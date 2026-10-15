@@ -1,0 +1,165 @@
+<mvc:View
+  controllerName="sap.ui.salesorder.store.controller.DeliveryMethod"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core">
+  <Page
+    id="deliveryMethodPage"
+    title="{i18n>deliveryMethodTitle}"
+    showNavButton="true"
+    navButtonPress=".onNavBack">
+    <headerContent>
+    </headerContent>
+    <content>
+      <!-- Guided Step Header -->
+      <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.StepIndicator" type="XML" />
+
+      <VBox class="sapUiResponsiveMargin">
+        <Breadcrumbs>
+          <Link text="{i18n>shellHome}" press=".onNavHome" />
+          <Link text="{i18n>pricingAvailabilityTitle}" press=".onNavToPriceAvailability" />
+          <Text text="{i18n>deliveryMethodTitle}" />
+        </Breadcrumbs>
+        <Title text="{i18n>deliveryMethodTitle}" titleStyle="H3" class="sapUiTinyMarginTop" />
+        <Text text="{i18n>deliveryMethodStepIndicator}" class="sapUiThemeColor-dim" />
+
+        <!-- Customer Summary Card -->
+        <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.CustomerHeader" type="XML" />
+
+        <!-- Delivery Method Panel  -->
+        <Panel
+          expandable="false"
+          expanded="true"
+          class="sapUiSmallMarginTop">
+          <headerToolbar>
+            <Toolbar>
+              <Title text="{i18n>deliveryMethodPanelTitle}" titleStyle="H5" />
+              <ToolbarSpacer />
+            </Toolbar>
+          </headerToolbar>
+          <content>
+            <HBox wrap="Wrap" class="deliveryMethodRow sapUiSmallMargin">
+              <VBox
+                class="deliveryMethodCard {= ${appState>/delivery/methodKey} === 'DELIVERY' ? 'deliveryMethodSelected' : ''} sapUiSmallMarginEnd sapUiSmallMarginBottom cursorPointer"
+                press=".onSelectDeliveryMethodToCustomer">
+                <HBox alignItems="Center">
+                  <RadioButton
+                    groupName="deliveryMethodGroup"
+                    selected="{= ${appState>/delivery/methodKey} === 'DELIVERY'}"
+                    select=".onSelectDeliveryMethodToCustomer" />
+                  <VBox class="sapUiTinyMarginBegin">
+                    <Title text="Delivery to Customer" titleStyle="H6" />
+                    <Text text="Ship from warehouse / store" class="sapUiThemeColor-dim" />
+                  </VBox>
+                </HBox>
+              </VBox>
+
+              <VBox
+                class="deliveryMethodCard {= ${appState>/delivery/methodKey} === 'COLLECTION' ? 'deliveryMethodSelected' : ''} sapUiSmallMarginEnd sapUiSmallMarginBottom cursorPointer"
+                press=".onSelectInStoreCollection">
+                <HBox alignItems="Center">
+                  <RadioButton
+                    groupName="deliveryMethodGroup"
+                    selected="{= ${appState>/delivery/methodKey} === 'COLLECTION'}"
+                    select=".onSelectInStoreCollection" />
+                  <VBox class="sapUiTinyMarginBegin">
+                    <Title text="In-Store Collection" titleStyle="H6" />
+                    <Text text="Customer collects today" class="sapUiThemeColor-dim" />
+                  </VBox>
+                </HBox>
+              </VBox>
+
+              <VBox
+                class="deliveryMethodCard {= ${appState>/delivery/methodKey} === 'WAREHOUSE' ? 'deliveryMethodSelected' : ''} sapUiSmallMarginBottom cursorPointer"
+                press=".onSelectWarehousePickup">
+                <HBox alignItems="Center">
+                  <RadioButton
+                    groupName="deliveryMethodGroup"
+                    selected="{= ${appState>/delivery/methodKey} === 'WAREHOUSE'}"
+                    select=".onSelectWarehousePickup" />
+                  <VBox class="sapUiTinyMarginBegin">
+                    <Title text="Warehouse Pickup" titleStyle="H6" />
+                    <Text text="Customer collects from DC" class="sapUiThemeColor-dim" />
+                  </VBox>
+                </HBox>
+              </VBox>
+            </HBox>
+
+            <HBox class="sapUiSmallMarginBeginEnd sapUiSmallMarginBottom" alignItems="Center">
+              <core:Icon src="sap-icon://hint" class="sapUiTinyMarginEnd" color="#6a6d70" />
+              <Text text="{i18n>weekendDeliveryHiddenNote}" class="sapUiThemeColor-dim" />
+            </HBox>
+          </content>
+        </Panel>
+
+        <!-- Order Availability (OAA) Panel  -->
+        <Panel
+          expandable="false"
+          expanded="true"
+          class="sapUiMediumMarginTop">
+          <headerToolbar>
+            <Toolbar>
+              <Title text="{i18n>orderAvailabilityPanelTitle}" titleStyle="H5" />
+              <ToolbarSpacer />
+              <ObjectStatus text="{i18n>checkCompletedBadge}" state="Success" icon="sap-icon://sys-enter-2" />
+            </Toolbar>
+          </headerToolbar>
+          <content>
+            <Table
+              id="oaaTable"
+              items="{appState>/delivery/oaa}"
+              class="sapUiSmallMarginTopBottom">
+              <columns>
+                <Column width="45%">
+                  <Text text="{i18n>colArticle}" />
+                </Column>
+                <Column width="18%" hAlign="Center">
+                  <Text text="{i18n>colRequested}" />
+                </Column>
+                <Column width="18%" hAlign="Center">
+                  <Text text="{i18n>colConfirmed}" />
+                </Column>
+                <Column width="19%" hAlign="End">
+                  <Text text="{i18n>colEarliestDate}" />
+                </Column>
+              </columns>
+              <items>
+                <ColumnListItem>
+                  <cells>
+                    <VBox>
+                      <Text text="{appState>article}" class="mainItemTitle" />
+                      <ObjectStatus text="{appState>statusText}" state="{appState>statusState}" />
+                    </VBox>
+                    <Text text="{appState>requested}" />
+                    <Text text="{appState>confirmed}" class="confirmedQtyText" />
+                    <Text text="{appState>earliestDate}" class="earliestDateText" />
+                  </cells>
+                </ColumnListItem>
+              </items>
+            </Table>
+          </content>
+        </Panel>
+
+        <!-- Backend Info Strip -->
+        <HBox class="backendInfoStrip sapUiMediumMarginTop" alignItems="Center">
+          <core:Icon src="sap-icon://database" class="sapUiTinyMarginEnd" color="#107e3e" />
+          <Text text="BACKEND: Delivery (OData OAA) – returns confirmed quantity and earliest date per item." />
+        </HBox>
+      </VBox>
+    </content>
+    <footer>
+      <OverflowToolbar>
+        <ToolbarSpacer />
+        <Button
+          id="btnNextDeliveryAddress"
+          text="{i18n>nextDeliveryAddressBtn}"
+          type="Emphasized"
+          press=".onNextToDeliveryAddress" />
+        <Button
+          id="btnBackFromDeliveryMethod"
+          text="{i18n>backBtn}"
+          press=".onNavBack" />
+      </OverflowToolbar>
+    </footer>
+  </Page>
+</mvc:View>

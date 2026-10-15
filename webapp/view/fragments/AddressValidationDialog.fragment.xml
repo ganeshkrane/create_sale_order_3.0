@@ -1,0 +1,84 @@
+<core:FragmentDefinition
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:l="sap.ui.layout">
+  <Dialog
+    id="addressValidationDialog"
+    title="{i18n>addressValidationModalTitle}"
+    contentWidth="720px"
+    contentHeight="480px"
+    resizable="true">
+    <customHeader>
+      <Toolbar>
+        <Title text="{i18n>addressValidationModalTitle}" titleStyle="H5" />
+        <ObjectStatus text="{i18n>addressValidationPluginBadge}" state="Warning" class="pluginOrangeBadge" />
+        <ToolbarSpacer />
+        <Button icon="sap-icon://decline" press=".onCancelAddressDialog" type="Transparent" />
+      </Toolbar>
+    </customHeader>
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <HBox alignItems="Center" class="addressInvokeHeader sapUiTinyMarginBottom">
+          <core:Icon src="sap-icon://hint" class="sapUiTinyMarginEnd" color="#0854a0" />
+          <Text text="Invoked with BP {appState>/customer/bpNumber} · Address type: {appState>/addressDialogContext/addressType} · Existing address passed as JSON" class="addressContextText" />
+        </HBox>
+
+        <Label text="{i18n>searchAddressLabel}" class="sapUiTinyMarginTop" />
+        <SearchField
+          id="addressSearchInput"
+          placeholder="{i18n>searchAddressPlaceholder}"
+          value="{appState>/addressDialogContext/searchQuery}"
+          search=".onSearchAddressInPlugin"
+          width="100%"
+          class="sapUiTinyMarginBottom" />
+
+        <Title text="{i18n>suggestedAddressesTitle}" titleStyle="H6" class="sapUiSmallMarginTop sapUiTinyMarginBottom" />
+
+        <List
+          id="suggestedAddressList"
+          items="{addresses>/}"
+          mode="SingleSelectMaster"
+          selectionChange=".onSelectAddressItem">
+          <CustomListItem selected="{addresses>isDefault}">
+            <HBox
+              alignItems="Center"
+              justifyContent="SpaceBetween"
+              class="sapUiSmallMarginBeginEnd sapUiTinyMarginTopBottom">
+              <VBox>
+                <Text text="{addresses>formatted}" class="addressListMainText" />
+                <Text text="{addresses>note}" class="addressListSubText" />
+              </VBox>
+              <ObjectStatus
+                text="{addresses>status}"
+                state="{path: 'addresses>status', formatter: '.formatter.addressStatusState'}"
+                class="statusChip" />
+            </HBox>
+          </CustomListItem>
+        </List>
+
+        <HBox class="sapUiSmallMarginTop" wrap="Wrap">
+          <Button
+            text="{i18n>enterNewAddressBtn}"
+            icon="sap-icon://add"
+            type="Transparent"
+            press=".onEnterNewAddressInPlugin"
+            class="sapUiTinyMarginEnd" />
+          <Button
+            text="{i18n>editSelectedBtn}"
+            icon="sap-icon://edit"
+            type="Transparent"
+            press=".onEditAddressInPlugin" />
+        </HBox>
+      </VBox>
+    </content>
+    <buttons>
+      <Button
+        text="{i18n>confirmAddressBtn}"
+        type="Emphasized"
+        press=".onConfirmAddressDialog" />
+      <Button
+        text="{i18n>cancelBtn}"
+        press=".onCancelAddressDialog" />
+    </buttons>
+  </Dialog>
+</core:FragmentDefinition>

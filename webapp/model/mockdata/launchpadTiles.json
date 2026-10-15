@@ -1,0 +1,44 @@
+[
+  {
+    "id": "tile-create-order-store",
+    "group": "Store Sales",
+    "title": "Create Sales Order – Store",
+    "subtitle": "Custom (Z) – copy of F0018",
+    "info": "Guided 7-Step",
+    "icon": "sap-icon://cart-4",
+    "isExtension": true,
+    "badgeNumber": "1",
+    "route": "customerSearch",
+    "highlight": true
+  },
+  {
+    "id": "tile-standard-f0018",
+    "group": "Sales",
+    "title": "Create Sales Orders",
+    "subtitle": "Standard F0018",
+    "info": "Classic SAP",
+    "icon": "sap-icon://sales-order",
+    "isExtension": false,
+    "route": "standardOrder"
+  },
+  {
+    "id": "tile-manage-orders",
+    "group": "Sales",
+    "title": "Manage Sales Orders",
+    "subtitle": "Standard",
+    "info": "12 Pending",
+    "icon": "sap-icon://sales-order-item",
+    "isExtension": false,
+    "route": "manageOrders"
+  },
+  {
+    "id": "tile-customer-overview",
+    "group": "Customers",
+    "title": "Customer Overview",
+    "subtitle": "CRM",
+    "info": "Lookup",
+    "icon": "sap-icon://customer",
+    "isExtension": false,
+    "route": "customerOverview"
+  }
+]

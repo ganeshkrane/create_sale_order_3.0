@@ -1,0 +1,184 @@
+<mvc:View
+  controllerName="sap.ui.salesorder.store.controller.CustomerSearch"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.ui.layout.form">
+  <Page
+    id="customerSearchPage"
+    title="{i18n>customerSearchTitle}"
+    showNavButton="true"
+    navButtonPress=".onNavBack">
+    <headerContent>
+    </headerContent>
+    <content>
+      <!-- Guided Step Header -->
+      <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.StepIndicator" type="XML" />
+
+      <VBox class="sapUiResponsiveMargin">
+        <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+          <VBox>
+            <Breadcrumbs>
+              <Link text="{i18n>shellHome}" press=".onNavHome" />
+              <Text text="{i18n>customerSearchTitle}" />
+            </Breadcrumbs>
+            <Title text="{i18n>customerSearchTitle}" titleStyle="H3" class="sapUiTinyMarginTop" />
+            <Text text="{i18n>customerSearchStepIndicator}" class="sapUiThemeColor-dim" />
+          </VBox>
+        </HBox>
+
+        <!-- Search Panel  -->
+        <Panel
+          headerText="{i18n>customerSearchPanelTitle}"
+          expandable="false"
+          expanded="true"
+          class="sapUiMediumMarginTop">
+          <headerToolbar>
+            <Toolbar>
+              <Title text="{i18n>customerSearchPanelTitle}" titleStyle="H5" />
+              <ToolbarSpacer />
+            </Toolbar>
+          </headerToolbar>
+          <content>
+            <VBox class="sapUiSmallMarginBeginEnd sapUiSmallMarginTopBottom">
+              <!-- Row 1: 5 fields across -->
+              <HBox justifyContent="SpaceBetween" alignItems="End" width="100%" class="sapUiTinyMarginBottom">
+                <VBox width="19%" class="customerSearchFieldGroup">
+                  <Label text="Customer Number:" labelFor="standaloneCustomerNumber" class="customerSearchFieldLabel" />
+                  <Input
+                    id="standaloneCustomerNumber"
+                    value="{searchCriteria>/customerNumber}"
+                    placeholder="Enter Customer Number"
+                    submit=".onSearchCustomer"
+                    class="customerSearchFieldInput" />
+                </VBox>
+
+                <VBox width="19%" class="customerSearchFieldGroup">
+                  <Label text="Customer ID Number:" labelFor="standaloneCustomerIdNumber" class="customerSearchFieldLabel" />
+                  <Input
+                    id="standaloneCustomerIdNumber"
+                    value="{searchCriteria>/idNumber}"
+                    placeholder="Enter ID Number"
+                    submit=".onSearchCustomer"
+                    class="customerSearchFieldInput" />
+                </VBox>
+
+                <VBox width="19%" class="customerSearchFieldGroup">
+                  <Label text="Customer Sales Order/Account Number:" labelFor="standaloneAccountOrderNumber" class="customerSearchFieldLabel" tooltip="Customer Sales Order/Account Number" />
+                  <Input
+                    id="standaloneAccountOrderNumber"
+                    value="{searchCriteria>/orderOrAccountNo}"
+                    placeholder="Enter Account Number"
+                    submit=".onSearchCustomer"
+                    class="customerSearchFieldInput" />
+                </VBox>
+
+                <VBox width="19%" class="customerSearchFieldGroup">
+                  <Label text="Customer Deal Number:" labelFor="standaloneDealNumber" class="customerSearchFieldLabel" />
+                  <Input
+                    id="standaloneDealNumber"
+                    value="{searchCriteria>/dealNumber}"
+                    placeholder="Enter Deal Number"
+                    submit=".onSearchCustomer"
+                    class="customerSearchFieldInput" />
+                </VBox>
+
+                <VBox width="19%" class="customerSearchFieldGroup">
+                  <Label text="PlusMore Number:" labelFor="standalonePlusMoreNumber" class="customerSearchFieldLabel" />
+                  <Input
+                    id="standalonePlusMoreNumber"
+                    value="{searchCriteria>/plusMoreNumber}"
+                    placeholder="Enter PlusMore Number"
+                    submit=".onSearchCustomer"
+                    class="customerSearchFieldInput" />
+                </VBox>
+              </HBox>
+
+              <!-- Row 2: Name and Lastname, Contact Number, Email Address, Spacer, Buttons -->
+              <HBox justifyContent="SpaceBetween" alignItems="End" width="100%" class="sapUiSmallMarginTop">
+                <VBox width="19%" class="customerSearchFieldGroup">
+                  <Label text="Name and Lastname:" labelFor="inputCustomerName" class="customerSearchFieldLabel" />
+                  <Input
+                    id="inputCustomerName"
+                    value="{searchCriteria>/customerName}"
+                    placeholder="Enter Name"
+                    submit=".onSearchCustomer"
+                    class="customerSearchFieldInput" />
+                </VBox>
+
+                <VBox width="19%" class="customerSearchFieldGroup">
+                  <Label text="Contact Number:" labelFor="inputMobile" class="customerSearchFieldLabel" />
+                  <Input
+                    id="inputMobile"
+                    value="{searchCriteria>/mobile}"
+                    placeholder="Enter Contact Number"
+                    submit=".onSearchCustomer"
+                    class="customerSearchFieldInput" />
+                </VBox>
+
+                <VBox width="19%" class="customerSearchFieldGroup">
+                  <Label text="Email Address:" labelFor="inputEmail" class="customerSearchFieldLabel" />
+                  <Input
+                    id="inputEmail"
+                    value="{searchCriteria>/email}"
+                    placeholder="Enter Email"
+                    type="Email"
+                    submit=".onSearchCustomer"
+                    class="customerSearchFieldInput" />
+                </VBox>
+
+                <VBox width="19%" class="customerSearchFieldGroup">
+                  <!-- Spacer -->
+                </VBox>
+
+                <HBox width="19%" justifyContent="End" alignItems="End" class="customerSearchActionGroup">
+                  <Button
+                    id="btnSearchCustomer"
+                    text="Search Customer"
+                    type="Emphasized"
+                    icon="sap-icon://search"
+                    press=".onSearchCustomer"
+                    class="btnSearchCustomerExact sapUiTinyMarginEnd" />
+                  <Button
+                    id="btnClearCriteria"
+                    text="Clear"
+                    icon="sap-icon://clear-filter"
+                    type="Default"
+                    press=".onClearCriteria"
+                    class="btnClearCustomerExact" />
+                </HBox>
+              </HBox>
+
+              <!-- Bottom center collapse toggle icon -->
+              <HBox justifyContent="Center" class="sapUiTinyMarginTop">
+                <Button
+                  icon="sap-icon://navigation-up-arrow"
+                  type="Transparent"
+                  tooltip="Toggle Search Panel"
+                  class="searchCollapseToggleBtn" />
+              </HBox>
+            </VBox>
+          </content>
+
+            <VBox alignItems="Center" class="sapUiLargeMarginTopBottom">
+              <core:Icon src="sap-icon://search" size="2rem" color="#89919a" class="sapUiTinyMarginBottom" />
+              <Text text="{i18n>searchPromptHint}" class="sapUiThemeColor-dim" />
+            </VBox>
+          </content>
+        </Panel>
+
+        <!-- Backend Info Strip -->
+        <HBox class="backendInfoStrip sapUiMediumMarginTop" alignItems="Center">
+          <core:Icon src="sap-icon://database" class="sapUiTinyMarginEnd" color="#107e3e" />
+          <Text text="BACKEND: Zcustomer_overview.srv (CRM) – returns BP number, name, telephone and e-mail." />
+        </HBox>
+      </VBox>
+    </content>
+    <footer>
+      <OverflowToolbar>
+        <ToolbarSpacer />
+        <Button text="{i18n>cancelBtn}" press=".onNavHome" />
+      </OverflowToolbar>
+    </footer>
+  </Page>
+</mvc:View>

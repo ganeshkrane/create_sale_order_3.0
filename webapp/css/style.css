@@ -1,0 +1,635 @@
+/* SAP Fiori Standard Store Sales Styling */
+
+.boldText {
+  font-weight: 700 !important;
+  color: #1d2d3e !important;
+}
+
+/* Customer Search Inputs and Labels (Screen 1.1) */
+.customerSearchFieldGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.customerSearchFieldLabel {
+  font-size: 0.825rem !important;
+  color: #4b6075 !important;
+  font-weight: 500 !important;
+  margin-bottom: 0.35rem !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.customerSearchFieldInput {
+  width: 100% !important;
+  height: 2.25rem !important;
+}
+
+.customerSearchFieldInput .sapMInputBaseContentWrapper {
+  height: 2.25rem !important;
+  border: 1px solid #c9d5e1 !important;
+  border-radius: 4px !important;
+  background-color: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
+.customerSearchFieldInput .sapMInputBaseInner {
+  height: 100% !important;
+  font-size: 0.875rem !important;
+  padding: 0 0.65rem !important;
+}
+
+.customerSearchFieldInput .sapMInputBaseInner::placeholder {
+  font-style: italic !important;
+  color: #7b8e9f !important;
+  font-size: 0.85rem !important;
+}
+
+.customerSearchActionGroup {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.btnSearchCustomerExact {
+  border-radius: 4px !important;
+  height: 2.25rem !important;
+}
+
+.btnSearchCustomerExact .sapMBtnInner {
+  background: #0070f2 !important;
+  border-color: #0070f2 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  height: 2.25rem !important;
+  line-height: 2.15rem !important;
+}
+
+.btnClearCustomerExact {
+  border-radius: 4px !important;
+  height: 2.25rem !important;
+}
+
+.btnClearCustomerExact .sapMBtnInner {
+  border: 1px solid #0070f2 !important;
+  color: #0070f2 !important;
+  background-color: #ffffff !important;
+  font-weight: 500 !important;
+  border-radius: 4px !important;
+  height: 2.25rem !important;
+  line-height: 2.15rem !important;
+}
+
+.searchCollapseToggleBtn {
+  border-radius: 50% !important;
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  padding: 0 !important;
+  border: 1px solid #d3dbe3 !important;
+  color: #0070f2 !important;
+  background-color: #ffffff !important;
+}
+
+.searchCollapseToggleBtn .sapMBtnInner {
+  border-radius: 50% !important;
+  height: 22px !important;
+  width: 22px !important;
+  min-width: 22px !important;
+  padding: 0 !important;
+}
+
+.searchFieldLabel {
+  font-size: 0.925rem !important;
+  color: #556b82 !important;
+  font-weight: 500 !important;
+}
+
+.customerSearchInput {
+  width: 260px !important;
+  height: 2.6rem !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+.customerSearchInput .sapMInputBaseContentWrapper {
+  height: 2.6rem !important;
+  border: 1px solid #899baf !important;
+  border-radius: 4px !important;
+  background-color: #ffffff !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.customerSearchInput.sapMInputFocused .sapMInputBaseContentWrapper,
+.customerSearchInput .sapMInputBaseContentWrapper:focus-within {
+  border-color: #0064d9 !important;
+  outline: 2px solid rgba(0, 100, 217, 0.25) !important;
+}
+
+.customerSearchInput .sapMInputBaseInner {
+  height: 100% !important;
+  line-height: normal !important;
+  font-size: 0.95rem !important;
+  padding: 0 0.85rem !important;
+  border: none !important;
+  background-color: transparent !important;
+  box-sizing: border-box !important;
+}
+
+.customerSearchInput .sapMInputBaseInner::placeholder {
+  font-style: italic !important;
+  color: #556b82 !important;
+  font-size: 0.95rem !important;
+}
+
+/* Marketing Information (Screen 3) */
+.marketingRow {
+  width: 97% !important;
+  max-width: 97% !important;
+  min-height: 2.35rem !important;
+  margin-bottom: 0.35rem !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.marketingQuestionLabel {
+  font-size: 0.95rem !important;
+  color: #1d2d3e !important;
+  font-weight: 500 !important;
+  line-height: 2.35rem !important;
+  margin: 0 !important;
+}
+
+.marketingSelect {
+  width: 240px !important;
+  min-width: 240px !important;
+}
+
+.marketingSelect .sapMSlt {
+  height: 2.35rem !important;
+  line-height: 2.35rem !important;
+  border-radius: 4px !important;
+  border: 1px solid #899baf !important;
+  background-color: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
+.marketingSelect.sapMSltValStateErr .sapMSlt,
+.marketingSelect[data-sap-ui-valuestate="Error"] .sapMSlt,
+.marketingSelect.sapMSelectError .sapMSlt {
+  background-color: #ffeef0 !important;
+  border: 1.5px solid #eb3b5a !important;
+}
+
+/* Order Type Cards */
+.orderTypeCardRow {
+  display: flex;
+  gap: 1rem;
+}
+
+.orderTypeOptionCard {
+  border: 1px solid #d3dbe3;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  min-width: 260px;
+  background: #ffffff;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.orderTypeOptionCard:hover {
+  background: #f7faff;
+  border-color: #0854a0;
+}
+
+.orderTypeSelected {
+  border: 2px solid #0854a0 !important;
+  background: #f0f6ff !important;
+}
+
+/* Delivery Method Cards */
+.deliveryMethodRow {
+  display: flex;
+  gap: 1rem;
+}
+
+.deliveryMethodCard {
+  border: 1px solid #d3dbe3;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  min-width: 260px;
+  background: #ffffff;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.deliveryMethodCard:hover {
+  background: #f7faff;
+  border-color: #0854a0;
+}
+
+.deliveryMethodSelected {
+  border: 2px solid #0854a0 !important;
+  background: #f0f6ff !important;
+}
+
+/* Address Box */
+.addressDisplayBox {
+  background: #ffffff;
+  border: 1px solid #d6dee6;
+  border-radius: 6px;
+  padding: 0.85rem 1rem;
+}
+
+.addressDisplayFormatted {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1d2d3e;
+}
+
+.addressDisplayMeta {
+  font-size: 0.75rem;
+  color: #5d6e80;
+  margin-top: 3px;
+}
+
+.statusChip {
+  font-weight: 700 !important;
+  font-size: 0.75rem !important;
+}
+
+/* Sub-items in Cart */
+.subItemRow {
+  background-color: #fafbfc !important;
+}
+
+.subItemTitle {
+  font-size: 0.85rem !important;
+  color: #0854a0 !important;
+  font-weight: 500 !important;
+}
+
+.subItemText {
+  color: #8c9ba5 !important;
+  font-size: 0.8rem !important;
+}
+
+.subItemPadding {
+  padding-left: 1rem;
+}
+
+.mainItemTitle {
+  font-weight: 600 !important;
+  color: #1d2d3e !important;
+}
+
+.itemNoBold {
+  font-weight: 600;
+}
+
+.productTableArticleId {
+  font-size: 0.75rem;
+  color: #6a6d70;
+}
+
+.qtyValueText {
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.priceTextBold {
+  font-weight: 600;
+  color: #1d2d3e;
+}
+
+/* Pricing summary styling */
+.pricingSummaryBox {
+  padding: 0.5rem;
+}
+
+.priceRowLabel {
+  font-size: 0.9rem;
+  color: #556b82;
+}
+
+.priceRowValue {
+  font-size: 0.95rem;
+  color: #1d2d3e;
+}
+
+.discountLabel, .discountValue {
+  color: #c94f00 !important;
+  font-weight: 600;
+}
+
+.pricingDivider {
+  height: 1px;
+  background-color: #d6dee6;
+  width: 100%;
+}
+
+.totalAmountColor {
+  color: #0854a0 !important;
+}
+
+/* Address Validation Plug-in dialog */
+.addressInvokeHeader {
+  background: #eef5fc;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.addressContextText {
+  font-size: 0.75rem;
+  color: #0854a0;
+  font-family: monospace;
+}
+
+.addressListMainText {
+  font-weight: 600;
+  color: #1d2d3e;
+}
+
+.addressListSubText {
+  font-size: 0.75rem;
+  color: #6a6d70;
+}
+
+/* Success Order Banner */
+.successOrderBanner {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.pendingActionBox {
+  background: #eef5fc;
+  border: 1px solid #cbe0f5;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.pendingActionText {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0854a0;
+}
+
+.cursorPointer {
+  cursor: pointer;
+}
+
+.confirmedQtyText {
+  font-weight: 600;
+}
+
+.earliestDateText {
+  font-weight: 500;
+  color: #0854a0;
+}
+
+.summarySubLabel {
+  font-size: 0.75rem;
+  color: #6a6d70;
+  text-transform: uppercase;
+}
+
+.summaryAddressText {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #1d2d3e;
+}
+
+.summaryHeaderValue {
+  font-weight: 500;
+}
+
+/* Value-Add dialog: prevent horizontal scrolling and ensure responsive columns */
+#valueAddDialog-scroll {
+  overflow-x: hidden !important;
+}
+
+#valueAddTable,
+#valueAddTable-tbl,
+#valueAddTable .sapMListTbl {
+  width: 100% !important;
+  table-layout: auto !important;
+}
+
+#valueAddTable .sapMListTblCell {
+  vertical-align: middle;
+}
+
+/* Customer Search: Keep 3 fields in 1 single horizontal line with NO scroll */
+.searchFieldsSingleRow {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+  width: auto !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+.searchFieldGroup {
+  display: inline-flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+  flex: 0 1 auto !important;
+}
+
+.searchFieldGroup .sapMLabel {
+  white-space: nowrap !important;
+}
+
+/* Ensure Customer Search panel content never shows horizontal scroll */
+.customerSearchPanel .sapMPanelContent,
+#wizardCustomerSearchPanel .sapMPanelContent {
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+/* Delivery Schedules & Conditions Tab styling matching user mockups */
+.deliverySchedulesSection {
+  background: #f7f9fa;
+  border: 1px solid #e1e7ec;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+}
+
+.deliverySchedulesSection .sapMTitle {
+  color: #1d2d3e;
+  font-weight: 600;
+}
+
+.textMutedBold {
+  color: #556b82;
+  font-weight: 500;
+}
+
+.conditionsTable .sapMInputBaseContentWrapper {
+  background-color: #ffffff !important;
+  border: 1px solid #899baf !important;
+  border-radius: 4px !important;
+}
+
+.conditionsTable .sapMListTblCell {
+  vertical-align: middle !important;
+}
+
+/* Attachment styling matching SalesOrderCartDetails and screenshot */
+.attachmentsReviewPanel {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+.attachmentsReviewPanel > .sapMPanelHdr,
+.attachmentsReviewPanel > .sapMPanelHdrExpandable {
+  display: none !important;
+}
+
+.attachmentsReviewPanel > .sapMPanelContent {
+  padding: 0 !important;
+}
+
+.attachmentsOverflowToolbar {
+  border-bottom: 1px solid #e1e7ec !important;
+  background: transparent !important;
+  padding-left: 0.25rem !important;
+  padding-right: 0.25rem !important;
+  height: 2.75rem !important;
+}
+
+.attachmentsUploadSetHint {
+  color: #556b82 !important;
+  font-size: 0.8125rem !important;
+}
+
+.attachmentItemMetaText {
+  color: #6a7d8f !important;
+  font-size: 0.8rem !important;
+}
+
+.attachmentFileLink {
+  font-size: 0.925rem !important;
+  font-weight: 500 !important;
+}
+
+/* Top Customer Banner (Above Wizard) in Bold */
+.customerTopBannerPanel {
+  background: #ffffff !important;
+  border: 1px solid #d5e3f0 !important;
+  border-left: 5px solid #0070f2 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+.customerTopBannerPanel .sapMPanelContent {
+  padding: 0.65rem 0.95rem !important;
+}
+
+.customerTopNameBold {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #1a2a3a !important;
+  letter-spacing: -0.01em !important;
+}
+
+.customerTopMetaText {
+  font-size: 0.825rem !important;
+  color: #556b82 !important;
+  font-weight: 500 !important;
+}
+
+/* Basic Customer Details (Screen 1 & 2 mockups) */
+.basicDetailsTitleText {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+}
+
+.entityTypeLabel {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+}
+
+.entityRadioBtn .sapMRbBLabel {
+  font-size: 0.925rem !important;
+  font-weight: 500 !important;
+  color: #1e293b !important;
+}
+
+.basicDetailsSectionTitle {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+}
+
+.basicDetailsLabel {
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+  color: #334155 !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.basicDetailsInput .sapMInputBaseContentWrapper,
+.basicDetailsSelect .sapMSlt,
+.basicDetailsDatePicker .sapMInputBaseContentWrapper {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 4px !important;
+  height: 2.35rem !important;
+  background-color: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
+.basicDetailsInput .sapMInputBaseInner,
+.basicDetailsDatePicker .sapMInputBaseInner {
+  font-size: 0.875rem !important;
+  padding: 0 0.75rem !important;
+}
+
+.basicDetailsInput input::placeholder,
+.basicDetailsDatePicker input::placeholder {
+  font-style: italic !important;
+  color: #64748b !important;
+  font-size: 0.85rem !important;
+}
+
+/* Wizard Step 1 button is hidden until customer is selected or created (step validated) */
+#stepCustomer .sapMWizardStepNextButton[disabled],
+#stepCustomer .sapMWizardStepNextButton.sapMBtnDisabled,
+#salesOrderWizard-step-stepCustomer-button[disabled],
+#salesOrderWizard-step-stepCustomer-button.sapMBtnDisabled {
+  display: none !important;
+}
+
+/* Wizard Step 2 button (Step 3 button) is hidden until 1st dropdown value is selected */
+#stepConsent .sapMWizardStepNextButton[disabled],
+#stepConsent .sapMWizardStepNextButton.sapMBtnDisabled,
+#salesOrderWizard-step-stepConsent-button[disabled],
+#salesOrderWizard-step-stepConsent-button.sapMBtnDisabled {
+  display: none !important;
+}
+
+/* Price Override Dialog styling */
+.priceOverrideInput input::placeholder {
+  font-style: italic !important;
+  color: #7b8e9f !important;
+}
+
+.itemPriceLink {
+  font-weight: 700 !important;
+  color: #0070f2 !important;
+}
+
+
+
+
+
+

@@ -1,0 +1,224 @@
+<mvc:View
+  controllerName="sap.ui.salesorder.store.controller.OrderSummary"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:l="sap.ui.layout">
+  <Page
+    id="orderSummaryPage"
+    title="{i18n>orderSummaryTitle}"
+    showNavButton="true"
+    navButtonPress=".onNavBack">
+    <headerContent>
+    </headerContent>
+    <content>
+      <!-- Guided Step Header -->
+      <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.StepIndicator" type="XML" />
+
+      <VBox class="sapUiResponsiveMargin">
+        <Breadcrumbs>
+          <Link text="{i18n>shellHome}" press=".onNavHome" />
+          <Link text="{i18n>deliveryAddressTitle}" press=".onNavToDeliveryAddress" />
+          <Text text="{i18n>orderSummaryTitle}" />
+        </Breadcrumbs>
+        <Title text="{i18n>orderSummaryTitle}" titleStyle="H3" class="sapUiTinyMarginTop" />
+        <Text text="{i18n>orderSummaryStepIndicator}" class="sapUiThemeColor-dim" />
+
+        <!-- Customer Summary Card -->
+        <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.CustomerHeader" type="XML" />
+
+        <!-- Review and Place Order - 3 Details Panels Row -->
+        <l:Grid
+          defaultSpan="XL4 L4 M12 S12"
+          class="sapUiSmallMarginTop">
+          <!-- 1. Shipping Details (Fields 1-8, 16, 17) -->
+          <Panel headerText="Shipping Details" class="fioriStandardBorderPanel">
+            <content>
+              <VBox class="sapUiSmallMargin">
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Ship To" class="priceRowLabel" />
+                  <Text text="{= ${appState>/delivery/shipToName} || ${appState>/review/shippingDetails/shipTo} || '1000234571 - Thabo Mokoena' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Payee" class="priceRowLabel" />
+                  <Text text="{= ${appState>/delivery/payeeText} || ${appState>/review/shippingDetails/payee} || '1000234571 - Thabo Mokoena' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Phone Number" class="priceRowLabel" />
+                  <Text text="{= ${appState>/delivery/shipToAddress/phone} || ${appState>/review/shippingDetails/phoneNumber} || '+27 82 555 0192' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Requested Delivery Date" class="priceRowLabel" />
+                  <Text text="{= ${appState>/delivery/requestedDeliveryDate} || ${appState>/review/shippingDetails/requestedDeliveryDate} || 'Sep 28, 2026' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Single Shipment" class="priceRowLabel" />
+                  <Text text="{= ${appState>/delivery/singleShipment} ? 'Yes' : 'No' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Carrier" class="priceRowLabel" />
+                  <Text text="{= ${appState>/delivery/carrier} || ${appState>/review/shippingDetails/carrier} || 'DHL Express' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Shipping" class="priceRowLabel" />
+                  <Text text="{= ${appState>/delivery/shipping} || ${appState>/review/shippingDetails/shipping} || 'Standard Delivery' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Incoterms" class="priceRowLabel" />
+                  <Text text="{= ${appState>/delivery/incoterms} || ${appState>/review/shippingDetails/incoterms} || 'FOB - Free on Board' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Shipping Instructions" class="priceRowLabel" />
+                  <Text text="{= ${appState>/delivery/shippingInstructions} || ${appState>/review/shippingDetails/shippingInstructions} || 'Deliver to front reception' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow">
+                  <Text text="Notes to Receiver" class="priceRowLabel" />
+                  <Text text="{= ${appState>/delivery/notesToReceiver} || ${appState>/review/shippingDetails/notesToReceiver} || 'Call customer upon arrival' }" class="summaryHeaderValue" />
+                </HBox>
+              </VBox>
+            </content>
+          </Panel>
+
+          <!-- 2. Billing Details (Fields 9-15) -->
+          <Panel headerText="Billing Details" class="fioriStandardBorderPanel">
+            <content>
+              <VBox class="sapUiSmallMargin">
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Bill to" class="priceRowLabel" />
+                  <Text text="{= ${appState>/review/billingDetails/billTo} || '1000234571 - Thabo Mokoena' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Address" class="priceRowLabel" />
+                  <Text text="{= ${appState>/review/billingDetails/address} || '12 Rivonia Road' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="City" class="priceRowLabel" />
+                  <Text text="{= ${appState>/review/billingDetails/city} || 'Sandton' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="State" class="priceRowLabel" />
+                  <Text text="{= ${appState>/review/billingDetails/state} || 'Gauteng' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Postal Code" class="priceRowLabel" />
+                  <Text text="{= ${appState>/review/billingDetails/postalCode} || '2196' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Country" class="priceRowLabel" />
+                  <Text text="{= ${appState>/review/billingDetails/country} || 'South Africa' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow">
+                  <Text text="Phone Number" class="priceRowLabel" />
+                  <Text text="{= ${appState>/review/billingDetails/phoneNumber} || '+27 82 555 0192' }" class="summaryHeaderValue" />
+                </HBox>
+              </VBox>
+            </content>
+          </Panel>
+
+          <!-- 3. Order Details (Fields 18-23) -->
+          <Panel headerText="Order Details" class="fioriStandardBorderPanel">
+            <content>
+              <VBox class="sapUiSmallMargin">
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Sold To" class="priceRowLabel" />
+                  <Text text="{= ${appState>/review/orderDetails/soldTo} || '1000234571 - Thabo Mokoena' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Application ID / Purchase Order" class="priceRowLabel" />
+                  <Text text="{= ${appState>/review/orderDetails/applicationId} || 'PO-2026-99482' }" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Total" class="priceRowLabel" />
+                  <Text text="{path: 'appState>/pricing/netValue', formatter: '.formatter.formatCurrency'}" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Tax" class="priceRowLabel" />
+                  <Text text="{path: 'appState>/pricing/vat', formatter: '.formatter.formatCurrency'}" class="summaryHeaderValue" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="Grand Total" class="priceRowLabel" />
+                  <Text text="{path: 'appState>/pricing/total', formatter: '.formatter.formatCurrency'}" class="priceRowValueBold" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" class="priceRow">
+                  <Text text="Sales Order Type" class="priceRowLabel" />
+                  <Text text="{= ${appState>/review/orderDetails/salesOrderType} || 'ZOR - Standard Store Order' }" class="summaryHeaderValue" />
+                </HBox>
+              </VBox>
+            </content>
+          </Panel>
+        </l:Grid>
+
+        <!-- 4. Order Item Details - All Item (Field 24) -->
+        <Panel headerText="Order Item Details - All Item ({= ${appState>/cart}.length })" class="fioriStandardBorderPanel sapUiMediumMarginTop">
+          <content>
+            <Table
+              id="orderSummaryItemsTable"
+              items="{appState>/cart}"
+              class="sapUiSmallMargin">
+              <columns>
+                <Column width="65px" hAlign="Center">
+                  <Text text="Item" />
+                </Column>
+                <Column width="110px">
+                  <Text text="Article" />
+                </Column>
+                <Column width="250px">
+                  <Text text="Description" />
+                </Column>
+                <Column width="80px" hAlign="Center">
+                  <Text text="Qty" />
+                </Column>
+                <Column width="65px" hAlign="Center">
+                  <Text text="UM" />
+                </Column>
+                <Column width="120px" hAlign="End">
+                  <Text text="Price/Unit" />
+                </Column>
+                <Column width="130px" hAlign="End">
+                  <Text text="Item Price" />
+                </Column>
+              </columns>
+              <items>
+                <ColumnListItem class="{= ${appState>isSubItem} ? 'subItemRow' : 'mainItemRow' }">
+                  <cells>
+                    <Text text="{appState>item}" />
+                    <Text text="{appState>articleId}" />
+                    <VBox>
+                      <Text text="{= ${appState>description} || ${appState>name} }" class="productTableTitle" />
+                      <Text text="{= ${appState>subText} ? ${appState>subText} : '' }" class="productTableArticleId" visible="{= !!${appState>subText} }" />
+                    </VBox>
+                    <Text text="{appState>qty}" />
+                    <Text text="{= ${appState>um} || 'EA' }" />
+                    <Text text="{path: 'appState>netPrice', formatter: '.formatter.formatCurrency'}" />
+                    <Text text="{path: 'appState>netValue', formatter: '.formatter.formatCurrency'}" class="priceTextBold" />
+                  </cells>
+                </ColumnListItem>
+              </items>
+            </Table>
+          </content>
+        </Panel>
+
+        <!-- Backend Info Strip -->
+        <HBox class="backendInfoStrip sapUiMediumMarginTop" alignItems="Center">
+          <core:Icon src="sap-icon://database" class="sapUiTinyMarginEnd" color="#107e3e" />
+          <Text text="BACKEND: ZSra017_Create_SalesOrders; SD customer OData as per status." />
+        </HBox>
+      </VBox>
+    </content>
+    <footer>
+      <OverflowToolbar>
+        <ToolbarSpacer />
+        <Button
+          id="btnCreateSalesOrder"
+          text="{i18n>createSalesOrderBtn}"
+          type="Emphasized"
+          icon="sap-icon://accept"
+          press=".onCreateSalesOrder" />
+        <Button
+          id="btnBackFromOrderSummary"
+          text="{i18n>backBtn}"
+          press=".onNavBack" />
+      </OverflowToolbar>
+    </footer>
+  </Page>
+</mvc:View>

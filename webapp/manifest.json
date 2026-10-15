@@ -1,0 +1,142 @@
+{
+  "_version": "1.12.0",
+  "sap.app": {
+    "id": "sap.ui.salesorder.store",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "title": "{{appTitle}}",
+    "description": "{{appSubtitle}}",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "dataSources": {
+      "customersMock": {
+        "uri": "model/mockdata/customers.json",
+        "type": "JSON"
+      },
+      "addressesMock": {
+        "uri": "model/mockdata/addresses.json",
+        "type": "JSON"
+      },
+      "orderTypesMock": {
+        "uri": "model/mockdata/orderTypes.json",
+        "type": "JSON"
+      },
+      "productsMock": {
+        "uri": "model/mockdata/products.json",
+        "type": "JSON"
+      },
+      "consentChannelsMock": {
+        "uri": "model/mockdata/consentChannels.json",
+        "type": "JSON"
+      },
+      "deliveryMethodsMock": {
+        "uri": "model/mockdata/deliveryMethods.json",
+        "type": "JSON"
+      }
+    },
+    "sourceTemplate": {
+      "id": "@sap/ux-app-migrator:freestyle",
+      "version": "1.33.0",
+      "toolsId": "563ecfb2-4f02-4a43-b4f0-5e62e4ebed57"
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "rootView": {
+      "viewName": "sap.ui.salesorder.store.view.App",
+      "type": "XML",
+      "async": true,
+      "id": "app"
+    },
+    "dependencies": {
+      "minUI5Version": "1.120.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {},
+        "sap.ui.layout": {},
+        "sap.ui.unified": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "sap.ui.salesorder.store.i18n.i18n",
+          "supportedLocales": [
+            "",
+            "en",
+            "de"
+          ],
+          "fallbackLocale": ""
+        }
+      },
+      "customers": {
+        "type": "sap.ui.model.json.JSONModel",
+        "dataSource": "customersMock"
+      },
+      "addresses": {
+        "type": "sap.ui.model.json.JSONModel",
+        "dataSource": "addressesMock"
+      },
+      "orderTypes": {
+        "type": "sap.ui.model.json.JSONModel",
+        "dataSource": "orderTypesMock"
+      },
+      "products": {
+        "type": "sap.ui.model.json.JSONModel",
+        "dataSource": "productsMock"
+      },
+      "consentChannels": {
+        "type": "sap.ui.model.json.JSONModel",
+        "dataSource": "consentChannelsMock"
+      },
+      "deliveryMethods": {
+        "type": "sap.ui.model.json.JSONModel",
+        "dataSource": "deliveryMethodsMock"
+      }
+    },
+    "resources": {
+      "css": [
+        {
+          "uri": "css/style.css"
+        }
+      ]
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "viewType": "XML",
+        "viewPath": "sap.ui.salesorder.store.view",
+        "controlId": "appNavContainer",
+        "controlAggregation": "pages",
+        "async": true
+      },
+      "routes": [
+        {
+          "name": "customerWizard",
+          "pattern": "",
+          "target": "customerWizard"
+        }
+      ],
+      "targets": {
+        "customerWizard": {
+          "viewName": "CustomerWizard",
+          "viewId": "customerWizardView",
+          "viewLevel": 1
+        }
+      }
+    }
+  }
+}

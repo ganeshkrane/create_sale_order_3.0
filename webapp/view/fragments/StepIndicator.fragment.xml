@@ -1,0 +1,67 @@
+<core:FragmentDefinition
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core">
+  <OverflowToolbar class="stepIndicatorToolbar sapUiNoMarginTop">
+    <Button
+      text="{i18n>stepLaunchpad}"
+      type="Transparent"
+      press=".onNavToStepLaunchpad"
+      class="stepBtn" />
+    <core:Icon src="sap-icon://slim-arrow-right" class="stepSeparator" />
+    
+    <Button
+      text="{i18n>step1Customer}"
+      type="{= ${appState>/currentStep} === 1 ? 'Emphasized' : 'Transparent'}"
+      icon="sap-icon://customer"
+      press=".onNavToStep1"
+      class="stepBtn" />
+    <core:Icon src="sap-icon://slim-arrow-right" class="stepSeparator" />
+
+    <Button
+      text="{i18n>step2Marketing}"
+      type="{= ${appState>/currentStep} === 2 ? 'Emphasized' : 'Transparent'}"
+      icon="sap-icon://accept"
+      press=".onNavToStep3"
+      class="stepBtn" />
+    <core:Icon src="sap-icon://slim-arrow-right" class="stepSeparator" />
+
+    <Button
+      text="{i18n>step3OrderType}"
+      type="{= ${appState>/currentStep} === 3 ? 'Emphasized' : 'Transparent'}"
+      icon="sap-icon://form"
+      press=".onNavToStep4"
+      class="stepBtn" />
+    <core:Icon src="sap-icon://slim-arrow-right" class="stepSeparator" />
+
+    <Button
+      text="{i18n>step4Cart}"
+      type="{= ${appState>/currentStep} === 4 ? 'Emphasized' : 'Transparent'}"
+      icon="sap-icon://cart"
+      press=".onNavToStep5"
+      class="stepBtn" />
+    <core:Icon src="sap-icon://slim-arrow-right" class="stepSeparator" />
+
+    <Button
+      text="{i18n>step5ReviewShipping}"
+      type="{= ${appState>/currentStep} === 5 ? 'Emphasized' : 'Transparent'}"
+      icon="sap-icon://shipping-status"
+      press=".onNavToStep6"
+      class="stepBtn" />
+    <core:Icon src="sap-icon://slim-arrow-right" class="stepSeparator" />
+
+    <Button
+      text="{i18n>step6Review}"
+      type="{= ${appState>/currentStep} === 6 ? 'Emphasized' : 'Transparent'}"
+      icon="sap-icon://survey"
+      press=".onNavToStep7"
+      class="stepBtn" />
+    <core:Icon src="sap-icon://slim-arrow-right" class="stepSeparator" />
+
+    <Button
+      text="{i18n>stepFinal}"
+      type="{= ${appState>/currentStep} === 8 ? 'Emphasized' : 'Transparent'}"
+      icon="sap-icon://order-status"
+      press=".onNavToStepFinal"
+      class="stepBtn" />
+  </OverflowToolbar>
+</core:FragmentDefinition>

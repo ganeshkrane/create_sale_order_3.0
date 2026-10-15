@@ -1,0 +1,1437 @@
+<mvc:View
+  controllerName="sap.ui.salesorder.store.controller.CustomerWizard"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.ui.layout.form"
+  xmlns:l="sap.ui.layout"
+  xmlns:u="sap.ui.unified">
+  <Page
+    id="customerWizardPage"
+    title="{i18n>appTitle}"
+    showNavButton="false"
+    class="sapUiContentPadding">
+    <headerContent>
+      
+    </headerContent>
+    <content>
+      <!-- Top Selected or Newly Created Customer Display (Above Wizard) in Bold -->
+      <Panel
+        id="topCustomerSummaryPanel"
+        visible="{wizardModel>/customerSelected}"
+        class="customerTopBannerPanel sapUiSmallMarginBottom">
+        <content>
+          <HBox alignItems="Center" justifyContent="SpaceBetween" wrap="Wrap" class="sapUiTinyMarginBeginEnd sapUiTinyMarginTopBottom">
+            <HBox alignItems="Center">
+              <core:Icon
+                src="{= ${appState>/customer/type} === 'Company' ? 'sap-icon://building' : 'sap-icon://person-placeholder'}"
+                size="1.8rem"
+                color="#0070f2"
+                class="sapUiSmallMarginEnd" />
+              <VBox>
+                <HBox alignItems="Center" wrap="Wrap">
+                  <Text text="{appState>/customer/name}" class="customerTopNameBold sapUiSmallMarginEnd" />
+                  <ObjectStatus text="{appState>/customer/type}" state="Information" class="bpBadge sapUiTinyMarginEnd" />
+                  <ObjectStatus
+                    text="{= ${wizardModel>/isNewlyCreatedCustomer} ? 'Customer Created' : 'Customer Selected'}"
+                    state="Success"
+                    icon="sap-icon://sys-enter-2"
+                    class="customerStatusBadge" />
+                </HBox>
+                <HBox alignItems="Center" wrap="Wrap" class="sapUiTinyMarginTop">
+                  <Text text="{= 'BP Number: ' + ${appState>/customer/bpNumber}}" class="customerTopMetaText sapUiSmallMarginEnd boldText" />
+              </HBox>
+              </VBox>
+            </HBox>
+            <HBox alignItems="Center" class="sapUiTinyMarginTopBottom">
+              <Button
+                text="Change Customer"
+                icon="sap-icon://user-edit"
+                type="Transparent"
+                press=".onChangeCustomerClick"
+                class="sapUiTinyMarginEnd" />
+            </HBox>
+          </HBox>
+        </content>
+      </Panel>
+
+      <!-- SAPUI5 Wizard Control -->
+      <Wizard
+        id="salesOrderWizard"
+        visible="{= !${wizardModel>/orderCreated} }"
+        complete=".onWizardComplete"
+        finishButtonText="{i18n>createSalesOrderBtn}"
+       >
+
+        <!-- ============================================== -->
+        <!-- STEP 1: CUSTOMER (Screens 2, 3, 4, 5)          -->
+        <!-- ============================================== -->
+        <WizardStep
+          id="stepCustomer"
+          title="{i18n>step1Customer}"
+          icon="sap-icon://customer"
+          validated="{wizardModel>/customerSelected}">
+          <VBox class="sapUiSmallMargin">
+            <!-- Customer Search Panel  -->
+            <!-- Customer Search Panel -->
+            <Panel
+              id="wizardCustomerSearchPanel"
+              expandable="true"
+              expanded="{wizardModel>/searchPanelExpanded}"
+              class="customerSearchPanel sapUiSmallMarginBottom">
+              <headerToolbar>
+                <Toolbar style="Clear">
+                  <Title text="{i18n>customerSearchPanelTitle}" titleStyle="H5" />
+                  <ToolbarSpacer />
+                  <Button
+                    id="btnCreateNewCustomer"
+                    text="Create New Customer"
+                    icon="sap-icon://add"
+                    type="Transparent"
+                    press=".onShowCustomerNotFoundCapture" />
+                </Toolbar>
+              </headerToolbar>
+              <content>
+                <VBox class="sapUiSmallMarginBeginEnd sapUiSmallMarginTopBottom">
+                  <!-- Row 1: 5 fields across (Customer Number, Customer ID Number, Sales Order/Account, Deal Number, PlusMore) -->
+                  <HBox justifyContent="SpaceBetween" alignItems="End" width="100%" class="sapUiTinyMarginBottom">
+                    <VBox width="19%" class="customerSearchFieldGroup">
+                      <Label text="Customer Number:" labelFor="inpCustomerNumber" class="customerSearchFieldLabel" />
+                      <Input
+                        id="inpCustomerNumber"
+                        value="{wizardModel>/searchCriteria/customerNumber}"
+                        placeholder="Enter Customer Number"
+                        submit=".onSearchCustomerClick"
+                        class="customerSearchFieldInput" />
+                    </VBox>
+
+                    <VBox width="19%" class="customerSearchFieldGroup">
+                      <Label text="Customer ID Number:" labelFor="inpCustomerIdNumber" class="customerSearchFieldLabel" />
+                      <Input
+                        id="inpCustomerIdNumber"
+                        value="{wizardModel>/searchCriteria/idNumber}"
+                        placeholder="Enter ID Number"
+                        submit=".onSearchCustomerClick"
+                        class="customerSearchFieldInput" />
+                    </VBox>
+
+                    <VBox width="19%" class="customerSearchFieldGroup">
+                      <Label text="Customer Sales Order/Account Number:" labelFor="inpAccountOrderNumber" class="customerSearchFieldLabel" tooltip="Customer Sales Order/Account Number" />
+                      <Input
+                        id="inpAccountOrderNumber"
+                        value="{wizardModel>/searchCriteria/orderOrAccountNo}"
+                        placeholder="Enter Account Number"
+                        submit=".onSearchCustomerClick"
+                        class="customerSearchFieldInput" />
+                    </VBox>
+
+                    <VBox width="19%" class="customerSearchFieldGroup">
+                      <Label text="Customer Deal Number:" labelFor="inpDealNumber" class="customerSearchFieldLabel" />
+                      <Input
+                        id="inpDealNumber"
+                        value="{wizardModel>/searchCriteria/dealNumber}"
+                        placeholder="Enter Deal Number"
+                        submit=".onSearchCustomerClick"
+                        class="customerSearchFieldInput" />
+                    </VBox>
+
+                    <VBox width="19%" class="customerSearchFieldGroup">
+                      <Label text="PlusMore Number:" labelFor="inpPlusMoreNumber" class="customerSearchFieldLabel" />
+                      <Input
+                        id="inpPlusMoreNumber"
+                        value="{wizardModel>/searchCriteria/plusMoreNumber}"
+                        placeholder="Enter PlusMore Number"
+                        submit=".onSearchCustomerClick"
+                        class="customerSearchFieldInput" />
+                    </VBox>
+                  </HBox>
+
+                  <!-- Row 2: Name and Lastname, Contact Number, Email Address, Spacer, Search/Clear buttons -->
+                  <HBox justifyContent="SpaceBetween" alignItems="End" width="100%" class="sapUiSmallMarginTop">
+                    <VBox width="19%" class="customerSearchFieldGroup">
+                      <Label text="Name and Lastname:" labelFor="wizardSearchName" class="customerSearchFieldLabel" />
+                      <Input
+                        id="wizardSearchName"
+                        value="{wizardModel>/searchCriteria/customerName}"
+                        placeholder="Enter Name"
+                        submit=".onSearchCustomerClick"
+                        class="customerSearchFieldInput" />
+                    </VBox>
+
+                    <VBox width="19%" class="customerSearchFieldGroup">
+                      <Label text="Contact Number:" labelFor="wizardSearchMobile" class="customerSearchFieldLabel" />
+                      <Input
+                        id="wizardSearchMobile"
+                        value="{wizardModel>/searchCriteria/mobile}"
+                        placeholder="Enter Contact Number"
+                        submit=".onSearchCustomerClick"
+                        class="customerSearchFieldInput" />
+                    </VBox>
+
+                    <VBox width="19%" class="customerSearchFieldGroup">
+                      <Label text="Email Address:" labelFor="wizardSearchEmail" class="customerSearchFieldLabel" />
+                      <Input
+                        id="wizardSearchEmail"
+                        value="{wizardModel>/searchCriteria/email}"
+                        placeholder="Enter Email"
+                        type="Email"
+                        submit=".onSearchCustomerClick"
+                        class="customerSearchFieldInput" />
+                    </VBox>
+
+                    <VBox width="19%" class="customerSearchFieldGroup">
+                      <!-- Spacer column matching grid width -->
+                    </VBox>
+
+                    <HBox width="19%" justifyContent="End" alignItems="End" class="customerSearchActionGroup">
+                      <Button
+                        id="btnSearchCustomer"
+                        text="Search Customer"
+                        type="Emphasized"
+                        icon="sap-icon://search"
+                        press=".onSearchCustomerClick"
+                        class="sapUiTinyMarginEnd" />
+                      <Button
+                        id="btnClearSearch"
+                        text="Clear"
+                        icon="sap-icon://clear-filter"
+                        type="Default"
+                        press=".onClearSearchCriteria"
+                         />
+                    </HBox>
+                  </HBox>
+
+                 
+                </VBox>
+              </content>
+            </Panel>
+
+            <!-- Basic Details Form (Matching Screenshots 1 & 2) - only displayed when creating new customer -->
+            <Panel
+              id="basicDetailsPanel"
+              expandable="false"
+              expanded="true"
+              visible="{wizardModel>/isCreatingNewCustomer}"
+              class="fioriStandardBorderPanel sapUiSmallMarginBottom">
+              <headerToolbar>
+                <Toolbar style="Clear">
+                  <Title text="1. Basic Details" titleStyle="H5" class="basicDetailsTitleText" />
+                  <ToolbarSpacer />
+                  <Button
+                    text="Cancel"
+                    type="Transparent"
+                    icon="sap-icon://cancel"
+                    visible="{wizardModel>/isCreatingNewCustomer}"
+                    press=".onCancelNewCustomer" />
+                </Toolbar>
+              </headerToolbar>
+              <content>
+                <VBox class="sapUiSmallMargin">
+                  <!-- Entity Type Radio Buttons -->
+                  <HBox alignItems="Center" class="sapUiSmallMarginBottom">
+                    <Label text="Entity Type:" class="entityTypeLabel sapUiMediumMarginEnd" />
+                    <RadioButton
+                      groupName="entityTypeRadioGroup"
+                      text="Individual"
+                      selected="{= ${appState>/customer/type} === 'Individual'}"
+                      select=".onSelectEntityTypeIndividual"
+                      class="sapUiMediumMarginEnd entityRadioBtn" />
+                    <RadioButton
+                      groupName="entityTypeRadioGroup"
+                      text="Company"
+                      selected="{= ${appState>/customer/type} === 'Company'}"
+                      select=".onSelectEntityTypeCompany"
+                      class="entityRadioBtn" />
+                  </HBox>
+
+                  <!-- Layout for Individual (Screenshot 2) -->
+                  <l:Grid
+                    visible="{= ${appState>/customer/type} === 'Individual'}"
+                    defaultSpan="XL6 L6 M12 S12"
+                    class="sapUiSmallMarginTop">
+                    <!-- Left Column: Personal Details -->
+                    <VBox class="basicDetailsColumn sapUiMediumMarginEnd">
+                      <Title text="Personal Details" titleStyle="H6" class="basicDetailsSectionTitle sapUiSmallMarginBottom" />
+
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                        <Label text="Title:" required="true" class="basicDetailsLabel" />
+                        <Select selectedKey="{appState>/customer/title}" width="100%" class="basicDetailsSelect">
+                          <core:Item key="Mr." text="Mr." />
+                          <core:Item key="Mrs." text="Mrs." />
+                          <core:Item key="Ms." text="Ms." />
+                          <core:Item key="Dr." text="Dr." />
+                        </Select>
+                      </VBox>
+
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                        <Label text="First Name:" required="true" class="basicDetailsLabel" />
+                        <Input
+                          value="{appState>/customer/firstName}"
+                          placeholder="Enter First Name"
+                          liveChange=".onUpdateCustomerName"
+                          class="basicDetailsInput" />
+                      </VBox>
+
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                        <Label text="Surname:" required="true" class="basicDetailsLabel" />
+                        <Input
+                          value="{appState>/customer/lastName}"
+                          placeholder="Enter Surname"
+                          liveChange=".onUpdateCustomerName"
+                          class="basicDetailsInput" />
+                      </VBox>
+
+                      <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
+                        <VBox width="48%">
+                          <Label text="Date of Birth:" required="true" class="basicDetailsLabel" />
+                          <DatePicker
+                            value="{appState>/customer/dateOfBirth}"
+                            placeholder="Enter Date of Birth"
+                            width="100%"
+                            class="basicDetailsDatePicker" />
+                        </VBox>
+                        <VBox width="48%">
+                          <Label text="Gender:" required="true" class="basicDetailsLabel" />
+                          <Select selectedKey="{appState>/customer/gender}" width="100%" class="basicDetailsSelect">
+                            <core:Item key="Male" text="Male" />
+                            <core:Item key="Female" text="Female" />
+                            <core:Item key="Other" text="Other" />
+                          </Select>
+                        </VBox>
+                      </HBox>
+                    </VBox>
+
+                    <!-- Right Column: Identification & Contact Information -->
+                    <VBox class="basicDetailsColumn">
+                      <Title text="Identification &amp; Contact Information" titleStyle="H6" class="basicDetailsSectionTitle sapUiSmallMarginBottom" />
+
+                      <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
+                        <VBox width="48%">
+                          <Label text="ID Type:" required="true" class="basicDetailsLabel" />
+                          <Select selectedKey="{appState>/customer/idType}" width="100%" class="basicDetailsSelect">
+                            <core:Item key="SA ID Number" text="SA ID Number" />
+                            <core:Item key="Passport" text="Passport" />
+                            <core:Item key="Foreign ID" text="Foreign ID" />
+                          </Select>
+                        </VBox>
+                        <VBox width="48%">
+                          <Label text="ID Number:" required="true" class="basicDetailsLabel" />
+                          <Input
+                            value="{appState>/customer/idPassport}"
+                            placeholder="Enter ID Number"
+                            class="basicDetailsInput" />
+                        </VBox>
+                      </HBox>
+
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                        <Label text="Mobile Number:" required="true" class="basicDetailsLabel" />
+                        <Input
+                          value="{appState>/customer/telephone}"
+                          placeholder="Enter Mobile Number"
+                          class="basicDetailsInput" />
+                      </VBox>
+
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                        <Label text="Email Address:" required="true" class="basicDetailsLabel" />
+                        <Input
+                          value="{appState>/customer/email}"
+                          placeholder="Enter Email Address"
+                          type="Email"
+                          class="basicDetailsInput" />
+                      </VBox>
+                    </VBox>
+                  </l:Grid>
+
+                  <!-- Layout for Company (Screenshot 1) -->
+                  <l:Grid
+                    visible="{= ${appState>/customer/type} === 'Company'}"
+                    defaultSpan="XL6 L6 M12 S12"
+                    class="sapUiSmallMarginTop">
+                    <!-- Left Column: Company Information -->
+                    <VBox class="basicDetailsColumn sapUiMediumMarginEnd">
+                      <Title text="Company Information" titleStyle="H6" class="basicDetailsSectionTitle sapUiSmallMarginBottom" />
+
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                        <Label text="Company Registered Name:" required="true" class="basicDetailsLabel" />
+                        <Input
+                          value="{appState>/customer/companyName}"
+                          placeholder="Enter Company Registered Name"
+                          liveChange=".onUpdateCustomerName"
+                          class="basicDetailsInput" />
+                      </VBox>
+
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                        <Label text="Company Registration Number:" required="true" class="basicDetailsLabel" />
+                        <Input
+                          value="{appState>/customer/regNo}"
+                          placeholder="Enter Company Registration Number"
+                          class="basicDetailsInput" />
+                      </VBox>
+
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                        <Label text="VAT Number:" class="basicDetailsLabel" />
+                        <Input
+                          value="{appState>/customer/vatNo}"
+                          placeholder="Enter VAT Number"
+                          class="basicDetailsInput" />
+                      </VBox>
+
+                      <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
+                        <VBox width="48%">
+                          <Label text="Date of Birth:" required="true" class="basicDetailsLabel" />
+                          <DatePicker
+                            value="{appState>/customer/dateOfBirth}"
+                            placeholder="Enter Date of Birth"
+                            width="100%"
+                            class="basicDetailsDatePicker" />
+                        </VBox>
+                        <VBox width="48%">
+                          <Label text="Gender:" required="true" class="basicDetailsLabel" />
+                          <Select selectedKey="{appState>/customer/gender}" width="100%" class="basicDetailsSelect">
+                            <core:Item key="Male" text="Male" />
+                            <core:Item key="Female" text="Female" />
+                            <core:Item key="Other" text="Other" />
+                          </Select>
+                        </VBox>
+                      </HBox>
+
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                        <Label text="Mobile Number:" required="true" class="basicDetailsLabel" />
+                        <Input
+                          value="{appState>/customer/telephone}"
+                          placeholder="Enter Mobile Number"
+                          class="basicDetailsInput" />
+                      </VBox>
+                    </VBox>
+
+                    <!-- Right Column: Authorised Representative -->
+                    <VBox class="basicDetailsColumn">
+                      <Title text="Authorised Representative" titleStyle="H6" class="basicDetailsSectionTitle sapUiSmallMarginBottom" />
+
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                        <Label text="Title:" required="true" class="basicDetailsLabel" />
+                        <Select selectedKey="{appState>/customer/authRepTitle}" width="100%" class="basicDetailsSelect">
+                          <core:Item key="Mr." text="Mr." />
+                          <core:Item key="Mrs." text="Mrs." />
+                          <core:Item key="Ms." text="Ms." />
+                          <core:Item key="Dr." text="Dr." />
+                        </Select>
+                      </VBox>
+
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                        <Label text="First Name:" required="true" class="basicDetailsLabel" />
+                        <Input
+                          value="{appState>/customer/authRepFirstName}"
+                          placeholder="Enter First Name"
+                          liveChange=".onUpdateCustomerName"
+                          class="basicDetailsInput" />
+                      </VBox>
+
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                        <Label text="Surname:" required="true" class="basicDetailsLabel" />
+                        <Input
+                          value="{appState>/customer/authRepSurname}"
+                          placeholder="Enter Surname"
+                          liveChange=".onUpdateCustomerName"
+                          class="basicDetailsInput" />
+                      </VBox>
+
+                      <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
+                        <VBox width="48%">
+                          <Label text="ID Type:" required="true" class="basicDetailsLabel" />
+                          <Select selectedKey="{appState>/customer/idType}" width="100%" class="basicDetailsSelect">
+                            <core:Item key="SA ID Number" text="SA ID Number" />
+                            <core:Item key="Passport" text="Passport" />
+                            <core:Item key="Foreign ID" text="Foreign ID" />
+                          </Select>
+                        </VBox>
+                        <VBox width="48%">
+                          <Label text="ID Number:" required="true" class="basicDetailsLabel" />
+                          <Input
+                            value="{appState>/customer/idPassport}"
+                            placeholder="Enter ID Number"
+                            class="basicDetailsInput" />
+                        </VBox>
+                      </HBox>
+
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                        <Label text="Email Address:" required="true" class="basicDetailsLabel" />
+                        <Input
+                          value="{appState>/customer/email}"
+                          placeholder="Enter Email Address"
+                          type="Email"
+                          class="basicDetailsInput" />
+                      </VBox>
+                    </VBox>
+                  </l:Grid>
+
+                  <!-- Address Validation & Selection Section -->
+                  <VBox class="sapUiMediumMarginTop">
+                    <!-- Before Address Selection / Validation -->
+                    <VBox visible="{= !${wizardModel>/addressValidated} }">
+                      <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                        <core:Icon src="sap-icon://map" color="#0070f2" class="sapUiTinyMarginEnd" />
+                        <Label text="Customer Address:" required="true" class="basicDetailsLabel boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" alignItems="Center" class="addressDisplayBox">
+                        <Text text="Please validate or select customer address to proceed with customer creation." class="customerSearchFieldLabel" />
+                        <Button
+                          id="btnWizardValidateSelectAddress"
+                          text="{i18n>validateSelectAddressBtn}"
+                          icon="sap-icon://map-2"
+                          type="Emphasized"
+                          press=".onOpenAddressPluginModal" />
+                      </HBox>
+                    </VBox>
+
+                    <!-- After Address Selection / Validation: Display validated address and CREATE CUSTOMER BUTTON -->
+                    <VBox visible="{wizardModel>/addressValidated}">
+                      <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                        <core:Icon src="sap-icon://addresses" color="#0070f2" class="sapUiTinyMarginEnd" />
+                        <Label text="Validated Address:" class="basicDetailsLabel boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" alignItems="Center" class="addressDisplayBox">
+                        <VBox>
+                          <Text text="{appState>/customer/address/formatted}" class="addressDisplayFormatted" />
+                          <HBox alignItems="Center" class="sapUiTinyMarginTop">
+                            <ObjectStatus
+                              text="{appState>/customer/address/status}"
+                              state="{appState>/customer/address/statusState}"
+                              class="statusChip sapUiSmallMarginEnd" />
+                            <Text text="{appState>/customer/address/type}" class="addressDisplayMeta" />
+                          </HBox>
+                        </VBox>
+                        <Button
+                          text="Change Address"
+                          icon="sap-icon://edit"
+                          type="Transparent"
+                          press=".onOpenAddressPluginModal" />
+                      </HBox>
+
+                      <!-- Create Customer Button: Only visible after address selection/validation -->
+                      <HBox justifyContent="End" alignItems="Center" class="sapUiMediumMarginTop">
+                        <Button
+                          id="btnConfirmCreateCustomer"
+                          text="Create Customer"
+                          icon="sap-icon://add-employee"
+                          type="Emphasized"
+                          press=".onExecuteCreateCustomer"
+                          class="sapUiSmallMarginBottom" />
+                      </HBox>
+                    </VBox>
+                  </VBox>
+                </VBox>
+              </content>
+            </Panel>
+          </VBox>
+        </WizardStep>
+
+        <!-- ============================================== -->
+        <!-- STEP 2: MARKETING INFORMATION (Screen 7)       -->
+        <!-- ============================================== -->
+        <WizardStep
+          id="stepConsent"
+          title="{i18n>step2Marketing}"
+          icon="sap-icon://accept"
+          validated="{= !!${appState>/marketing/marketToYou} }">
+          <VBox class="sapUiMediumMarginTopBottom sapUiSmallMarginBeginEnd" width="100%">
+            <!-- Row 1: May we or any of our associated companies market to you? -->
+            <HBox justifyContent="SpaceBetween" alignItems="Center" class="marketingRow">
+              <Label
+                text="May we or any of our associated companies market to you?"
+                labelFor="selMarketToYou"
+                class="marketingQuestionLabel" />
+              <Select
+                id="selMarketToYou"
+                width="240px"
+                selectedKey="{appState>/marketing/marketToYou}"
+                change=".onMarketToYouChange"
+                class="marketingSelect">
+                <core:Item key="" text="" />
+                <core:Item key="Yes" text="Yes" />
+                <core:Item key="No" text="No" />
+              </Select>
+            </HBox>
+
+            <!-- Row 2: Marketing Language -->
+            <HBox justifyContent="SpaceBetween" alignItems="Center" class="marketingRow">
+              <Label
+                text="Marketing Language"
+                labelFor="selMarketingLanguage"
+                class="marketingQuestionLabel" />
+              <Select
+                id="selMarketingLanguage"
+                width="240px"
+                selectedKey="{appState>/marketing/marketingLanguage}"
+                class="marketingSelect">
+                <core:Item key="English" text="English" />
+                <core:Item key="Afrikaans" text="Afrikaans" />
+                <core:Item key="isiZulu" text="isiZulu" />
+                <core:Item key="isiXhosa" text="isiXhosa" />
+                <core:Item key="German" text="German" />
+              </Select>
+            </HBox>
+
+            <!-- Row 3: Marketing Correspondence Method -->
+            <HBox justifyContent="SpaceBetween" alignItems="Center" class="marketingRow">
+              <Label
+                text="Marketing Correspondence Method"
+                labelFor="selMarketingMethod"
+                class="marketingQuestionLabel" />
+              <Select
+                id="selMarketingMethod"
+                width="240px"
+                selectedKey="{appState>/marketing/marketingCorrespondenceMethod}"
+                visible="{= ${appState>/marketing/marketToYou} === 'Yes' }"
+                class="marketingSelect">
+                <core:Item key="" text="" />
+                <core:Item key="Email" text="Email" />
+                <core:Item key="SMS" text="SMS" />
+                <core:Item key="Telephone" text="Telephone" />
+                <core:Item key="Post" text="Post" />
+              </Select>
+            </HBox>
+
+            <!-- Row 4: Statement Correspondence Method -->
+            <HBox justifyContent="SpaceBetween" alignItems="Center" class="marketingRow">
+              <Label
+                text="Statement Correspondence Method"
+                labelFor="selStatementMethod"
+                class="marketingQuestionLabel" />
+              <Select
+                id="selStatementMethod"
+                width="240px"
+                selectedKey="{appState>/marketing/statementCorrespondenceMethod}"
+               
+                class="marketingSelect">
+                <core:Item key="" text="" />
+                <core:Item key="Email" text="Email" />
+                <core:Item key="SMS" text="SMS" />
+                <core:Item key="Post" text="Post" />
+              </Select>
+            </HBox>
+
+            <!-- Row 5: For future marketing may we do a credit bureau check on you? -->
+            <HBox justifyContent="SpaceBetween" alignItems="Center" class="marketingRow">
+              <Label
+                text="For future marketing may we do a credit bureau check on you?"
+                labelFor="selCreditBureauCheck"
+                class="marketingQuestionLabel" />
+              <Select
+                id="selCreditBureauCheck"
+                width="240px"
+                selectedKey="{appState>/marketing/creditBureauCheck}"
+                class="marketingSelect">
+                <core:Item key="" text="" />
+                <core:Item key="Yes" text="Yes" />
+                <core:Item key="No" text="No" />
+              </Select>
+            </HBox>
+          </VBox>
+        </WizardStep>
+
+        <!-- ============================================== -->
+        <!-- STEP 3: ORDER TYPE (Screen 8)                  -->
+        <!-- ============================================== -->
+        <WizardStep
+          id="stepOrderType"
+          title="{i18n>step3OrderType}"
+          icon="sap-icon://form"
+          validated="true">
+          <VBox class="sapUiMediumMarginTopBottom sapUiSmallMarginBeginEnd" width="100%">
+            <HBox alignItems="Center" class="marketingRow">
+              <Label text="Order Type" labelFor="selOrderTypeDropdown" class="marketingQuestionLabel sapUiMediumMarginEnd" width="160px" />
+              <Select
+                id="selOrderTypeDropdown"
+                width="280px"
+                selectedKey="{appState>/orderHeader/orderType}"
+                change=".onOrderTypeChange"
+                class="customerSearchInput">
+                <core:Item key="ZOR" text="ZOR - Standard Store Order" />
+                <core:Item key="ZDL" text="ZDL - Delivery Order" />
+                <core:Item key="ZSP" text="ZSP - Special / Supply Order" />
+              </Select>
+            </HBox>
+          </VBox>
+        </WizardStep>
+
+        <!-- ============================================== -->
+        <!-- STEP 4: CART (Screens 9, 10, 11)               -->
+        <!-- ============================================== -->
+        <WizardStep
+          id="stepProducts"
+          title="{i18n>step4Cart}"
+          icon="sap-icon://cart"
+          validated="{= ${appState>/cart}.length > 0 }">
+          <VBox class="sapUiSmallMargin">
+            <!-- Cart Table (Screen 10) -->
+            <Panel
+              headerText="{i18n>cartTitle}"
+              expandable="false"
+              expanded="true"
+              class="fioriStandardBorderPanel sapUiSmallMarginBottom">
+              <headerToolbar>
+                <Toolbar>
+                  <Title
+                    text="{= 'Cart Items (' + ${appState>/cart}.length + ')' }"
+                    titleStyle="H5"
+                    class="sapUiSmallMarginEnd" />
+                  <ToolbarSpacer />
+                  <Button
+                    id="btnAddArticle"
+                    text="Add Article"
+                    icon="sap-icon://add"
+                    type="Emphasized"
+                    press=".onOpenAddArticleDialog" />
+                </Toolbar>
+              </headerToolbar>
+              <content>
+                <ScrollContainer
+                  horizontal="true"
+                  vertical="false"
+                  width="100%">
+                  <Table
+                    id="cartTable"
+                    items="{appState>/cart}"
+                    noDataText="No articles added yet. Click 'Add Article' to select products from the popup.">
+                    <columns>
+                      <Column width="65px" hAlign="Center">
+                        <Text text="Item" />
+                      </Column>
+                      <Column width="110px">
+                        <Text text="Article" />
+                      </Column>
+                      <Column width="100px" hAlign="Center">
+                        <Text text="Target Qty" />
+                      </Column>
+                      <Column width="65px" hAlign="Center">
+                        <Text text="UM" />
+                      </Column>
+                      <Column width="220px">
+                        <Text text="Description" />
+                      </Column>
+                      <Column width="110px">
+                        <Text text="Product No." />
+                      </Column>
+                      <Column width="110px">
+                        <Text text="" />
+                      </Column>
+                      <Column width="115px" hAlign="End">
+                        <Text text="Price/Unit" />
+                      </Column>
+                      <Column width="115px" hAlign="End">
+                        <Text text="Item Price" />
+                      </Column>
+                      <Column width="125px" hAlign="Center">
+                        <Text text="Sales Person ID" />
+                      </Column>
+                      <Column width="80px" hAlign="Center">
+                        <Text text="Site" />
+                      </Column>
+                      <Column width="115px" hAlign="Center">
+                        <Text text="Item Category" />
+                      </Column>
+                      <Column width="150px">
+                        <Text text="Extended Guarantee Product" />
+                      </Column>
+                      <Column width="180px">
+                        <Text text="Rej. Reason" />
+                      </Column>
+                      <Column width="65px" hAlign="Center">
+                        <Text text="Action" />
+                      </Column>
+                    </columns>
+                    <items>
+                      <ColumnListItem class="{= ${appState>isSubItem} ? 'subItemRow' : 'mainItemRow' }">
+                        <cells>
+                          <Text text="{appState>item}" />
+                          <Text text="{appState>articleId}" />
+                          <HBox alignItems="Center" justifyContent="Center">
+                            <Button
+                              icon="sap-icon://less"
+                              type="Transparent"
+                              press=".onDecreaseQty"
+                              enabled="{= ${appState>qty} > 1 }" />
+                            <Text text="{appState>qty}" class="sapUiTinyMarginBeginEnd" />
+                            <Button
+                              icon="sap-icon://add"
+                              type="Transparent"
+                              press=".onIncreaseQty" />
+                          </HBox>
+                          <Text text="{= ${appState>um} || 'EA' }" />
+                          <Text text="{= ${appState>description} || ${appState>name} }" class="productTableTitle" />
+                          <Text text="{= ${appState>productNo} || 'PRD-' + ${appState>articleId} }" />
+                          <Link
+                            text="value-add"
+                            press=".onOpenValueAddPopup"
+                            visible="{= !${appState>isSubItem} &amp;&amp; !${appState>isValueAdd} }" />
+                          <Text text="{path: 'appState>netPrice', formatter: '.formatter.formatPriceOnly'}" />
+                          <Link
+                            text="{path: 'appState>netValue', formatter: '.formatter.formatPriceOnly'}"
+                            press=".onOpenPriceOverrideDialog"
+                            class="priceTextBold itemPriceLink"
+                            tooltip="Click to override price" />
+                          <Text text="{= ${appState>salesPersonId} || 'SP-1042' }" />
+                          <Text text="{= ${appState>site} || 'S101' }" />
+                          <Text text="{appState>itemCat}" />
+                          <Text text="{= ${appState>extendedGuarantee} || (${appState>isSubItem} ? 'ZEGP-24' : '-') }" />
+                          <Select
+                            selectedKey="{appState>rejReason}"
+                            width="100%"
+                            change=".onRejectionReasonChange">
+                            <core:Item key="-" text="- None -" />
+                            <core:Item key="01" text="01 - Out of Stock" />
+                            <core:Item key="02" text="02 - Customer Cancellation" />
+                            <core:Item key="03" text="03 - Price Dispute" />
+                            <core:Item key="04" text="04 - Damaged Goods" />
+                            <core:Item key="05" text="05 - Late Delivery" />
+                            <core:Item key="06" text="06 - Alternative Item" />
+                          </Select>
+                          <Button
+                            icon="sap-icon://delete"
+                            type="Transparent"
+                            tooltip="Delete Line Item"
+                            press=".onRemoveCartItem" />
+                        </cells>
+                      </ColumnListItem>
+                    </items>
+                  </Table>
+                </ScrollContainer>
+                <HBox
+                  class="valueAddedNoteBox sapUiSmallMargin"
+                  alignItems="Center">
+                  <core:Icon src="sap-icon://information" class="sapUiTinyMarginEnd" color="#d15a00" />
+                  <Text text="{i18n>valueAddedNote}" class="valueAddedNoteText" />
+                </HBox>
+              </content>
+            </Panel>
+
+          </VBox>
+        </WizardStep>
+
+        <!-- ============================================== -->
+        <!-- STEP 5: REVIEW SHIPPING (23 Fields)            -->
+        <!-- ============================================== -->
+        <WizardStep
+          id="stepDelivery"
+          title="{i18n>step5ReviewShipping}"
+          icon="sap-icon://shipping-status"
+          validated="true">
+          <VBox class="sapUiSmallMargin">
+            <!-- Review Shipping Master Panel -->
+            <Panel headerText="Review Shipping" class="fioriStandardBorderPanel sapUiSmallMarginBottom">
+              <content>
+                <!-- Header Configuration Row (Review Shipping Fields) -->
+                <l:Grid defaultSpan="XL4 L4 M6 S12" class="sapUiSmallMargin">
+                  <VBox class="sapUiTinyMarginBottom">
+                    <Label text="Payee" required="true" class="sapUiTinyMarginBottom textMutedBold" />
+                    <Select selectedKey="{appState>/delivery/payee}" change=".onPayeeSelectChange" width="100%">
+                      <core:Item key="1000234571" text="1000234571 - Thabo Mokoena" />
+                      <core:Item key="1000234588" text="1000234588 - Corporate Account" />
+                      <core:Item key="1000234599" text="1000234599 - Branch Store 1042" />
+                    </Select>
+                  </VBox>
+
+                  <VBox class="sapUiTinyMarginBottom">
+                    <Label text="Application ID / PO Number" required="true" class="sapUiTinyMarginBottom textMutedBold" />
+                    <Input value="{appState>/delivery/poNumber}" placeholder="Enter PO Number (e.g. PO-2026-99482)" width="100%" />
+                  </VBox>
+
+                  <VBox class="sapUiTinyMarginBottom">
+                    <Label text="Delivery Type" required="true" class="sapUiTinyMarginBottom textMutedBold" />
+                    <Select selectedKey="{appState>/delivery/deliveryType}" width="100%">
+                      <core:Item key="Pick" text="Pick (In-Store Collection)" />
+                      <core:Item key="Delivery" text="Delivery to Customer" />
+                      <core:Item key="Express" text="Express Courier Delivery" />
+                      <core:Item key="Warehouse" text="Warehouse Pickup" />
+                    </Select>
+                  </VBox>
+
+                  <VBox class="sapUiTinyMarginBottom">
+                    <Label text="Requested Delivery Date" required="true" class="sapUiTinyMarginBottom textMutedBold" />
+                    <DatePicker
+                      value="{appState>/delivery/requestedDeliveryDate}"
+                      placeholder="Select delivery date (e.g. Sep 28, 2026)"
+                      change=".onRequestedDeliveryDateChange"
+                      width="100%" />
+                  </VBox>
+
+                  <VBox class="sapUiTinyMarginBottom">
+                    <Label text="Shipping" class="sapUiTinyMarginBottom textMutedBold" />
+                    <Select selectedKey="{appState>/delivery/shipping}" change=".onShippingMethodChange" width="100%">
+                      <core:Item key="Standard Delivery" text="Standard Delivery" />
+                      <core:Item key="Express Next-Day" text="Express Next-Day" />
+                      <core:Item key="Priority Overnight" text="Priority Overnight" />
+                      <core:Item key="Economy Road Freight" text="Economy Road Freight" />
+                    </Select>
+                  </VBox>
+
+                  <VBox class="sapUiTinyMarginBottom">
+                    <Label text="Carrier" class="sapUiTinyMarginBottom textMutedBold" />
+                    <Select selectedKey="{appState>/delivery/carrier}" change=".onCarrierChange" width="100%">
+                      <core:Item key="DHL Express" text="DHL Express" />
+                      <core:Item key="FedEx" text="FedEx" />
+                      <core:Item key="The Courier Guy" text="The Courier Guy" />
+                      <core:Item key="RAM Hand-to-Hand" text="RAM Hand-to-Hand" />
+                      <core:Item key="In-house Fleet" text="In-house Fleet" />
+                    </Select>
+                  </VBox>
+
+                  <VBox class="sapUiTinyMarginBottom">
+                    <Label text="Incoterms" class="sapUiTinyMarginBottom textMutedBold" />
+                    <Select selectedKey="{appState>/delivery/incoterms}" change=".onIncotermsChange" width="100%">
+                      <core:Item key="FOB - Free on Board" text="FOB - Free on Board" />
+                      <core:Item key="CIF - Cost, Insurance and Freight" text="CIF - Cost, Insurance and Freight" />
+                      <core:Item key="DDP - Delivered Duty Paid" text="DDP - Delivered Duty Paid" />
+                      <core:Item key="EXW - Ex Works" text="EXW - Ex Works" />
+                    </Select>
+                  </VBox>
+
+                  <VBox class="sapUiTinyMarginBottom">
+                    <Label text="Single Shipment" class="sapUiTinyMarginBottom textMutedBold" />
+                    <HBox alignItems="Center">
+                      <Switch
+                        state="{appState>/delivery/singleShipment}"
+                        customTextOn="Yes"
+                        customTextOff="No"
+                        change=".onSingleShipmentChange"
+                        class="sapUiSmallMarginEnd" />
+                      <Text text="{= ${appState>/delivery/singleShipment} ? 'Yes (Deliver in one shipment)' : 'No (Partial allowed)' }" class="sapUiThemeColor-dim" />
+                    </HBox>
+                  </VBox>
+
+                  <VBox class="sapUiTinyMarginBottom">
+                    <Label text="Delivery Address same as Billing" class="sapUiTinyMarginBottom textMutedBold" />
+                    <HBox alignItems="Center">
+                      <Switch
+                        state="{appState>/delivery/sameAsBilling}"
+                        customTextOn="Yes"
+                        customTextOff="No"
+                        change=".onToggleSameAsBilling"
+                        class="sapUiSmallMarginEnd" />
+                      <Text text="{= ${appState>/delivery/sameAsBilling} ? 'Yes (Billing address reused)' : 'No (Separate address)' }" class="sapUiThemeColor-dim" />
+                    </HBox>
+                  </VBox>
+                </l:Grid>
+
+                <!-- Dual Column Layout for Ship To & Bill To -->
+                <l:Grid defaultSpan="XL6 L6 M12 S12" class="sapUiSmallMarginTop">
+                  <!-- Ship to Section (Fields 5 to 13) -->
+                  <Panel headerText="Ship to Details" class="fioriStandardBorderPanel">
+                    <content>
+                      <VBox class="sapUiSmallMargin">
+                        <VBox class="sapUiSmallMarginBottom">
+                          <Label text="Ship to" required="true" class="textMutedBold" />
+                          <Select selectedKey="{appState>/delivery/shipTo}" change=".onShipToSelectChange" width="100%">
+                            <core:Item key="1000234571" text="1000234571 - Thabo Mokoena (Primary Store)" />
+                            <core:Item key="1000234588" text="1000234588 - Sandton Business Hub" />
+                            <core:Item key="1000234599" text="1000234599 - Rosebank Depot" />
+                          </Select>
+                        </VBox>
+
+                        <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                          <Text text="Address" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/shipToAddress/street}" class="summaryHeaderValue" />
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                          <Text text="City" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/shipToAddress/city}" class="summaryHeaderValue" />
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                          <Text text="State" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/shipToAddress/state}" class="summaryHeaderValue" />
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                          <Text text="Postal Code" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/shipToAddress/postalCode}" class="summaryHeaderValue" />
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                          <Text text="Country" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/shipToAddress/country}" class="summaryHeaderValue" />
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                          <Text text="Phone Number" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/shipToAddress/phone}" class="summaryHeaderValue" />
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                          <Text text="Carrier" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/carrier}" class="summaryHeaderValue" />
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                          <Text text="Shipping" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/shipping}" class="summaryHeaderValue" />
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" class="priceRow">
+                          <Text text="Incoterms" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/incoterms}" class="summaryHeaderValue" />
+                        </HBox>
+                      </VBox>
+                    </content>
+                  </Panel>
+
+                  <!-- Bill to Section (Fields 14 to 20) -->
+                  <Panel headerText="Bill to Details" class="fioriStandardBorderPanel">
+                    <content>
+                      <VBox class="sapUiSmallMargin">
+                        <VBox class="sapUiSmallMarginBottom">
+                          <Label text="Bill to" required="{= !${appState>/delivery/sameAsBilling} }" class="textMutedBold" />
+                          <Select
+                            selectedKey="{appState>/delivery/billTo}"
+                            change=".onBillToSelectChange"
+                            width="100%"
+                            enabled="{= !${appState>/delivery/sameAsBilling} }">
+                            <core:Item key="1000234571" text="1000234571 - Thabo Mokoena" />
+                            <core:Item key="1000234588" text="1000234588 - Corporate Billing Account" />
+                            <core:Item key="1000234599" text="1000234599 - Finance Office" />
+                          </Select>
+                          <Text
+                            text="Synchronized with delivery address (same as billing)"
+                            class="sapUiTinyMarginTop sapUiThemeColor-dim"
+                            visible="{appState>/delivery/sameAsBilling}" />
+                        </VBox>
+
+                        <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                          <Text text="Address" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/billToAddress/street}" class="summaryHeaderValue" />
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                          <Text text="City" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/billToAddress/city}" class="summaryHeaderValue" />
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                          <Text text="State" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/billToAddress/state}" class="summaryHeaderValue" />
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                          <Text text="Postal Code" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/billToAddress/postalCode}" class="summaryHeaderValue" />
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                          <Text text="Country" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/billToAddress/country}" class="summaryHeaderValue" />
+                        </HBox>
+                        <HBox justifyContent="SpaceBetween" class="priceRow">
+                          <Text text="Phone Number" class="priceRowLabel" />
+                          <Text text="{appState>/delivery/billToAddress/phone}" class="summaryHeaderValue" />
+                        </HBox>
+                      </VBox>
+                    </content>
+                  </Panel>
+                </l:Grid>
+
+                <!-- Instructions, Notes & Attachment (Fields 21 to 23) -->
+                <Panel headerText="Shipping Instructions &amp; Attachments" class="fioriStandardBorderPanel sapUiSmallMarginTop">
+                  <content>
+                    <f:SimpleForm
+                      editable="true"
+                      layout="ResponsiveGridLayout"
+                      labelSpanXL="2"
+                      labelSpanL="2"
+                      labelSpanM="3"
+                      labelSpanS="12"
+                      adjustLabelSpan="false"
+                      emptySpanXL="0"
+                      emptySpanL="0"
+                      emptySpanM="0"
+                      emptySpanS="0"
+                      columnsXL="1"
+                      columnsL="1"
+                      columnsM="1"
+                      singleContainerFullSize="false"
+                      class="sapUiSmallMarginBeginEnd sapUiTinyMarginTop">
+                      <f:content>
+                        <Label text="Shipping Instructions" />
+                        <TextArea
+                          id="shipInstructions"
+                          value="{appState>/delivery/shippingInstructions}"
+                          placeholder="Enter shipping instructions..."
+                          rows="2"
+                          maxLength="132" />
+
+                        <Label text="Notes to Receiver" />
+                        <TextArea
+                          id="receiverNotes"
+                          value="{appState>/delivery/notesToReceiver}"
+                          placeholder="Enter notes to receiver..."
+                          rows="2"
+                          maxLength="132" />
+
+                        <Label text="{i18n>ATTACHMENT}" />
+                        <u:FileUploader
+                          id="deliveryFileUploader"
+                          name="attachmentUploader"
+                          width="100%"
+                          placeholder="Choose file to attach (saved with SO upon placing order)..."
+                          buttonText="Browse..."
+                          icon="sap-icon://attachment"
+                          maximumFileSize="2"
+                          fileSizeExceed=".onFileSizeExceed"
+                          change=".onFileSelected"
+                          sameFilenameAllowed="false" />
+                      </f:content>
+                    </f:SimpleForm>
+
+                    <!-- Attachments List (displayed after attachment control and before marketing information) -->
+                    <Panel id="attachmentsPanel" expandable="false" class="attachmentsReviewPanel sapUiSmallMarginBeginEnd sapUiTinyMarginTop">
+                      <headerToolbar>
+                        <OverflowToolbar class="attachmentsOverflowToolbar">
+                          <Title text="{i18n>ATTACHMENTS_LIST_TITLE} ({=${appState>/delivery/attachments}.length || 0})" level="H5" />
+                          <ToolbarSpacer />
+                          <Text text="Attachments will be saved to UploadSet with the generated SO number" class="attachmentsUploadSetHint sapUiSmallMarginEnd" />
+                        </OverflowToolbar>
+                      </headerToolbar>
+                      <content>
+                        <List
+                          id="attachmentsList"
+                          items="{appState>/delivery/attachments}"
+                          noDataText="{i18n>NO_ATTACHMENTS_ADDED}"
+                          showSeparators="All">
+                          <CustomListItem>
+                            <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiSmallMargin">
+                              <HBox alignItems="Center">
+                                <core:Icon
+                                  src="{=${appState>isPdf} ? 'sap-icon://pdf-attachment' : 'sap-icon://document'}" 
+                                  color="{=${appState>isPdf} ? '#b00' : '#0854a0'}" 
+                                  size="1.4rem" 
+                                  class="sapUiSmallMarginEnd sapUiTinyMarginTop" />
+                                <VBox>
+                                  <Link
+                                    text="{= ${appState>Descr} || ${appState>fileName} || ${appState>name} || ${appState>AttaId}}"
+                                    press=".onAttachmentPress"
+                                    design="Emphasized"
+                                    wrapping="true"
+                                    class="attachmentFileLink" />
+                                  <HBox alignItems="Center" class="sapUiTinyMarginTop">
+                                    <Text
+                                      text="{= 'ID: ' + (${appState>AttaId} || ${appState>id} || ${appState>fileName} || ${appState>name})}"
+                                      class="sapUiTinyMarginEnd attachmentItemMetaText"
+                                      visible="{= !!(${appState>AttaId} || ${appState>id} || ${appState>fileName} || ${appState>name})}" />
+                                    <Text
+                                      text="{= '• ' + (${appState>fileSize} || ${appState>size} || 'Document')}"
+                                      class="sapUiTinyMarginEnd attachmentItemMetaText" />
+                                    <Text
+                                      text="{= '• ' + (${appState>uploadDate} || '')}"
+                                      class="attachmentItemMetaText"
+                                      visible="{= !!${appState>uploadDate}}" />
+                                  </HBox>
+                                </VBox>
+                              </HBox>
+                              <HBox alignItems="Center">
+                                <Button
+                                  icon="sap-icon://download"
+                                  type="Transparent"
+                                  press=".onAttachmentPress"
+                                  tooltip="View or Download File"
+                                  class="sapUiTinyMarginEnd" />
+                                <Button
+                                  icon="sap-icon://delete"
+                                  type="Transparent"
+                                  press=".onDeleteAttachment"
+                                  tooltip="{i18n>DELETE_ATTACHMENT}" />
+                              </HBox>
+                            </HBox>
+                          </CustomListItem>
+                        </List>
+                      </content>
+                    </Panel>
+                  </content>
+                </Panel>
+              </content>
+            </Panel>
+          </VBox>
+        </WizardStep>
+
+        <!-- ============================================== -->
+        <!-- STEP 6: REVIEW (Screen 15)                     -->
+        <!-- ============================================== -->
+        <WizardStep
+          id="stepReview"
+          title="{i18n>step6Review}"
+          icon="sap-icon://survey"
+          validated="true">
+          <VBox class="sapUiSmallMargin">
+            <l:Grid defaultSpan="XL4 L4 M12 S12" class="sapUiSmallMarginBottom">
+              <!-- 1. Shipping Details (Fields 1-8, 16, 17) -->
+              <Panel headerText="Shipping Details" class="fioriStandardBorderPanel">
+                <content>
+                  <VBox class="sapUiSmallMargin">
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Ship To" class="priceRowLabel" />
+                      <Text text="{= ${appState>/delivery/shipToName} || ${appState>/review/shippingDetails/shipTo} || '1000234571 - Thabo Mokoena' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Payee" class="priceRowLabel" />
+                      <Text text="{= ${appState>/delivery/payeeText} || ${appState>/review/shippingDetails/payee} || '1000234571 - Thabo Mokoena' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Phone Number" class="priceRowLabel" />
+                      <Text text="{= ${appState>/delivery/shipToAddress/phone} || ${appState>/review/shippingDetails/phoneNumber} || '+27 82 555 0192' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Requested Delivery Date" class="priceRowLabel" />
+                      <Text text="{= ${appState>/delivery/requestedDeliveryDate} || ${appState>/review/shippingDetails/requestedDeliveryDate} || 'Sep 28, 2026' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Single Shipment" class="priceRowLabel" />
+                      <Text text="{= ${appState>/delivery/singleShipment} ? 'Yes' : 'No' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Carrier" class="priceRowLabel" />
+                      <Text text="{= ${appState>/delivery/carrier} || ${appState>/review/shippingDetails/carrier} || 'DHL Express' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Shipping" class="priceRowLabel" />
+                      <Text text="{= ${appState>/delivery/shipping} || ${appState>/review/shippingDetails/shipping} || 'Standard Delivery' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
+                      <Label text="Shipment Priority" required="true" class="priceRowLabel" labelFor="selReviewShipmentPriority" />
+                      <Select
+                        id="selReviewShipmentPriority"
+                        width="180px"
+                        selectedKey="{appState>/orderFinal/shipmentPriority}"
+                        change=".onReviewShipmentPriorityChange">
+                        <core:Item key="" text="Select Priority" />
+                        <core:Item key="01" text="{i18n>priorityImmediate}" />
+                        <core:Item key="02" text="{i18n>priorityHigh}" />
+                        <core:Item key="03" text="{i18n>priorityStandard}" />
+                        <core:Item key="04" text="{i18n>priorityLow}" />
+                      </Select>
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Incoterms" class="priceRowLabel" />
+                      <Text text="{= ${appState>/delivery/incoterms} || ${appState>/review/shippingDetails/incoterms} || 'FOB - Free on Board' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Shipping Instructions" class="priceRowLabel" />
+                      <Text text="{= ${appState>/delivery/shippingInstructions} || ${appState>/review/shippingDetails/shippingInstructions} || 'Deliver to front reception' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow">
+                      <Text text="Notes to Receiver" class="priceRowLabel" />
+                      <Text text="{= ${appState>/delivery/notesToReceiver} || ${appState>/review/shippingDetails/notesToReceiver} || 'Call customer upon arrival' }" class="summaryHeaderValue" />
+                    </HBox>
+                  </VBox>
+                </content>
+              </Panel>
+
+              <!-- 2. Billing Details (Fields 9-15) -->
+              <Panel headerText="Billing Details" class="fioriStandardBorderPanel">
+                <content>
+                  <VBox class="sapUiSmallMargin">
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Bill to" class="priceRowLabel" />
+                      <Text text="{= ${appState>/review/billingDetails/billTo} || '1000234571 - Thabo Mokoena' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Address" class="priceRowLabel" />
+                      <Text text="{= ${appState>/review/billingDetails/address} || '12 Rivonia Road' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="City" class="priceRowLabel" />
+                      <Text text="{= ${appState>/review/billingDetails/city} || 'Sandton' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="State" class="priceRowLabel" />
+                      <Text text="{= ${appState>/review/billingDetails/state} || 'Gauteng' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Postal Code" class="priceRowLabel" />
+                      <Text text="{= ${appState>/review/billingDetails/postalCode} || '2196' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Country" class="priceRowLabel" />
+                      <Text text="{= ${appState>/review/billingDetails/country} || 'South Africa' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow">
+                      <Text text="Phone Number" class="priceRowLabel" />
+                      <Text text="{= ${appState>/review/billingDetails/phoneNumber} || '+27 82 555 0192' }" class="summaryHeaderValue" />
+                    </HBox>
+                  </VBox>
+                </content>
+              </Panel>
+
+              <!-- 3. Order Details (Fields 18-23) -->
+              <Panel headerText="Order Details" class="fioriStandardBorderPanel">
+                <content>
+                  <VBox class="sapUiSmallMargin">
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Sold To" class="priceRowLabel" />
+                      <Text text="{= ${appState>/review/orderDetails/soldTo} || '1000234571 - Thabo Mokoena' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Application ID / Purchase Order" class="priceRowLabel" />
+                      <Text text="{= ${appState>/review/orderDetails/applicationId} || 'PO-2026-99482' }" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Total" class="priceRowLabel" />
+                      <Text text="{path: 'appState>/pricing/netValue', formatter: '.formatter.formatCurrency'}" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Tax" class="priceRowLabel" />
+                      <Text text="{path: 'appState>/pricing/vat', formatter: '.formatter.formatCurrency'}" class="summaryHeaderValue" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Grand Total" class="priceRowLabel" />
+                      <Text text="{path: 'appState>/pricing/total', formatter: '.formatter.formatCurrency'}" class="priceRowValueBold" />
+                    </HBox>
+                    <HBox justifyContent="SpaceBetween" class="priceRow">
+                      <Text text="Sales Order Type" class="priceRowLabel" />
+                      <Text text="{= ${appState>/review/orderDetails/salesOrderType} || 'ZOR - Standard Store Order' }" class="summaryHeaderValue" />
+                    </HBox>
+                  </VBox>
+                </content>
+              </Panel>
+            </l:Grid>
+
+            <!-- 4. Order Item Details - All Item (Field 24) -->
+            <Panel headerText="Order Item Details - All Item ({= ${appState>/cart}.length })" class="fioriStandardBorderPanel sapUiMediumMarginTop">
+              <content>
+                <Table
+                  id="wizardReviewItemsTable"
+                  items="{appState>/cart}"
+                  class="sapUiSmallMargin">
+                  <columns>
+                    <Column width="65px" hAlign="Center">
+                      <Text text="Item" />
+                    </Column>
+                    <Column width="110px">
+                      <Text text="Article" />
+                    </Column>
+                    <Column width="250px">
+                      <Text text="Description" />
+                    </Column>
+                    <Column width="80px" hAlign="Center">
+                      <Text text="Qty" />
+                    </Column>
+                    <Column width="65px" hAlign="Center">
+                      <Text text="UM" />
+                    </Column>
+                    <Column width="120px" hAlign="End">
+                      <Text text="Price/Unit" />
+                    </Column>
+                    <Column width="130px" hAlign="End">
+                      <Text text="Item Price" />
+                    </Column>
+                  </columns>
+                  <items>
+                    <ColumnListItem class="{= ${appState>isSubItem} ? 'subItemRow' : 'mainItemRow' }">
+                      <cells>
+                        <Text text="{appState>item}" />
+                        <Text text="{appState>articleId}" />
+                        <VBox>
+                          <Text text="{= ${appState>description} || ${appState>name} }" class="productTableTitle" />
+                          <Text text="{= ${appState>subText} ? ${appState>subText} : '' }" class="productTableArticleId" visible="{= !!${appState>subText} }" />
+                        </VBox>
+                        <Text text="{appState>qty}" />
+                        <Text text="{= ${appState>um} || 'EA' }" />
+                        <Text text="{path: 'appState>netPrice', formatter: '.formatter.formatCurrency'}" />
+                        <Text text="{path: 'appState>netValue', formatter: '.formatter.formatCurrency'}" class="priceTextBold" />
+                      </cells>
+                    </ColumnListItem>
+                  </items>
+                </Table>
+              </content>
+            </Panel>
+
+            <HBox justifyContent="End" class="sapUiMediumMarginTop">
+              <Button
+                id="btnWizardCreateOrder"
+                text="{i18n>createSalesOrderBtn}"
+                type="Emphasized"
+                icon="sap-icon://accept"
+                press=".onCreateSalesOrder" />
+            </HBox>
+          </VBox>
+        </WizardStep>
+      </Wizard>
+
+      <!-- ============================================== -->
+      <!-- ============================================== -->
+      <!-- FINAL ORDER CONFIRMATION                       -->
+      <!-- ============================================== -->
+      <VBox
+        id="finalOrderContainer"
+        visible="{wizardModel>/orderCreated}"
+        class="sapUiResponsiveMargin">
+        <VBox class="sapUiMediumMarginTop sapUiSmallMarginBottom" alignItems="Center">
+          <ObjectStatus
+            icon="sap-icon://sys-enter-2"
+            state="Success"
+            text="Sales Order {appState>/orderFinal/salesOrderNo} created successfully. SD customer address updated for ship-to {appState>/orderFinal/shipToBp}."
+            class="successOrderBanner" />
+        </VBox>
+
+        <!-- Order Summary Card -->
+        <Panel
+          headerText="Sales Order Confirmation"
+          expandable="false"
+          expanded="true"
+          class="fioriStandardBorderPanel sapUiSmallMarginTop">
+          <content>
+            <HBox justifyContent="SpaceAround" alignItems="Center" wrap="Wrap" class="sapUiMediumMargin">
+              <VBox class="sapUiSmallMargin">
+                <Text text="Sales Order Number" class="sapUiThemeColor-dim" />
+                <Title text="{appState>/orderFinal/salesOrderNo}" titleStyle="H4" />
+              </VBox>
+              <VBox class="sapUiSmallMargin">
+                <Text text="Shipment Priority" class="sapUiThemeColor-dim" />
+                <ObjectStatus text="{appState>/orderFinal/shipmentPriorityText}" state="Success" class="statusChip" />
+              </VBox>
+              <VBox class="sapUiSmallMargin">
+                <Text text="Customer Sold-To" class="sapUiThemeColor-dim" />
+                <Title text="{appState>/orderHeader/soldToParty}" titleStyle="H6" />
+              </VBox>
+              <VBox class="sapUiSmallMargin">
+                <Text text="Total Amount" class="sapUiThemeColor-dim" />
+                <Title text="{path: 'appState>/pricing/total', formatter: '.formatter.formatCurrency'}" titleStyle="H4" />
+              </VBox>
+            </HBox>
+          </content>
+        </Panel>
+
+        <!-- Created Items Review Table -->
+        <Panel
+          headerText="Order Items ({= ${appState>/cart}.length })"
+          expandable="false"
+          expanded="true"
+          class="fioriStandardBorderPanel sapUiMediumMarginTop">
+          <content>
+            <Table items="{appState>/cart}" class="sapUiSmallMargin">
+              <columns>
+                <Column width="100px">
+                  <Text text="{i18n>colItemNo}" />
+                </Column>
+                <Column width="50%">
+                  <Text text="{i18n>colArticle}" />
+                </Column>
+                <Column width="20%" hAlign="Center">
+                  <Text text="{i18n>colQty}" />
+                </Column>
+                <Column width="20%" hAlign="End">
+                  <Text text="Price" />
+                </Column>
+              </columns>
+              <items>
+                <ColumnListItem>
+                  <cells>
+                    <Text text="{appState>item}" />
+                    <Text text="{= ${appState>description} || ${appState>name} }" class="mainItemTitle" />
+                    <Text text="{appState>qty}" />
+                    <Text text="{path: 'appState>netValue', formatter: '.formatter.formatCurrency'}" class="priceTextBold" />
+                  </cells>
+                </ColumnListItem>
+              </items>
+            </Table>
+          </content>
+        </Panel>
+
+        <HBox justifyContent="End" class="sapUiMediumMarginTop">
+          <Button
+            text="{i18n>createNewOrderBtn}"
+            icon="sap-icon://add"
+            type="Emphasized"
+            press=".onCreateNewOrderReset" />
+        </HBox>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

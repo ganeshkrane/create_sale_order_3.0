@@ -1,0 +1,23 @@
+[
+  {
+    "code": "ZOR",
+    "name": "Standard Store Order",
+    "description": "Take-away / collect today",
+    "itemCategory": "TAN",
+    "defaultSelected": true
+  },
+  {
+    "code": "ZDL",
+    "name": "Delivery Order",
+    "description": "Deliver to customer address",
+    "itemCategory": "TAN",
+    "defaultSelected": false
+  },
+  {
+    "code": "ZSP",
+    "name": "Special / Supply Order",
+    "description": "Warehouse Supply directly to site",
+    "itemCategory": "TAB",
+    "defaultSelected": false
+  }
+]

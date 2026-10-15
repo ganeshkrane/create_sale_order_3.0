@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Sales Order – Store</title>
+  <meta name="description" content="SAP Fiori application for creating sales orders in store, featuring customer search, marketing consent, order type configuration, cart management, pricing conditions, delivery setup, and final order review." />
+  <meta property="og:title" content="Create Sales Order – Store" />
+  <meta property="og:description" content="SAP Fiori application for creating sales orders in store, featuring customer search, marketing consent, order type configuration, cart management, pricing conditions, delivery setup, and final order review." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+  </style>
+  <script
+    id="sap-ui-bootstrap"
+    src="https://sdk.openui5.org/resources/sap-ui-core.js"
+    data-sap-ui-theme="sap_horizon"
+    data-sap-ui-resourceroots='{
+      "sap.ui.salesorder.store": "./webapp/"
+    }'
+    data-sap-ui-libs="sap.m,sap.ui.core,sap.ui.layout,sap.ui.unified"
+    data-sap-ui-compatVersion="edge">
+  </script>
+  <link rel="stylesheet" type="text/css" href="./webapp/css/style.css">
+</head>
+<body class="sapUiBody" id="content">
+  <script>
+    sap.ui.getCore().attachInit(function () {
+      sap.ui.require([
+        "sap/ui/core/ComponentContainer"
+      ], function (ComponentContainer) {
+        new ComponentContainer({
+          name: "sap.ui.salesorder.store",
+          settings: {
+            id: "salesorder"
+          },
+          async: true,
+          height: "100%"
+        }).placeAt("content");
+      });
+    });
+  </script>
+</body>
+</html>

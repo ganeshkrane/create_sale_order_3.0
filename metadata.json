@@ -1,0 +1,6 @@
+{
+  "name": "Create Sales Order – Store",
+  "description": "SAP Fiori application for creating sales orders in store, featuring customer search, marketing consent, order type configuration, cart management, pricing conditions, delivery setup, and final order review.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

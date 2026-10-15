@@ -1,0 +1,49 @@
+<core:FragmentDefinition
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core">
+  <Dialog
+    id="priceOverrideDialog"
+    title="Price Override"
+    icon="sap-icon://sys-help"
+    contentWidth="400px"
+    resizable="false"
+    draggable="true">
+    <content>
+      <VBox class="sapUiMediumMargin">
+        <VBox class="sapUiSmallMarginBottom">
+          <Label text="Manager Authorization" class="boldText sapUiTinyMarginBottom" labelFor="inpManagerAuth" />
+          <Input
+            id="inpManagerAuth"
+            value="{priceOverrideModel>/managerAuth}"
+            placeholder="Employee Number"
+            width="100%"
+            class="priceOverrideInput" />
+        </VBox>
+
+        <VBox class="sapUiSmallMarginBottom">
+          <Label text="New Sales Price" class="boldText sapUiTinyMarginBottom" labelFor="inpNewSalesPrice" />
+          <Input
+            id="inpNewSalesPrice"
+            value="{priceOverrideModel>/newPrice}"
+            placeholder="Price"
+            type="Number"
+            width="100%"
+            submit=".onConfirmPriceOverride"
+            class="priceOverrideInput" />
+        </VBox>
+      </VBox>
+    </content>
+    <buttons>
+      <Button
+        id="btnPriceOverrideYes"
+        text="Yes"
+        type="Emphasized"
+        press=".onConfirmPriceOverride" />
+      <Button
+        id="btnPriceOverrideCancel"
+        text="Cancel"
+        type="Transparent"
+        press=".onCancelPriceOverride" />
+    </buttons>
+  </Dialog>
+</core:FragmentDefinition>

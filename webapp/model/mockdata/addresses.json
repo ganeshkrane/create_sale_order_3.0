@@ -1,0 +1,41 @@
+[
+  {
+    "id": "addr-1",
+    "street": "12 Rivonia Road",
+    "city": "Sandton",
+    "postalCode": "2196",
+    "region": "Gauteng",
+    "country": "South Africa",
+    "formatted": "12 Rivonia Road, Sandton, 2196, Gauteng",
+    "status": "EXISTING",
+    "statusState": "Success",
+    "note": "Verified · Last used 14 Sep 2026",
+    "isDefault": true
+  },
+  {
+    "id": "addr-2",
+    "street": "45 Jan Smuts Avenue",
+    "city": "Rosebank",
+    "postalCode": "2196",
+    "region": "Gauteng",
+    "country": "South Africa",
+    "formatted": "45 Jan Smuts Avenue, Rosebank, 2196, Gauteng",
+    "status": "MODIFIED",
+    "statusState": "Warning",
+    "note": "Last delivered 02 Aug 2026 · Unit number added",
+    "isDefault": false
+  },
+  {
+    "id": "addr-3",
+    "street": "7 Oxford Road",
+    "city": "Parktown",
+    "postalCode": "2193",
+    "region": "Gauteng",
+    "country": "South Africa",
+    "formatted": "7 Oxford Road, Parktown, 2193, Gauteng",
+    "status": "VERIFIED",
+    "statusState": "Information",
+    "note": "Verified address via Amperity postal registry",
+    "isDefault": false
+  }
+]

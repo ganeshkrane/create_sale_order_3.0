@@ -1,0 +1,117 @@
+<mvc:View
+  controllerName="sap.ui.salesorder.store.controller.CustomerCreate"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.ui.layout.form">
+  <Page
+    id="customerCreatePage"
+    title="{i18n>customerNotFoundTitle}"
+    showNavButton="true"
+    navButtonPress=".onNavBack">
+    <headerContent>
+    </headerContent>
+    <content>
+      <!-- Guided Step Header -->
+      <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.StepIndicator" type="XML" />
+
+      <VBox class="sapUiResponsiveMargin">
+        <Breadcrumbs>
+          <Link text="{i18n>shellHome}" press=".onNavHome" />
+          <Link text="{i18n>customerSearchTitle}" press=".onNavToSearch" />
+          <Text text="{i18n>customerNotFoundTitle}" />
+        </Breadcrumbs>
+        <Title text="{i18n>customerSearchTitle}" titleStyle="H3" class="sapUiTinyMarginTop" />
+        <Text text="{i18n>customerSearchStepIndicator}" class="sapUiThemeColor-dim" />
+
+        <!-- Missing Input Panel  -->
+        <Panel
+          expandable="false"
+          expanded="true"
+          class="sapUiMediumMarginTop">
+          <headerToolbar>
+            <Toolbar>
+              <Title text="{i18n>customerNotFoundTitle}" titleStyle="H5" />
+              <ToolbarSpacer />
+            </Toolbar>
+          </headerToolbar>
+          <content>
+
+            <VBox class="sapUiSmallMargin">
+              <Label text="{i18n>customerTypeLabel}" required="true" class="sapUiTinyMarginBottom" />
+              <RadioButtonGroup
+                id="rbgCustomerType"
+                columns="2"
+                selectedIndex="0"
+                select=".onCustomerTypeChange"
+                class="customerTypeRadioGroup">
+                <buttons>
+                  <RadioButton text="{i18n>typeIndividual}" tooltip="{i18n>typeIndividualSub}" />
+                  <RadioButton text="{i18n>typeCompany}" tooltip="{i18n>typeCompanySub}" />
+                </buttons>
+              </RadioButtonGroup>
+              <HBox class="sapUiTinyMarginTop" justifyContent="Start">
+                <Text text="({= ${customerCreateModel>/selectedTypeIndex} === 0 ? ${i18n>typeIndividualSub} : ${i18n>typeCompanySub} })" class="sapUiThemeColor-dim sapUiSmallMarginBegin" />
+              </HBox>
+            </VBox>
+
+            <!-- Search Criteria Used (Read-only) -->
+            <Panel
+              headerText="{i18n>searchCriteriaUsedTitle}"
+              expandable="false"
+              expanded="true"
+              class="fioriInnerBorderPanel sapUiMediumMarginTop">
+              <content>
+                <f:SimpleForm
+                  editable="false"
+                  layout="ResponsiveGridLayout"
+                  labelSpanXL="3"
+                  labelSpanL="3"
+                  labelSpanM="3"
+                  labelSpanS="12"
+                  emptySpanXL="2"
+                  emptySpanL="2"
+                  emptySpanM="2"
+                  emptySpanS="0"
+                  columnsXL="1"
+                  columnsL="1"
+                  columnsM="1">
+                  <f:content>
+                    <Label text="{i18n>customerNameLabel}" />
+                    <Input value="{appState>/searchCriteriaUsed/customerName}" editable="false" />
+
+                    <Label text="{i18n>mobileLabel}" />
+                    <Input value="{appState>/searchCriteriaUsed/mobile}" editable="false" />
+
+                    <Label text="{i18n>emailLabel}" />
+                    <Input value="{appState>/searchCriteriaUsed/email}" editable="false" />
+                  </f:content>
+                </f:SimpleForm>
+              </content>
+            </Panel>
+          </content>
+        </Panel>
+
+        <!-- Backend Info Strip -->
+        <HBox class="backendInfoStrip sapUiMediumMarginTop" alignItems="Center">
+          <core:Icon src="sap-icon://database" class="sapUiTinyMarginEnd" color="#107e3e" />
+          <Text text="BACKEND: BP create (shell customer) via CRM Create/Update Customer API." />
+        </HBox>
+      </VBox>
+    </content>
+    <footer>
+      <OverflowToolbar>
+        <ToolbarSpacer />
+        <Button
+          id="btnContinueCreate"
+          text="{i18n>continueBtn}"
+          type="Emphasized"
+          press=".onContinueWithShellCustomer" />
+        <Button
+          id="btnBackToSearch"
+          text="{i18n>backToSearchBtn}"
+          press=".onNavToSearch" />
+      </OverflowToolbar>
+    </footer>
+  </Page>
+</mvc:View>

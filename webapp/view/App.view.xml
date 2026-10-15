@@ -1,0 +1,9 @@
+<mvc:View
+  controllerName="sap.ui.salesorder.store.controller.App"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  displayBlock="true">
+  <Shell id="shell" appWidthLimited="false">
+    <App id="appNavContainer" />
+  </Shell>
+</mvc:View>

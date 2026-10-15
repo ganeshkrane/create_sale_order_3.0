@@ -1,0 +1,73 @@
+<core:FragmentDefinition
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core">
+  <Dialog
+    id="customerSearchResultsDialog"
+    title="{i18n>searchResultsDialogTitle}"
+    contentWidth="760px"
+    contentHeight="420px"
+    resizable="true"
+    draggable="true">
+    <subHeader>
+      <Toolbar>
+        <SearchField
+          value="{appState>/searchFilterValue}"
+          placeholder="Enter Customer Name"
+          liveChange=".onLiveSearchDialog"
+          width="40%" />
+        <ToolbarSpacer />
+        <Text text="{i18n>searchResultsSource}" class="serviceSourceInfoText" />
+      </Toolbar>
+    </subHeader>
+    <content>
+      <Table
+        id="customerResultsTable"
+        items="{customers>/}"
+        mode="SingleSelectMaster"
+        selectionChange=".onSelectCustomerRow"
+        class="sapUiResponsiveMargin">
+        <columns>
+          <Column width="130px">
+            <Text text="{i18n>colBpNumber}" />
+          </Column>
+          <Column>
+            <Text text="{i18n>colName}" />
+          </Column>
+          <Column minScreenWidth="Tablet" demandPopin="true">
+            <Text text="{i18n>colTelephone}" />
+          </Column>
+          <Column minScreenWidth="Tablet" demandPopin="true">
+            <Text text="{i18n>colEmail}" />
+          </Column>
+          <Column width="110px">
+            <Text text="{i18n>colType}" />
+          </Column>
+        </columns>
+        <items>
+          <ColumnListItem>
+            <cells>
+              <ObjectIdentifier title="{customers>bpNumber}" />
+              <Text text="{customers>name}" />
+              <Text text="{customers>telephone}" />
+              <Text text="{customers>email}" />
+              <ObjectStatus text="{customers>type}" state="{= ${customers>type} === 'Company' ? 'Information' : 'None'}" />
+            </cells>
+          </ColumnListItem>
+        </items>
+      </Table>
+    </content>
+    <buttons>
+      <Button
+        text="{i18n>selectCustomerBtn}"
+        type="Emphasized"
+        press=".onConfirmCustomerSelection" />
+      <Button
+        text="{i18n>customerNotFoundBtn}"
+        type="Default"
+        press=".onCustomerNotFound" />
+      <Button
+        text="{i18n>cancelBtn}"
+        press=".onCloseSearchResultsDialog" />
+    </buttons>
+  </Dialog>
+</core:FragmentDefinition>

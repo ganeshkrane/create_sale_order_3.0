@@ -1,0 +1,142 @@
+<mvc:View
+  controllerName="sap.ui.salesorder.store.controller.OrderFinal"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.ui.layout.form">
+  <Page
+    id="orderFinalPage"
+    title="{i18n>reviewSalesOrderTitle}"
+    showNavButton="false">
+    <headerContent>
+    </headerContent>
+    <content>
+      <!-- Guided Step Header -->
+      <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.StepIndicator" type="XML" />
+
+      <VBox class="sapUiResponsiveMargin">
+        <Breadcrumbs>
+          <Link text="{i18n>shellHome}" press=".onNavHome" />
+          <Text text="{i18n>reviewSalesOrderTitle}" />
+        </Breadcrumbs>
+        <Title text="{i18n>reviewSalesOrderTitle}" titleStyle="H3" class="sapUiTinyMarginTop" />
+        <Text text="{i18n>reviewSalesOrderStepIndicator}" class="sapUiThemeColor-dim" />
+
+        <!-- Success Banner matching Screen 16 item 1 -->
+
+        <!-- Shipment Priority Panel  -->
+        <Panel
+          expandable="false"
+          expanded="true"
+          class="sapUiSmallMarginTop">
+          <headerToolbar>
+            <Toolbar>
+              <Title text="{i18n>shipmentPriorityPanelTitle}" titleStyle="H5" />
+              <ToolbarSpacer />
+              <Text text="{i18n>serviceManageOrderText}" class="serviceSourceInfoText sapUiSmallMarginEnd" />
+            </Toolbar>
+          </headerToolbar>
+          <content>
+            <f:SimpleForm
+              editable="true"
+              layout="ResponsiveGridLayout"
+              labelSpanXL="3"
+              labelSpanL="3"
+              labelSpanM="4"
+              labelSpanS="12"
+              columnsXL="2"
+              columnsL="2"
+              columnsM="1">
+              <f:content>
+                <Label text="{i18n>salesOrderNoLabel}" />
+                <Input value="{appState>/orderFinal/salesOrderNo}" editable="false" />
+
+                <Label text="{i18n>shipmentPriorityLabel}" required="true" />
+                <Select id="selectShipmentPriority" selectedKey="{appState>/orderFinal/shipmentPriority}">
+                  <core:Item key="01" text="{i18n>priorityImmediate}" />
+                  <core:Item key="02" text="{i18n>priorityHigh}" />
+                  <core:Item key="03" text="{i18n>priorityStandard}" />
+                  <core:Item key="04" text="{i18n>priorityLow}" />
+                </Select>
+
+                <core:Title text="Additional Logistics Notes" />
+                <Label text="{i18n>remarksLabel}" />
+                <TextArea
+                  rows="2"
+                  value="{appState>/orderFinal/remarks}"
+                  placeholder="Enter remarks for store dispatch..." />
+              </f:content>
+            </f:SimpleForm>
+          </content>
+        </Panel>
+
+        <!-- Standard F0018 Created Items Review Table -->
+        <Panel
+          expandable="false"
+          expanded="true"
+          class="fioriStandardBorderPanel sapUiMediumMarginTop">
+          <headerToolbar>
+            <Toolbar>
+              <Title text="Sales Order {appState>/orderFinal/salesOrderNo}" titleStyle="H5" />
+              <ToolbarSpacer />
+              <Text text="{i18n>launchpadBadgeStandard}" class="tileBadgeStandard" />
+            </Toolbar>
+          </headerToolbar>
+          <content>
+            <Table
+              id="finalOrderItemsTable"
+              items="{appState>/delivery/oaa}"
+              class="sapUiSmallMargin">
+              <columns>
+                <Column width="100px">
+                  <Text text="{i18n>colItemNo}" />
+                </Column>
+                <Column width="50%">
+                  <Text text="{i18n>colArticle}" />
+                </Column>
+                <Column width="20%" hAlign="Center">
+                  <Text text="{i18n>colQty}" />
+                </Column>
+                <Column width="20%" hAlign="End">
+                  <Text text="{i18n>colConfirmedDate}" />
+                </Column>
+              </columns>
+              <items>
+                <ColumnListItem>
+                  <cells>
+                    <Text text="{= ${appState>article}.indexOf('Oslo') !== -1 ? '10' : '20' }" />
+                    <Text text="{appState>article}" class="mainItemTitle" />
+                    <Text text="{appState>confirmed}" />
+                    <Text text="{appState>earliestDate}" class="earliestDateText" />
+                  </cells>
+                </ColumnListItem>
+              </items>
+            </Table>
+          </content>
+        </Panel>
+
+        <!-- Backend Info Strip -->
+        <HBox class="backendInfoStrip sapUiMediumMarginTop" alignItems="Center">
+          <core:Icon src="sap-icon://database" class="sapUiTinyMarginEnd" color="#107e3e" />
+          <Text text="BACKEND: Manage Sales Order Update Shipment Priority." />
+        </HBox>
+      </VBox>
+    </content>
+    <footer>
+      <OverflowToolbar>
+        <ToolbarSpacer />
+        <Button
+          id="btnSavePriority"
+          text="{i18n>savePriorityBtn}"
+          type="Emphasized"
+          icon="sap-icon://save"
+          press=".onSaveShipmentPriority" />
+        <Button
+          id="btnCreateNewOrder"
+          text="{i18n>createNewOrderBtn}"
+          icon="sap-icon://add"
+          press=".onCreateNewOrder" />
+      </OverflowToolbar>
+    </footer>
+  </Page>
+</mvc:View>

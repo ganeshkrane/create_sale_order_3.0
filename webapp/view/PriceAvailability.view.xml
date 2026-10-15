@@ -1,0 +1,127 @@
+<mvc:View
+  controllerName="sap.ui.salesorder.store.controller.PriceAvailability"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:l="sap.ui.layout">
+  <Page
+    id="priceAvailabilityPage"
+    title="{i18n>pricingAvailabilityTitle}"
+    showNavButton="true"
+    navButtonPress=".onNavBack">
+    <headerContent>
+    </headerContent>
+    <content>
+      <!-- Guided Step Header -->
+      <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.StepIndicator" type="XML" />
+
+      <VBox class="sapUiResponsiveMargin">
+        <Breadcrumbs>
+          <Link text="{i18n>shellHome}" press=".onNavHome" />
+          <Link text="{i18n>cartTitle}" press=".onNavToCart" />
+          <Text text="{i18n>pricingAvailabilityTitle}" />
+        </Breadcrumbs>
+        <Title text="{i18n>pricingAvailabilityTitle}" titleStyle="H3" class="sapUiTinyMarginTop" />
+        <Text text="{i18n>pricingAvailabilityStepIndicator}" class="sapUiThemeColor-dim" />
+
+        <!-- Customer Summary Card -->
+        <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.CustomerHeader" type="XML" />
+
+        <!-- Dual Panels Row -->
+        <l:Grid
+          defaultSpan="XL6 L6 M12 S12"
+          class="sapUiSmallMarginTop">
+          <!-- Pricing Summary Panel (Standard F0018) -->
+          <Panel
+            expandable="false"
+            expanded="true"
+            class="fioriStandardBorderPanel">
+            <headerToolbar>
+              <Toolbar>
+                <Title text="{i18n>pricingSummaryPanelTitle}" titleStyle="H5" />
+                <ToolbarSpacer />
+                <Text text="{i18n>launchpadBadgeStandard}" class="tileBadgeStandard" />
+              </Toolbar>
+            </headerToolbar>
+            <content>
+              <VBox class="pricingSummaryBox sapUiSmallMargin">
+                <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="{i18n>netValueOfItemsLabel}" class="priceRowLabel" />
+                  <Text text="{path: 'appState>/pricing/netValue', formatter: '.formatter.formatCurrency'}" class="priceRowValue" />
+                </HBox>
+
+                <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="{i18n>discountsLabel}" class="priceRowLabel discountLabel" />
+                  <Text text="- {path: 'appState>/pricing/discounts', formatter: '.formatter.formatCurrency'}" class="discountValue" />
+                </HBox>
+
+                <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
+                  <Text text="{i18n>vatLabel}" class="priceRowLabel" />
+                  <Text text="{path: 'appState>/pricing/vat', formatter: '.formatter.formatCurrency'}" class="priceRowValue" />
+                </HBox>
+
+                <HBox class="pricingDivider sapUiSmallMarginTopBottom" />
+
+                <HBox justifyContent="SpaceBetween" alignItems="Center" class="totalPriceRow sapUiSmallMarginTop">
+                  <Title text="{i18n>totalInclVatLabel}" titleStyle="H4" />
+                  <Title text="{path: 'appState>/pricing/total', formatter: '.formatter.formatCurrency'}" titleStyle="H3" class="totalAmountColor" />
+                </HBox>
+              </VBox>
+            </content>
+          </Panel>
+
+          <!-- Availability Panel  -->
+          <Panel
+            expandable="false"
+            expanded="true"
+            >
+            <headerToolbar>
+              <Toolbar>
+                <Title text="{i18n>availabilityPanelTitle}" titleStyle="H5" />
+                <ToolbarSpacer />
+              </Toolbar>
+            </headerToolbar>
+            <content>
+              <VBox class="availabilityListBox sapUiSmallMargin">
+                <HBox justifyContent="SpaceBetween" alignItems="Center" class="availItemRow sapUiSmallMarginBottom">
+                  <Text text="Oslo Dining Chair – Oak ×4" class="availItemName" />
+                  <ObjectStatus text="In store" state="Success" class="stockChipGreen" />
+                </HBox>
+
+                <HBox justifyContent="SpaceBetween" alignItems="Center" class="availItemRow sapUiSmallMarginBottom">
+                  <Text text="Nordic Dining Table ×1" class="availItemName" />
+                  <ObjectStatus text="Warehouse – 3 days" state="Information" class="stockChipBlue" />
+                </HBox>
+
+                <HBox justifyContent="SpaceBetween" alignItems="Center" class="availItemRow sapUiSmallMarginBottom">
+                  <Text text="EGP / Table Cover" class="availItemName" />
+                  <ObjectStatus text="N/A (service / in store)" state="None" />
+                </HBox>
+              </VBox>
+            </content>
+          </Panel>
+        </l:Grid>
+
+        <!-- Backend Info Strip -->
+        <HBox class="backendInfoStrip sapUiMediumMarginTop" alignItems="Center">
+          <core:Icon src="sap-icon://database" class="sapUiTinyMarginEnd" color="#107e3e" />
+          <Text text="BACKEND: Pricing simulation / standard availability." />
+        </HBox>
+      </VBox>
+    </content>
+    <footer>
+      <OverflowToolbar>
+        <ToolbarSpacer />
+        <Button
+          id="btnNextDelivery"
+          text="{i18n>nextDeliveryBtn}"
+          type="Emphasized"
+          press=".onNextToDelivery" />
+        <Button
+          id="btnBackToCart"
+          text="{i18n>backToCartBtn}"
+          press=".onNavToCart" />
+      </OverflowToolbar>
+    </footer>
+  </Page>
+</mvc:View>

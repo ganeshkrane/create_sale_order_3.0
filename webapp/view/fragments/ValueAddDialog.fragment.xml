@@ -1,0 +1,69 @@
+<core:FragmentDefinition
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core">
+  <Dialog
+    id="valueAddDialog"
+    title="Select Product"
+    contentWidth="680px"
+    contentHeight="460px"
+    horizontalScrolling="false"
+    resizable="true"
+    draggable="true">
+    <subHeader>
+      <Toolbar>
+        <SearchField
+          id="valueAddSearchField"
+          placeholder="Search"
+          width="100%"
+          liveChange=".onLiveSearchValueAdd" />
+      </Toolbar>
+    </subHeader>
+    <content>
+      <Table
+        id="valueAddTable"
+        items="{valueAddModel>/items}"
+        mode="MultiSelect"
+        includeItemInSelection="true"
+        fixedLayout="false"
+        width="100%"
+        class="sapUiSmallMarginTopBottom">
+        <columns>
+          <Column width="20%">
+            <Text text="Main Article" />
+          </Column>
+          <Column width="20%">
+            <Text text="Add-on Article" />
+          </Column>
+          <Column width="42%">
+            <Text text="Description" />
+          </Column>
+          <Column width="18%" hAlign="End">
+            <Text text="Price" />
+          </Column>
+        </columns>
+        <items>
+          <ColumnListItem>
+            <cells>
+              <Text text="{valueAddModel>mainArticle}" class="boldText" />
+              <Text text="{valueAddModel>addonArticle}" class="boldText" />
+              <Text text="{valueAddModel>description}" />
+              <Text text="{valueAddModel>price}" />
+            </cells>
+          </ColumnListItem>
+        </items>
+      </Table>
+    </content>
+    <buttons>
+      <Button
+        id="btnSelectValueAdd"
+        text="Select"
+        type="Emphasized"
+        press=".onConfirmValueAddSelection" />
+      <Button
+        id="btnCancelValueAdd"
+        text="Cancel"
+        type="Default"
+        press=".onCloseValueAddDialog" />
+    </buttons>
+  </Dialog>
+</core:FragmentDefinition>

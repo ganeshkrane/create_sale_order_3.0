@@ -1,0 +1,126 @@
+<mvc:View
+  controllerName="sap.ui.salesorder.store.controller.DeliveryAddress"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core">
+  <Page
+    id="deliveryAddressPage"
+    title="{i18n>deliveryAddressTitle}"
+    showNavButton="true"
+    navButtonPress=".onNavBack">
+    <headerContent>
+    </headerContent>
+    <content>
+      <!-- Guided Step Header -->
+      <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.StepIndicator" type="XML" />
+
+      <VBox class="sapUiResponsiveMargin">
+        <Breadcrumbs>
+          <Link text="{i18n>shellHome}" press=".onNavHome" />
+          <Link text="{i18n>deliveryMethodTitle}" press=".onNavToDeliveryMethod" />
+          <Text text="{i18n>deliveryAddressTitle}" />
+        </Breadcrumbs>
+        <Title text="{i18n>deliveryAddressTitle}" titleStyle="H3" class="sapUiTinyMarginTop" />
+        <Text
+          text="{= ${appState>/delivery/sameAsBilling} ? ${i18n>deliveryAddressSameStepIndicator} : ${i18n>deliveryAddressDiffStepIndicator} }"
+          class="sapUiThemeColor-dim" />
+
+        <!-- Customer Summary Card -->
+        <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.CustomerHeader" type="XML" />
+
+        <!-- Delivery Address Panel  -->
+        <Panel
+          expandable="false"
+          expanded="true"
+          class="sapUiSmallMarginTop">
+          <headerToolbar>
+            <Toolbar>
+              <Title text="{i18n>deliveryAddressPanelTitle}" titleStyle="H5" />
+              <ToolbarSpacer />
+            </Toolbar>
+          </headerToolbar>
+          <content>
+            <!-- Same as billing toggle switch -->
+            <HBox alignItems="Center" class="sapUiSmallMargin">
+              <Switch
+                id="switchSameAsBilling"
+                state="{appState>/delivery/sameAsBilling}"
+                change=".onToggleSameAsBilling"
+                class="sapUiSmallMarginEnd" />
+              <Label text="{i18n>sameAsBillingToggleLabel}" class="toggleTextLabel" />
+            </HBox>
+
+            <!-- Mode YES: Reused billing address (Screen 13) -->
+            <VBox visible="{appState>/delivery/sameAsBilling}">
+              <HBox
+                alignItems="Center"
+                justifyContent="SpaceBetween"
+                class="addressDisplayBox sapUiSmallMargin">
+                <HBox alignItems="Center">
+                  <RadioButton selected="true" groupName="addrSelectYes" />
+                  <VBox class="sapUiSmallMarginBegin">
+                    <Text text="{appState>/customer/address/formatted}" class="addressDisplayFormatted" />
+                    <Text text="{i18n>reusedFromSessionNote} · Status: {appState>/customer/address/status}" class="addressDisplayMeta" />
+                  </VBox>
+                </HBox>
+                <ObjectStatus
+                  text="{appState>/customer/address/status}"
+                  state="{path: 'appState>/customer/address/status', formatter: '.formatter.addressStatusState'}"
+                  class="statusChip" />
+              </HBox>
+            </VBox>
+
+            <!-- Mode NO: Different delivery address (Screen 14) -->
+            <VBox visible="{= !${appState>/delivery/sameAsBilling} }">
+              <HBox
+                alignItems="Center"
+                justifyContent="SpaceBetween"
+                class="addressDisplayBox sapUiSmallMargin">
+                <HBox alignItems="Center">
+                  <RadioButton selected="true" groupName="addrSelectNo" />
+                  <VBox class="sapUiSmallMarginBegin">
+                    <Text text="{appState>/delivery/differentAddress/formatted}" class="addressDisplayFormatted" />
+                    <Text text="Ship-to address · Status: {appState>/delivery/differentAddress/status}" class="addressDisplayMeta" />
+                  </VBox>
+                </HBox>
+                <HBox alignItems="Center">
+                  <ObjectStatus
+                    text="{appState>/delivery/differentAddress/status}"
+                    state="{path: 'appState>/delivery/differentAddress/status', formatter: '.formatter.addressStatusState'}"
+                    class="statusChip sapUiSmallMarginEnd" />
+                  <Button
+                    text="{i18n>changeAddressBtn}"
+                    icon="sap-icon://edit"
+                    type="Transparent"
+                    press=".onChangeDifferentAddress" />
+                </HBox>
+              </HBox>
+            </VBox>
+
+            <!-- Decision logic info banner matching mockups -->
+          </content>
+        </Panel>
+
+        <!-- Backend Info Strip -->
+        <HBox class="backendInfoStrip sapUiMediumMarginTop" alignItems="Center">
+          <core:Icon src="sap-icon://database" class="sapUiTinyMarginEnd" color="#107e3e" />
+          <Text text="BACKEND: Update SD Customer Address (OData) – only when New or Modified." />
+        </HBox>
+      </VBox>
+    </content>
+    <footer>
+      <OverflowToolbar>
+        <ToolbarSpacer />
+        <Button
+          id="btnNextReview"
+          text="{i18n>nextReviewBtn}"
+          type="Emphasized"
+          press=".onNextToReview" />
+        <Button
+          id="btnBackFromDeliveryAddress"
+          text="{i18n>backBtn}"
+          press=".onNavBack" />
+      </OverflowToolbar>
+    </footer>
+  </Page>
+</mvc:View>

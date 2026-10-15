@@ -1,0 +1,136 @@
+<mvc:View
+  controllerName="sap.ui.salesorder.store.controller.Products"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core">
+  <Page
+    id="productsPage"
+    title="{i18n>productsTitle}"
+    showNavButton="true"
+    navButtonPress=".onNavBack">
+    <headerContent>
+    </headerContent>
+    <content>
+      <!-- Guided Step Header -->
+      <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.StepIndicator" type="XML" />
+
+      <VBox class="sapUiResponsiveMargin">
+        <Breadcrumbs>
+          <Link text="{i18n>shellHome}" press=".onNavHome" />
+          <Link text="{i18n>orderTypeTitle}" press=".onNavToOrderType" />
+          <Text text="{i18n>productsTitle}" />
+        </Breadcrumbs>
+        <Title text="{i18n>productsTitle}" titleStyle="H3" class="sapUiTinyMarginTop" />
+        <Text text="{i18n>productsStepIndicator}" class="sapUiThemeColor-dim" />
+
+        <!-- Customer Summary Card -->
+        <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.CustomerHeader" type="XML" />
+
+        <!-- Select Products Panel  -->
+        <Panel
+          expandable="false"
+          expanded="true"
+          class="sapUiSmallMarginTop">
+          <headerToolbar>
+            <Toolbar>
+              <Title text="{i18n>productsTitle}" titleStyle="H5" />
+              <ToolbarSpacer />
+              <Text text="{i18n>productsServiceText}" class="serviceSourceInfoText sapUiSmallMarginEnd" />
+            </Toolbar>
+          </headerToolbar>
+          <content>
+            <!-- Search & Filters Bar -->
+            <Toolbar class="sapUiSmallMarginBottom">
+              <SearchField
+                id="searchProductField"
+                placeholder="{i18n>searchProductsPlaceholder}"
+                value="{productFilter>/query}"
+                liveChange=".onLiveSearchProducts"
+                width="35%" />
+              <ToolbarSpacer />
+              <Label text="{i18n>categoryFilterLabel}" class="sapUiTinyMarginEnd" />
+              <Select
+                id="selectCategory"
+                selectedKey="{productFilter>/category}"
+                change=".onCategoryFilterChange"
+                width="180px">
+                <core:Item key="All" text="{i18n>allCategories}" />
+                <core:Item key="Dining" text="Dining" />
+                <core:Item key="Tables" text="Tables" />
+                <core:Item key="Sofas" text="Sofas" />
+                <core:Item key="Lighting" text="Lighting" />
+                <core:Item key="Bedroom" text="Bedroom" />
+              </Select>
+              <Text text="Order Type: {appState>/orderHeader/orderTypeName}" class="sapUiThemeColor-dim sapUiSmallMarginBegin" />
+            </Toolbar>
+
+            <!-- Products Table -->
+            <Table
+              id="productsCatalogTable"
+              items="{products>/}"
+              growing="true"
+              growingThreshold="10">
+              <columns>
+                <Column width="45%">
+                  <Text text="{i18n>colArticle}" />
+                </Column>
+                <Column width="20%">
+                  <Text text="{i18n>colListPrice}" />
+                </Column>
+                <Column width="20%" minScreenWidth="Tablet" demandPopin="true">
+                  <Text text="{i18n>colAvailability}" />
+                </Column>
+                <Column width="15%" hAlign="End">
+                  <Text text="{i18n>colAction}" />
+                </Column>
+              </columns>
+              <items>
+                <ColumnListItem>
+                  <cells>
+                    <HBox alignItems="Center">
+                      <core:Icon src="{products>icon}" size="1.8rem" class="productIcon sapUiSmallMarginEnd" />
+                      <VBox>
+                        <Text text="{products>name}" class="productTableTitle" />
+                        <Text text="{products>articleId} · {products>category}" class="productTableArticleId" />
+                      </VBox>
+                    </HBox>
+                    <Text text="{path: 'products>price', formatter: '.formatter.formatCurrency'}" class="priceTextBold" />
+                    <ObjectStatus
+                      text="{products>stockText}"
+                      state="{products>stockState}" />
+                    <Button
+                      text="{i18n>addToCartBtn}"
+                      type="Emphasized"
+                      icon="sap-icon://cart-plus"
+                      press=".onAddToCart" />
+                  </cells>
+                </ColumnListItem>
+              </items>
+            </Table>
+          </content>
+        </Panel>
+
+        <!-- Backend Info Strip -->
+        <HBox class="backendInfoStrip sapUiMediumMarginTop" alignItems="Center">
+          <core:Icon src="sap-icon://database" class="sapUiTinyMarginEnd" color="#107e3e" />
+          <Text text="BACKEND: ZSra017_Products – Indicative stock only; confirmed OAA runs after delivery method." />
+        </HBox>
+      </VBox>
+    </content>
+    <footer>
+      <OverflowToolbar>
+        <ToolbarSpacer />
+        <Button
+          id="btnGoToCart"
+          text="Cart ({= ${appState>/cart}.length })"
+          type="Emphasized"
+          icon="sap-icon://cart"
+          press=".onGoToCart" />
+        <Button
+          id="btnBackFromProducts"
+          text="{i18n>backBtn}"
+          press=".onNavBack" />
+      </OverflowToolbar>
+    </footer>
+  </Page>
+</mvc:View>

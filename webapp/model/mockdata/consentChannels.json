@@ -1,0 +1,26 @@
+[
+  {
+    "id": "email",
+    "channel": "E-mail marketing",
+    "consent": true,
+    "description": "Receive promotional updates, promotions and newsletters via email"
+  },
+  {
+    "id": "sms",
+    "channel": "SMS / WhatsApp",
+    "consent": true,
+    "description": "Receive order status, delivery notifications and instant flash deals"
+  },
+  {
+    "id": "phone",
+    "channel": "Telephone calls",
+    "consent": false,
+    "description": "Direct telesales or promotional voice phone calls from representatives"
+  },
+  {
+    "id": "partners",
+    "channel": "Share data with partners",
+    "consent": false,
+    "description": "Share aggregated contact details with 3rd-party logistics & finance partners"
+  }
+]

@@ -1,0 +1,161 @@
+<mvc:View
+  controllerName="sap.ui.salesorder.store.controller.Consent"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.ui.layout.form">
+  <Page
+    id="consentPage"
+    title="{i18n>consentTitle}"
+    showNavButton="true"
+    navButtonPress=".onNavBack">
+    <headerContent>
+    </headerContent>
+    <content>
+      <!-- Guided Step Header -->
+      <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.StepIndicator" type="XML" />
+
+      <VBox class="sapUiResponsiveMargin">
+        <Breadcrumbs>
+          <Link text="{i18n>shellHome}" press=".onNavHome" />
+          <Link text="{i18n>basicDetailsTitle}" press=".onNavToBasicDetails" />
+          <Text text="{i18n>consentTitle}" />
+        </Breadcrumbs>
+        <Title text="{i18n>consentTitle}" titleStyle="H3" class="sapUiTinyMarginTop" />
+        <Text text="{i18n>consentStepIndicator}" class="sapUiThemeColor-dim" />
+
+        <!-- Customer Summary Card -->
+        <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.CustomerHeader" type="XML" />
+
+        <!-- Marketing Consent Panel  -->
+        <Panel
+          expandable="false"
+          expanded="true"
+          class="sapUiSmallMarginTop">
+          <headerToolbar>
+            <Toolbar>
+              <Title text="{i18n>consentPanelTitle}" titleStyle="H5" />
+              <ToolbarSpacer />
+            </Toolbar>
+          </headerToolbar>
+          <content>
+            <VBox class="sapUiSmallMargin" width="100%">
+              <!-- Row 1: May we or any of our associated companies market to you? -->
+              <HBox justifyContent="SpaceBetween" alignItems="Center" class="marketingRow">
+                <Label
+                  text="May we or any of our associated companies market to you?"
+                  labelFor="consentMarketToYou"
+                  class="marketingQuestionLabel" />
+                <Select
+                  id="consentMarketToYou"
+                  width="240px"
+                  selectedKey="{appState>/marketing/marketToYou}"
+                  valueState="{= ${appState>/marketing/marketToYou} ? 'None' : 'Error' }"
+                  class="marketingSelect">
+                  <core:Item key="" text="" />
+                  <core:Item key="Yes" text="Yes" />
+                  <core:Item key="No" text="No" />
+                </Select>
+              </HBox>
+
+              <!-- Row 2: Marketing Language -->
+              <HBox justifyContent="SpaceBetween" alignItems="Center" class="marketingRow">
+                <Label
+                  text="Marketing Language"
+                  labelFor="consentMarketingLanguage"
+                  class="marketingQuestionLabel" />
+                <Select
+                  id="consentMarketingLanguage"
+                  width="240px"
+                  selectedKey="{appState>/marketing/marketingLanguage}"
+                  class="marketingSelect">
+                  <core:Item key="English" text="English" />
+                  <core:Item key="Afrikaans" text="Afrikaans" />
+                  <core:Item key="isiZulu" text="isiZulu" />
+                  <core:Item key="isiXhosa" text="isiXhosa" />
+                  <core:Item key="German" text="German" />
+                </Select>
+              </HBox>
+
+              <!-- Row 3: Marketing Correspondence Method -->
+              <HBox justifyContent="SpaceBetween" alignItems="Center" class="marketingRow">
+                <Label
+                  text="Marketing Correspondence Method"
+                  labelFor="consentMarketingMethod"
+                  class="marketingQuestionLabel" />
+                <Select
+                  id="consentMarketingMethod"
+                  width="240px"
+                  selectedKey="{appState>/marketing/marketingCorrespondenceMethod}"
+                  visible="{= ${appState>/marketing/marketToYou} === 'Yes' }"
+                  class="marketingSelect">
+                  <core:Item key="" text="" />
+                  <core:Item key="Email" text="Email" />
+                  <core:Item key="SMS" text="SMS" />
+                  <core:Item key="Telephone" text="Telephone" />
+                  <core:Item key="Post" text="Post" />
+                </Select>
+              </HBox>
+
+              <!-- Row 4: Statement Correspondence Method -->
+              <HBox justifyContent="SpaceBetween" alignItems="Center" class="marketingRow">
+                <Label
+                  text="Statement Correspondence Method"
+                  labelFor="consentStatementMethod"
+                  class="marketingQuestionLabel" />
+                <Select
+                  id="consentStatementMethod"
+                  width="240px"
+                  selectedKey="{appState>/marketing/statementCorrespondenceMethod}"
+                  valueState="{= ${appState>/marketing/statementCorrespondenceMethod} ? 'None' : 'Error' }"
+                  class="marketingSelect">
+                  <core:Item key="" text="" />
+                  <core:Item key="Email" text="Email" />
+                  <core:Item key="SMS" text="SMS" />
+                  <core:Item key="Post" text="Post" />
+                </Select>
+              </HBox>
+
+              <!-- Row 5: For future marketing may we do a credit bureau check on you? -->
+              <HBox justifyContent="SpaceBetween" alignItems="Center" class="marketingRow">
+                <Label
+                  text="For future marketing may we do a credit bureau check on you?"
+                  labelFor="consentCreditBureauCheck"
+                  class="marketingQuestionLabel" />
+                <Select
+                  id="consentCreditBureauCheck"
+                  width="240px"
+                  selectedKey="{appState>/marketing/creditBureauCheck}"
+                  class="marketingSelect">
+                  <core:Item key="" text="" />
+                  <core:Item key="Yes" text="Yes" />
+                  <core:Item key="No" text="No" />
+                </Select>
+              </HBox>
+            </VBox>
+          </content>
+        </Panel>
+
+        <!-- Backend Info Strip -->
+        <HBox class="backendInfoStrip sapUiMediumMarginTop" alignItems="Center">
+          <core:Icon src="sap-icon://database" class="sapUiTinyMarginEnd" color="#107e3e" />
+          <Text text="BACKEND: BP – Create/Update Customer (CRM Customer API)." />
+        </HBox>
+      </VBox>
+    </content>
+    <footer>
+      <OverflowToolbar>
+        <ToolbarSpacer />
+        <Button
+          id="btnSaveCustomerContinue"
+          text="{i18n>saveCustomerContinueBtn}"
+          type="Emphasized"
+          press=".onSaveCustomerAndContinue" />
+        <Button
+          id="btnBackFromConsent"
+          text="{i18n>backBtn}"
+          press=".onNavBack" />
+      </OverflowToolbar>
+    </footer>
+  </Page>
+</mvc:View>

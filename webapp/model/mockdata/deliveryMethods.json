@@ -1,0 +1,23 @@
+[
+  {
+    "key": "DELIVERY",
+    "title": "Delivery to Customer",
+    "subtitle": "Ship from warehouse / store",
+    "icon": "sap-icon://shipping-status",
+    "selected": true
+  },
+  {
+    "key": "COLLECTION",
+    "title": "In-Store Collection",
+    "subtitle": "Customer collects today",
+    "icon": "sap-icon://retail-store",
+    "selected": false
+  },
+  {
+    "key": "WAREHOUSE",
+    "title": "Warehouse Pickup",
+    "subtitle": "Customer collects from DC",
+    "icon": "sap-icon://factory",
+    "selected": false
+  }
+]

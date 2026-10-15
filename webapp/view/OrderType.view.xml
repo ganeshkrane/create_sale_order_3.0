@@ -1,0 +1,68 @@
+<mvc:View
+  controllerName="sap.ui.salesorder.store.controller.OrderType"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:f="sap.ui.layout.form">
+  <Page
+    id="orderTypePage"
+    title="{i18n>orderTypeTitle}"
+    showNavButton="true"
+    navButtonPress=".onNavBack">
+    <headerContent>
+    </headerContent>
+    <content>
+      <!-- Guided Step Header -->
+      <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.StepIndicator" type="XML" />
+
+      <VBox class="sapUiResponsiveMargin">
+        <Breadcrumbs>
+          <Link text="{i18n>shellHome}" press=".onNavHome" />
+          <Link text="{i18n>consentTitle}" press=".onNavToConsent" />
+          <Text text="{i18n>orderTypeTitle}" />
+        </Breadcrumbs>
+        <Title text="{i18n>orderTypeTitle}" titleStyle="H3" class="sapUiTinyMarginTop" />
+        <Text text="{i18n>orderTypeStepIndicator}" class="sapUiThemeColor-dim" />
+
+        <!-- Customer Summary Card -->
+        <core:Fragment fragmentName="sap.ui.salesorder.store.view.fragments.CustomerHeader" type="XML" />
+
+        <!-- Order Type Selection Panel -->
+        <Panel
+          expandable="false"
+          expanded="true"
+          class="sapUiSmallMarginTop">
+          <content>
+            <HBox alignItems="Center" class="marketingRow sapUiSmallMargin">
+              <Label text="Order Type" labelFor="selStandaloneOrderType" class="marketingQuestionLabel sapUiMediumMarginEnd" width="160px" />
+              <Select
+                id="selStandaloneOrderType"
+                width="280px"
+                selectedKey="{appState>/orderHeader/orderType}"
+                change=".onOrderTypeChange"
+                class="customerSearchInput">
+                <core:Item key="ZOR" text="ZOR - Standard Store Order" />
+                <core:Item key="ZDL" text="ZDL - Delivery Order" />
+                <core:Item key="ZSP" text="ZSP - Special / Supply Order" />
+              </Select>
+            </HBox>
+          </content>
+        </Panel>
+      </VBox>
+    </content>
+    <footer>
+      <OverflowToolbar>
+        <ToolbarSpacer />
+        <Button
+          id="btnNextProducts"
+          text="{i18n>nextProductsBtn}"
+          type="Emphasized"
+          press=".onNextToProducts" />
+        <Button
+          id="btnBackFromOrderType"
+          text="{i18n>backBtn}"
+          press=".onNavBack" />
+      </OverflowToolbar>
+    </footer>
+  </Page>
+</mvc:View>

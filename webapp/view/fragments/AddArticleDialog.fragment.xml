@@ -1,0 +1,73 @@
+<core:FragmentDefinition
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core">
+  <Dialog
+    id="addArticleDialog"
+    title="Select Product"
+    contentWidth="960px"
+    contentHeight="500px"
+    resizable="true"
+    draggable="true">
+    <subHeader>
+      <Toolbar>
+        <SearchField
+          id="searchSelectProduct"
+          value="{wizardModel>/productSearchQuery}"
+          liveChange=".onLiveSearchDialogProducts"
+          search=".onLiveSearchDialogProducts"
+          width="100%" />
+      </Toolbar>
+    </subHeader>
+    <content>
+      <Table
+        id="selectProductTable"
+        items="{products>/}"
+        noDataText="No Products Found"
+        mode="SingleSelectMaster"
+        selectionChange=".onSelectProductFromDialogRow"
+        itemPress=".onSelectProductFromDialogRow"
+        class="sapUiSmallMargin">
+        <columns>
+          <Column width="34%">
+            <Text text="Article" />
+          </Column>
+          <Column width="12%">
+            <Text text="Site" />
+          </Column>
+          <Column width="14%">
+            <Text text="Stock" />
+          </Column>
+          <Column width="14%">
+            <Text text="QTY" />
+          </Column>
+          <Column width="14%">
+            <Text text="Gross Price" />
+          </Column>
+          <Column width="12%">
+            <Text text="Item Catagory" />
+          </Column>
+        </columns>
+        <items>
+          <ColumnListItem type="Active">
+            <cells>
+              <VBox>
+                <Text text="{products>articleId}" class="boldText" />
+                <Text text="{products>name}" class="sapUiTinyMarginTop" />
+              </VBox>
+              <Text text="{products>site}" />
+              <Text text="{= ${products>stockText} || ${products>stock} || 'In Stock' }" />
+              <Text text="{path: 'products>qty', formatter: '.formatter.formatQtyDecimal'}" />
+              <Text text="{path: 'products>price', formatter: '.formatter.formatPriceOnly'}" />
+              <Text text="{= ${products>itemCat} || 'TAN' }" />
+            </cells>
+          </ColumnListItem>
+        </items>
+      </Table>
+    </content>
+    <buttons>
+      <Button
+        text="Cancel"
+        press=".onCloseAddArticleDialog" />
+    </buttons>
+  </Dialog>
+</core:FragmentDefinition>
