@@ -58,10 +58,8 @@
       <!-- SAPUI5 Wizard Control -->
       <Wizard
         id="salesOrderWizard"
-        visible="{= !${wizardModel>/orderCreated} }"
         complete=".onWizardComplete"
-        finishButtonText="{i18n>createSalesOrderBtn}"
-       >
+        finishButtonText="{i18n>createSalesOrderBtn}">
 
         <!-- ============================================== -->
         <!-- STEP 1: CUSTOMER (Screens 2, 3, 4, 5)          -->
@@ -218,6 +216,13 @@
                   <Title text="1. Basic Details" titleStyle="H5" class="basicDetailsTitleText" />
                   <ToolbarSpacer />
                   <Button
+                    id="messagePopoverBtn"
+                    icon="sap-icon://message-popup"
+                    type="Negative"
+                    text="{= (${messages>/}.length || 0) + ' Errors' }"
+                    visible="{= (${messages>/}.length || 0) > 0 }"
+                    press=".onMessagePopoverPress" />
+                  <Button
                     text="Cancel"
                     type="Transparent"
                     icon="sap-icon://cancel"
@@ -227,6 +232,20 @@
               </headerToolbar>
               <content>
                 <VBox class="sapUiSmallMargin">
+                  <!-- Inline Error Messages Banner for Basic Details -->
+                  <MessageStrip
+                    id="basicDetailsErrorMessageStrip"
+                    text="{= 'Please correct the ' + (${messages>/}.length || 0) + ' highlighted error(s) in Basic Details before validating address.' }"
+                    type="Error"
+                    showIcon="true"
+                    showCloseButton="true"
+                    visible="{= (${messages>/}.length || 0) > 0 }"
+                    class="sapUiSmallMarginBottom">
+                    <link>
+                      <Link text="View all error messages" press=".onMessagePopoverPress" />
+                    </link>
+                  </MessageStrip>
+
                   <!-- Entity Type Radio Buttons -->
                   <HBox alignItems="Center" class="sapUiSmallMarginBottom">
                     <Label text="Entity Type:" class="entityTypeLabel sapUiMediumMarginEnd" />
@@ -255,7 +274,12 @@
 
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="Title:" required="true" class="basicDetailsLabel" />
-                        <Select selectedKey="{appState>/customer/title}" width="100%" class="basicDetailsSelect">
+                        <Select
+                          id="selectIndivTitle"
+                          selectedKey="{appState>/customer/title}"
+                          width="100%"
+                          change=".onFieldChange"
+                          class="basicDetailsSelect">
                           <core:Item key="Mr." text="Mr." />
                           <core:Item key="Mrs." text="Mrs." />
                           <core:Item key="Ms." text="Ms." />
@@ -266,18 +290,22 @@
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="First Name:" required="true" class="basicDetailsLabel" />
                         <Input
+                          id="inputIndivFirstName"
                           value="{appState>/customer/firstName}"
                           placeholder="Enter First Name"
-                          liveChange=".onUpdateCustomerName"
+                          liveChange=".onNameLiveChange"
+                          change=".onFieldChange"
                           class="basicDetailsInput" />
                       </VBox>
 
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="Surname:" required="true" class="basicDetailsLabel" />
                         <Input
+                          id="inputIndivSurname"
                           value="{appState>/customer/lastName}"
                           placeholder="Enter Surname"
-                          liveChange=".onUpdateCustomerName"
+                          liveChange=".onNameLiveChange"
+                          change=".onFieldChange"
                           class="basicDetailsInput" />
                       </VBox>
 
@@ -285,14 +313,23 @@
                         <VBox width="48%">
                           <Label text="Date of Birth:" required="true" class="basicDetailsLabel" />
                           <DatePicker
+                            id="dpIndivDob"
                             value="{appState>/customer/dateOfBirth}"
-                            placeholder="Enter Date of Birth"
+                            displayFormat="dd.MM.yyyy"
+                            valueFormat="dd.MM.yyyy"
+                            placeholder="dd.MM.yyyy"
                             width="100%"
+                            change=".onDobChange"
                             class="basicDetailsDatePicker" />
                         </VBox>
                         <VBox width="48%">
                           <Label text="Gender:" required="true" class="basicDetailsLabel" />
-                          <Select selectedKey="{appState>/customer/gender}" width="100%" class="basicDetailsSelect">
+                          <Select
+                            id="selectIndivGender"
+                            selectedKey="{appState>/customer/gender}"
+                            width="100%"
+                            change=".onFieldChange"
+                            class="basicDetailsSelect">
                             <core:Item key="Male" text="Male" />
                             <core:Item key="Female" text="Female" />
                             <core:Item key="Other" text="Other" />
@@ -308,7 +345,12 @@
                       <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
                         <VBox width="48%">
                           <Label text="ID Type:" required="true" class="basicDetailsLabel" />
-                          <Select selectedKey="{appState>/customer/idType}" width="100%" class="basicDetailsSelect">
+                          <Select
+                            id="selectIndivIdType"
+                            selectedKey="{appState>/customer/idType}"
+                            width="100%"
+                            change=".onFieldChange"
+                            class="basicDetailsSelect">
                             <core:Item key="SA ID Number" text="SA ID Number" />
                             <core:Item key="Passport" text="Passport" />
                             <core:Item key="Foreign ID" text="Foreign ID" />
@@ -317,8 +359,12 @@
                         <VBox width="48%">
                           <Label text="ID Number:" required="true" class="basicDetailsLabel" />
                           <Input
+                            id="inputIndivIdNo"
                             value="{appState>/customer/idPassport}"
                             placeholder="Enter ID Number"
+                            maxLength="13"
+                            liveChange=".onIdNoLiveChange"
+                            change=".onFieldChange"
                             class="basicDetailsInput" />
                         </VBox>
                       </HBox>
@@ -326,17 +372,24 @@
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="Mobile Number:" required="true" class="basicDetailsLabel" />
                         <Input
+                          id="inputIndivMobile"
                           value="{appState>/customer/telephone}"
                           placeholder="Enter Mobile Number"
+                          maxLength="10"
+                          liveChange=".onMobileLiveChange"
+                          change=".onFieldChange"
                           class="basicDetailsInput" />
                       </VBox>
 
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="Email Address:" required="true" class="basicDetailsLabel" />
                         <Input
+                          id="inputIndivEmail"
                           value="{appState>/customer/email}"
                           placeholder="Enter Email Address"
                           type="Email"
+                          liveChange=".onFieldChange"
+                          change=".onFieldChange"
                           class="basicDetailsInput" />
                       </VBox>
                     </VBox>
@@ -354,25 +407,33 @@
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="Company Registered Name:" required="true" class="basicDetailsLabel" />
                         <Input
+                          id="inputCompanyRegName"
                           value="{appState>/customer/companyName}"
                           placeholder="Enter Company Registered Name"
-                          liveChange=".onUpdateCustomerName"
+                          liveChange=".onNameLiveChange"
+                          change=".onFieldChange"
                           class="basicDetailsInput" />
                       </VBox>
 
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="Company Registration Number:" required="true" class="basicDetailsLabel" />
                         <Input
+                          id="inputCompanyRegNo"
                           value="{appState>/customer/regNo}"
                           placeholder="Enter Company Registration Number"
+                          liveChange=".onFieldChange"
+                          change=".onFieldChange"
                           class="basicDetailsInput" />
                       </VBox>
 
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="VAT Number:" class="basicDetailsLabel" />
                         <Input
+                          id="inputVatNumber"
                           value="{appState>/customer/vatNo}"
                           placeholder="Enter VAT Number"
+                          liveChange=".onFieldChange"
+                          change=".onFieldChange"
                           class="basicDetailsInput" />
                       </VBox>
 
@@ -380,14 +441,23 @@
                         <VBox width="48%">
                           <Label text="Date of Birth:" required="true" class="basicDetailsLabel" />
                           <DatePicker
+                            id="dpCompanyDob"
                             value="{appState>/customer/dateOfBirth}"
-                            placeholder="Enter Date of Birth"
+                            displayFormat="dd.MM.yyyy"
+                            valueFormat="dd.MM.yyyy"
+                            placeholder="dd.MM.yyyy"
                             width="100%"
+                            change=".onDobChange"
                             class="basicDetailsDatePicker" />
                         </VBox>
                         <VBox width="48%">
                           <Label text="Gender:" required="true" class="basicDetailsLabel" />
-                          <Select selectedKey="{appState>/customer/gender}" width="100%" class="basicDetailsSelect">
+                          <Select
+                            id="selectCompanyGender"
+                            selectedKey="{appState>/customer/gender}"
+                            width="100%"
+                            change=".onFieldChange"
+                            class="basicDetailsSelect">
                             <core:Item key="Male" text="Male" />
                             <core:Item key="Female" text="Female" />
                             <core:Item key="Other" text="Other" />
@@ -398,8 +468,12 @@
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="Mobile Number:" required="true" class="basicDetailsLabel" />
                         <Input
+                          id="inputCompanyMobile"
                           value="{appState>/customer/telephone}"
                           placeholder="Enter Mobile Number"
+                          maxLength="10"
+                          liveChange=".onMobileLiveChange"
+                          change=".onFieldChange"
                           class="basicDetailsInput" />
                       </VBox>
                     </VBox>
@@ -410,7 +484,12 @@
 
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="Title:" required="true" class="basicDetailsLabel" />
-                        <Select selectedKey="{appState>/customer/authRepTitle}" width="100%" class="basicDetailsSelect">
+                        <Select
+                          id="selectCompanyTitle"
+                          selectedKey="{appState>/customer/authRepTitle}"
+                          width="100%"
+                          change=".onFieldChange"
+                          class="basicDetailsSelect">
                           <core:Item key="Mr." text="Mr." />
                           <core:Item key="Mrs." text="Mrs." />
                           <core:Item key="Ms." text="Ms." />
@@ -421,25 +500,34 @@
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="First Name:" required="true" class="basicDetailsLabel" />
                         <Input
+                          id="inputCompanyFirstName"
                           value="{appState>/customer/authRepFirstName}"
                           placeholder="Enter First Name"
-                          liveChange=".onUpdateCustomerName"
+                          liveChange=".onNameLiveChange"
+                          change=".onFieldChange"
                           class="basicDetailsInput" />
                       </VBox>
 
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="Surname:" required="true" class="basicDetailsLabel" />
                         <Input
+                          id="inputCompanySurname"
                           value="{appState>/customer/authRepSurname}"
                           placeholder="Enter Surname"
-                          liveChange=".onUpdateCustomerName"
+                          liveChange=".onNameLiveChange"
+                          change=".onFieldChange"
                           class="basicDetailsInput" />
                       </VBox>
 
                       <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
                         <VBox width="48%">
                           <Label text="ID Type:" required="true" class="basicDetailsLabel" />
-                          <Select selectedKey="{appState>/customer/idType}" width="100%" class="basicDetailsSelect">
+                          <Select
+                            id="selectCompanyIdType"
+                            selectedKey="{appState>/customer/idType}"
+                            width="100%"
+                            change=".onFieldChange"
+                            class="basicDetailsSelect">
                             <core:Item key="SA ID Number" text="SA ID Number" />
                             <core:Item key="Passport" text="Passport" />
                             <core:Item key="Foreign ID" text="Foreign ID" />
@@ -448,8 +536,12 @@
                         <VBox width="48%">
                           <Label text="ID Number:" required="true" class="basicDetailsLabel" />
                           <Input
+                            id="inputCompanyIdNo"
                             value="{appState>/customer/idPassport}"
                             placeholder="Enter ID Number"
+                            maxLength="13"
+                            liveChange=".onIdNoLiveChange"
+                            change=".onFieldChange"
                             class="basicDetailsInput" />
                         </VBox>
                       </HBox>
@@ -457,9 +549,12 @@
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="Email Address:" required="true" class="basicDetailsLabel" />
                         <Input
+                          id="inputCompanyEmail"
                           value="{appState>/customer/email}"
                           placeholder="Enter Email Address"
                           type="Email"
+                          liveChange=".onFieldChange"
+                          change=".onFieldChange"
                           class="basicDetailsInput" />
                       </VBox>
                     </VBox>
@@ -475,12 +570,22 @@
                       </HBox>
                       <HBox justifyContent="SpaceBetween" alignItems="Center" class="addressDisplayBox">
                         <Text text="Please validate or select customer address to proceed with customer creation." class="customerSearchFieldLabel" />
-                        <Button
-                          id="btnWizardValidateSelectAddress"
-                          text="{i18n>validateSelectAddressBtn}"
-                          icon="sap-icon://map-2"
-                          type="Emphasized"
-                          press=".onOpenAddressPluginModal" />
+                        <HBox alignItems="Center">
+                          <Button
+                            id="btnAddressErrorsPopover"
+                            icon="sap-icon://message-popup"
+                            type="Negative"
+                            text="{= (${messages>/}.length || 0) + ' Errors' }"
+                            visible="{= (${messages>/}.length || 0) > 0 }"
+                            class="sapUiTinyMarginEnd"
+                            press=".onMessagePopoverPress" />
+                          <Button
+                            id="btnWizardValidateSelectAddress"
+                            text="{i18n>validateSelectAddressBtn}"
+                            icon="sap-icon://map-2"
+                            type="Emphasized"
+                            press=".onOpenAddressPluginModal" />
+                        </HBox>
                       </HBox>
                     </VBox>
 
@@ -662,7 +767,7 @@
           id="stepProducts"
           title="{i18n>step4Cart}"
           icon="sap-icon://cart"
-          validated="{= ${appState>/cart}.length > 0 }">
+          validated="{= (${appState>/cartCount} || 0) > 0 }">
           <VBox class="sapUiSmallMargin">
             <!-- Cart Table (Screen 10) -->
             <Panel
@@ -673,7 +778,8 @@
               <headerToolbar>
                 <Toolbar>
                   <Title
-                    text="{= 'Cart Items (' + ${appState>/cart}.length + ')' }"
+                    id="cartItemsTitle"
+                    text="{= 'Cart Items (' + (${appState>/cartCount} !== undefined ? ${appState>/cartCount} : 0) + ')' }"
                     titleStyle="H5"
                     class="sapUiSmallMarginEnd" />
                   <ToolbarSpacer />
@@ -797,12 +903,7 @@
                     </items>
                   </Table>
                 </ScrollContainer>
-                <HBox
-                  class="valueAddedNoteBox sapUiSmallMargin"
-                  alignItems="Center">
-                  <core:Icon src="sap-icon://information" class="sapUiTinyMarginEnd" color="#d15a00" />
-                  <Text text="{i18n>valueAddedNote}" class="valueAddedNoteText" />
-                </HBox>
+                
               </content>
             </Panel>
 
@@ -1283,7 +1384,7 @@
             </l:Grid>
 
             <!-- 4. Order Item Details - All Item (Field 24) -->
-            <Panel headerText="Order Item Details - All Item ({= ${appState>/cart}.length })" class="fioriStandardBorderPanel sapUiMediumMarginTop">
+            <Panel headerText="{= 'Order Item Details - All Item (' + (${appState>/cartCount} !== undefined ? ${appState>/cartCount} : 0) + ')' }" class="fioriStandardBorderPanel sapUiMediumMarginTop">
               <content>
                 <Table
                   id="wizardReviewItemsTable"
@@ -1343,95 +1444,6 @@
           </VBox>
         </WizardStep>
       </Wizard>
-
-      <!-- ============================================== -->
-      <!-- ============================================== -->
-      <!-- FINAL ORDER CONFIRMATION                       -->
-      <!-- ============================================== -->
-      <VBox
-        id="finalOrderContainer"
-        visible="{wizardModel>/orderCreated}"
-        class="sapUiResponsiveMargin">
-        <VBox class="sapUiMediumMarginTop sapUiSmallMarginBottom" alignItems="Center">
-          <ObjectStatus
-            icon="sap-icon://sys-enter-2"
-            state="Success"
-            text="Sales Order {appState>/orderFinal/salesOrderNo} created successfully. SD customer address updated for ship-to {appState>/orderFinal/shipToBp}."
-            class="successOrderBanner" />
-        </VBox>
-
-        <!-- Order Summary Card -->
-        <Panel
-          headerText="Sales Order Confirmation"
-          expandable="false"
-          expanded="true"
-          class="fioriStandardBorderPanel sapUiSmallMarginTop">
-          <content>
-            <HBox justifyContent="SpaceAround" alignItems="Center" wrap="Wrap" class="sapUiMediumMargin">
-              <VBox class="sapUiSmallMargin">
-                <Text text="Sales Order Number" class="sapUiThemeColor-dim" />
-                <Title text="{appState>/orderFinal/salesOrderNo}" titleStyle="H4" />
-              </VBox>
-              <VBox class="sapUiSmallMargin">
-                <Text text="Shipment Priority" class="sapUiThemeColor-dim" />
-                <ObjectStatus text="{appState>/orderFinal/shipmentPriorityText}" state="Success" class="statusChip" />
-              </VBox>
-              <VBox class="sapUiSmallMargin">
-                <Text text="Customer Sold-To" class="sapUiThemeColor-dim" />
-                <Title text="{appState>/orderHeader/soldToParty}" titleStyle="H6" />
-              </VBox>
-              <VBox class="sapUiSmallMargin">
-                <Text text="Total Amount" class="sapUiThemeColor-dim" />
-                <Title text="{path: 'appState>/pricing/total', formatter: '.formatter.formatCurrency'}" titleStyle="H4" />
-              </VBox>
-            </HBox>
-          </content>
-        </Panel>
-
-        <!-- Created Items Review Table -->
-        <Panel
-          headerText="Order Items ({= ${appState>/cart}.length })"
-          expandable="false"
-          expanded="true"
-          class="fioriStandardBorderPanel sapUiMediumMarginTop">
-          <content>
-            <Table items="{appState>/cart}" class="sapUiSmallMargin">
-              <columns>
-                <Column width="100px">
-                  <Text text="{i18n>colItemNo}" />
-                </Column>
-                <Column width="50%">
-                  <Text text="{i18n>colArticle}" />
-                </Column>
-                <Column width="20%" hAlign="Center">
-                  <Text text="{i18n>colQty}" />
-                </Column>
-                <Column width="20%" hAlign="End">
-                  <Text text="Price" />
-                </Column>
-              </columns>
-              <items>
-                <ColumnListItem>
-                  <cells>
-                    <Text text="{appState>item}" />
-                    <Text text="{= ${appState>description} || ${appState>name} }" class="mainItemTitle" />
-                    <Text text="{appState>qty}" />
-                    <Text text="{path: 'appState>netValue', formatter: '.formatter.formatCurrency'}" class="priceTextBold" />
-                  </cells>
-                </ColumnListItem>
-              </items>
-            </Table>
-          </content>
-        </Panel>
-
-        <HBox justifyContent="End" class="sapUiMediumMarginTop">
-          <Button
-            text="{i18n>createNewOrderBtn}"
-            icon="sap-icon://add"
-            type="Emphasized"
-            press=".onCreateNewOrderReset" />
-        </HBox>
-      </VBox>
     </content>
   </Page>
 </mvc:View>

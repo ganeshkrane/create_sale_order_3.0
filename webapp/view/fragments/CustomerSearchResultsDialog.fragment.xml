@@ -16,7 +16,7 @@
           liveChange=".onLiveSearchDialog"
           width="40%" />
         <ToolbarSpacer />
-        <Text text="{i18n>searchResultsSource}" class="serviceSourceInfoText" />
+        
       </Toolbar>
     </subHeader>
     <content>
@@ -25,7 +25,7 @@
         items="{customers>/}"
         mode="SingleSelectMaster"
         selectionChange=".onSelectCustomerRow"
-        class="sapUiResponsiveMargin">
+        >
         <columns>
           <Column width="130px">
             <Text text="{i18n>colBpNumber}" />

@@ -72,11 +72,13 @@ sap.ui.define([
       var fVat = +(fNetValue * 0.15).toFixed(2);
       var fTotal = +(fNetValue + fVat).toFixed(2);
 
-      oAppState.setProperty("/cart", aItems);
+      oAppState.setProperty("/cart", aItems.slice());
+      oAppState.setProperty("/cartCount", aItems.length);
       oAppState.setProperty("/pricing/netValue", fNetValue);
       oAppState.setProperty("/pricing/discounts", -fDiscountSum);
       oAppState.setProperty("/pricing/vat", fVat);
       oAppState.setProperty("/pricing/total", fTotal);
+      oAppState.refresh(true);
     },
 
     /**

@@ -102,6 +102,7 @@ sap.ui.define([
           }
         ],
         cart: [],
+        cartCount: 0,
         // Pricing summary breakdown
         pricing: {
           netValue: 0.00,

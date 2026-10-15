@@ -4,11 +4,14 @@ sap.ui.define([
   "sap/ui/core/Fragment",
   "sap/m/MessageToast",
   "sap/m/MessageBox",
+  "sap/m/MessagePopover",
+  "sap/m/MessageItem",
   "sap/ui/model/Filter",
   "sap/ui/model/FilterOperator",
   "sap/ui/salesorder/store/model/models",
-  "sap/m/StepInput"
-], function (BaseController, JSONModel, Fragment, MessageToast, MessageBox, Filter, FilterOperator, models, StepInput) {
+  "sap/m/StepInput",
+  "sap/ui/salesorder/store/utils/BasicDetailsValidation"
+], function (BaseController, JSONModel, Fragment, MessageToast, MessageBox, MessagePopover, MessageItem, Filter, FilterOperator, models, StepInput, BasicDetailsValidation) {
   "use strict";
 
   return BaseController.extend("sap.ui.salesorder.store.controller.CustomerWizard", {
@@ -48,16 +51,54 @@ sap.ui.define([
       // Ensure pricing is initialized
       this.recalculateTotals();
       this._updatePendingActionText();
-      this._sCurrentLang = "en";
+
+      // Setup DatePicker limits (must be at least 18 years old)
+      this._setupDatePickerLimits();
+
+      // Initialize messages model for MessagePopover
+      var oMessageModel = new JSONModel([]);
+      this.getView().setModel(oMessageModel, "messages");
+
+      var that = this;
+      this._oMessagePopover = new MessagePopover({
+        activeTitlePress: function (oEvt) {
+          var oItem = oEvt.getParameter("item");
+          var oBindingContext = oItem.getBindingContext("messages");
+          if (oBindingContext) {
+            var sControlId = oBindingContext.getProperty("controlId");
+            if (sControlId) {
+              var oCtrl = that.byId(sControlId);
+              if (oCtrl && oCtrl.focus) {
+                oCtrl.focus();
+              }
+            }
+          }
+        },
+        items: {
+          path: "messages>/",
+          template: new MessageItem({
+            type: "{messages>type}",
+            title: "{messages>title}",
+            description: "{messages>description}",
+            subtitle: "{messages>subtitle}"
+          })
+        }
+      });
+      this.getView().addDependent(this._oMessagePopover);
     },
 
-    onToggleLanguage: function () {
-      this._sCurrentLang = (this._sCurrentLang === "en") ? "de" : "en";
-      sap.ui.getCore().getConfiguration().setLanguage(this._sCurrentLang);
-      var sMsg = this._sCurrentLang === "de"
-        ? "Sprache gewechselt zu Deutsch (DE)"
-        : "Language switched to English (EN)";
-      MessageToast.show(sMsg);
+    _setupDatePickerLimits: function () {
+      var dToday = new Date();
+      var dMaxDate = new Date(dToday.getFullYear() - 18, dToday.getMonth(), dToday.getDate());
+
+      var oDpComp = this.byId("dpCompanyDob");
+      if (oDpComp && oDpComp.setMaxDate) {
+        oDpComp.setMaxDate(dMaxDate);
+      }
+      var oDpInd = this.byId("dpIndivDob");
+      if (oDpInd && oDpInd.setMaxDate) {
+        oDpInd.setMaxDate(dMaxDate);
+      }
     },
 
     // ========================================================
@@ -284,13 +325,188 @@ sap.ui.define([
     onSelectEntityTypeIndividual: function () {
       var oAppState = this.getModel("appState");
       oAppState.setProperty("/customer/type", "Individual");
+      this._clearAllBasicDetailsControlStates();
       this.onUpdateCustomerName();
     },
 
     onSelectEntityTypeCompany: function () {
       var oAppState = this.getModel("appState");
       oAppState.setProperty("/customer/type", "Company");
+      this._clearAllBasicDetailsControlStates();
       this.onUpdateCustomerName();
+    },
+
+    onNameLiveChange: function (oEvent) {
+      var oSource = oEvent.getSource();
+      var sVal = oEvent.getParameter("value") || "";
+      var sClean = sVal.replace(/[^a-zA-Z\s.'-]/g, "");
+      if (sVal !== sClean) {
+        oSource.setValue(sClean);
+      }
+      var oBinding = oSource.getBinding("value");
+      if (oBinding) {
+        oBinding.setValue(sClean);
+      }
+      this.onUpdateCustomerName();
+      if (oSource.getValueState && oSource.getValueState() === "Error") {
+        this._validateBasicDetailsForm(true);
+      }
+    },
+
+    onMobileLiveChange: function (oEvent) {
+      var oSource = oEvent.getSource();
+      var sVal = oEvent.getParameter("value") || "";
+      var sClean = sVal.replace(/[^\d]/g, "").slice(0, 10);
+      if (sVal !== sClean) {
+        oSource.setValue(sClean);
+      }
+      var oBinding = oSource.getBinding("value");
+      if (oBinding) {
+        oBinding.setValue(sClean);
+      }
+      if (oSource.getValueState && oSource.getValueState() === "Error") {
+        this._validateBasicDetailsForm(true);
+      }
+    },
+
+    onIdNoLiveChange: function (oEvent) {
+      var oSource = oEvent.getSource();
+      var sVal = oEvent.getParameter("value") || "";
+      var oAppState = this.getModel("appState");
+      var sIdType = oAppState ? (oAppState.getProperty("/customer/idType") || "SA ID Number") : "SA ID Number";
+
+      var sClean = sVal;
+      if (sIdType === "SA ID Number") {
+        sClean = sVal.replace(/[^\d]/g, "").slice(0, 13);
+      } else if (sIdType === "Passport") {
+        sClean = sVal.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 12);
+      } else {
+        sClean = sVal.replace(/[^a-zA-Z0-9-]/g, "").slice(0, 20);
+      }
+
+      if (sVal !== sClean) {
+        oSource.setValue(sClean);
+      }
+      var oBinding = oSource.getBinding("value");
+      if (oBinding) {
+        oBinding.setValue(sClean);
+      }
+      if (oSource.getValueState && oSource.getValueState() === "Error") {
+        this._validateBasicDetailsForm(true);
+      }
+    },
+
+    onDobChange: function (oEvent) {
+      var oDP = oEvent.getSource();
+      var sVal = oEvent.getParameter("value") || oDP.getValue() || "";
+      var oAppState = this.getModel("appState");
+      if (oAppState) {
+        oAppState.setProperty("/customer/dateOfBirth", sVal);
+      }
+      if (oDP.getValueState && oDP.getValueState() === "Error") {
+        this._validateBasicDetailsForm(true);
+      }
+    },
+
+    onFieldChange: function (oEvent) {
+      if (oEvent && oEvent.getSource) {
+        var oSource = oEvent.getSource();
+        var oBinding = oSource.getBinding && (oSource.getBinding("value") || oSource.getBinding("selectedKey"));
+        if (oBinding && oSource.getValue) {
+          oBinding.setValue(oSource.getValue());
+        }
+        if (oSource.getValueState && oSource.getValueState() === "Error") {
+          this._validateBasicDetailsForm(true);
+        }
+      }
+    },
+
+    _clearAllBasicDetailsControlStates: function () {
+      var aControlIds = [
+        "inputCompanyRegName", "inputCompanyRegNo", "inputVatNumber", "dpCompanyDob", "selectCompanyGender",
+        "inputCompanyMobile", "selectCompanyTitle", "inputCompanyFirstName", "inputCompanySurname",
+        "selectCompanyIdType", "inputCompanyIdNo", "inputCompanyEmail",
+        "selectIndivTitle", "inputIndivFirstName", "inputIndivSurname", "dpIndivDob",
+        "selectIndivGender", "selectIndivIdType", "inputIndivIdNo", "inputIndivMobile", "inputIndivEmail"
+      ];
+      var that = this;
+      aControlIds.forEach(function (sId) {
+        var oCtrl = that.byId(sId);
+        if (oCtrl && oCtrl.setValueState) {
+          oCtrl.setValueState("None");
+          oCtrl.setValueStateText("");
+        }
+      });
+    },
+
+    _validateBasicDetailsForm: function (bSilent) {
+      var oAppState = this.getModel("appState");
+      var oCustomer = oAppState ? oAppState.getProperty("/customer") : {};
+      oCustomer = oCustomer || {};
+      var sEntityType = oCustomer.type || "Individual";
+
+      this._clearAllBasicDetailsControlStates();
+      this._setupDatePickerLimits();
+
+      var oDpComp = this.byId("dpCompanyDob");
+      var oDpInd = this.byId("dpIndivDob");
+
+      var oValidationData = {
+        entityType: sEntityType,
+        customerName: (sEntityType === "Company" ? oCustomer.companyName : ((oCustomer.firstName || "") + " " + (oCustomer.lastName || ""))) || "",
+        companyRegNo: oCustomer.regNo || "",
+        vatNumber: oCustomer.vatNo || "",
+        dateOfBirth: oCustomer.dateOfBirth || "",
+        gender: oCustomer.gender || "",
+        mobileNumber: oCustomer.telephone || "",
+        emailAddress: oCustomer.email || "",
+        title: sEntityType === "Company" ? (oCustomer.authRepTitle || "") : (oCustomer.title || ""),
+        firstName: sEntityType === "Company" ? (oCustomer.authRepFirstName || "") : (oCustomer.firstName || ""),
+        surname: sEntityType === "Company" ? (oCustomer.authRepSurname || "") : (oCustomer.lastName || ""),
+        idType: oCustomer.idType || "SA ID Number",
+        idNumber: oCustomer.idPassport || ""
+      };
+
+      var aValidationErrors = BasicDetailsValidation.validateBasicDetails(
+        oValidationData,
+        this.getResourceBundle(),
+        {
+          bDpCompValid: (sEntityType === "Company" && oDpComp && oDpComp.isValidValue) ? oDpComp.isValidValue() : ((sEntityType === "Individual" && oDpInd && oDpInd.isValidValue) ? oDpInd.isValidValue() : true)
+        }
+      );
+
+      if (aValidationErrors && aValidationErrors.length > 0) {
+        var that = this;
+        var oFirstCtrlToFocus = null;
+
+        aValidationErrors.forEach(function (oErr) {
+          if (oErr.controlId) {
+            var oCtrl = that.byId(oErr.controlId);
+            if (oCtrl && oCtrl.setValueState) {
+              oCtrl.setValueState("Error");
+              oCtrl.setValueStateText(oErr.subtitle || oErr.description);
+              if (!oFirstCtrlToFocus && oCtrl.focus) {
+                oFirstCtrlToFocus = oCtrl;
+              }
+            }
+          }
+        });
+
+        if (!bSilent) {
+          var sFirstErrorMsg = aValidationErrors[0].subtitle || aValidationErrors[0].description;
+          MessageBox.error(sFirstErrorMsg, {
+            title: "Validation Error",
+            onClose: function () {
+              if (oFirstCtrlToFocus && oFirstCtrlToFocus.focus) {
+                oFirstCtrlToFocus.focus();
+              }
+            }
+          });
+        }
+        return false;
+      }
+
+      return true;
     },
 
     onUpdateCustomerName: function () {
@@ -330,6 +546,8 @@ sap.ui.define([
       var oWizardModel = this.getView().getModel("wizardModel");
       oWizardModel.setProperty("/showNewCustomerCapture", false);
       oWizardModel.setProperty("/isCreatingNewCustomer", true);
+      this._setupDatePickerLimits();
+      this._clearAllBasicDetailsControlStates();
       MessageToast.show("Basic Details ready for customer creation");
     },
 
@@ -345,6 +563,13 @@ sap.ui.define([
     // STEP 2: ADDRESS VALIDATION
     // ========================================================
     onOpenAddressPluginModal: function () {
+      // 1. Validate basic details of individual or company first based on radio button selection
+      var bValid = this._validateBasicDetailsForm(false);
+      if (!bValid) {
+        return; // Validation failed: errors highlighted, popup NOT opened
+      }
+
+      // 2. If all ok, open the address plugin popup!
       var that = this;
       var oAppState = this.getModel("appState");
 
@@ -439,23 +664,8 @@ sap.ui.define([
       var sType = oCustomer.type || "Individual";
 
       // Form validation
-      if (sType === "Individual") {
-        var sFirst = (oCustomer.firstName || "").trim();
-        var sLast = (oCustomer.lastName || "").trim();
-        if (!sFirst && !sLast) {
-          MessageBox.warning("Please provide customer First Name or Surname.");
-          return;
-        }
-        if (!oCustomer.telephone && !oCustomer.email) {
-          MessageBox.warning("Please provide at least a Mobile Number or Email Address.");
-          return;
-        }
-      } else {
-        var sComp = (oCustomer.companyName || "").trim();
-        if (!sComp) {
-          MessageBox.warning("Please provide Company Registered Name.");
-          return;
-        }
+      if (!this._validateBasicDetailsForm(false)) {
+        return;
       }
 
       // Check address
@@ -1010,6 +1220,7 @@ sap.ui.define([
               return it.item !== oItem.item && it.parentItem !== oItem.item;
             });
             oAppState.setProperty("/cart", aFiltered);
+            oAppState.setProperty("/cartCount", aFiltered.length);
             that.recalculateTotals();
             var oStepProducts = that.byId("stepProducts");
             if (oStepProducts) {
@@ -1712,13 +1923,22 @@ sap.ui.define([
       oAppState.setProperty("/orderFinal/shipmentPriorityText", sPriorityText);
       oAppState.setProperty("/orderFinal/isSaved", true);
 
-      this.getView().getModel("wizardModel").setProperty("/orderCreated", true);
-      MessageToast.show("Sales Order " + sSalesOrderNo + " created successfully with " + sPriorityText + " priority!");
+      var that = this;
+      MessageBox.success("Sales Order " + sSalesOrderNo + " created successfully.", {
+        title: "Sales Order Created",
+        actions: [MessageBox.Action.OK],
+        emphasizedAction: MessageBox.Action.OK,
+        onClose: function () {
+          that.onCreateNewOrderReset();
+        }
+      });
     },
 
     onCreateNewOrderReset: function () {
-      var oOwnerComponent = this.getOwnerComponent();
-      oOwnerComponent.setModel(models.createAppStateModel(), "appState");
+      var oNewAppState = models.createAppStateModel();
+      this.getOwnerComponent().setModel(oNewAppState, "appState");
+      this.getView().setModel(oNewAppState, "appState");
+
       var oWizardModel = this.getView().getModel("wizardModel");
       oWizardModel.setProperty("/orderCreated", false);
       oWizardModel.setProperty("/showNewCustomerCapture", false);
@@ -1726,20 +1946,46 @@ sap.ui.define([
       oWizardModel.setProperty("/customerSelected", false);
       oWizardModel.setProperty("/addressValidated", false);
       oWizardModel.setProperty("/isNewlyCreatedCustomer", false);
+      oWizardModel.setProperty("/searchPanelExpanded", true);
+      oWizardModel.setProperty("/newCustomerTypeIndex", 0);
+      oWizardModel.setProperty("/searchCriteria", {
+        customerName: "",
+        mobile: "",
+        email: "",
+        customerNumber: "",
+        idNumber: "",
+        orderOrAccountNo: "",
+        dealNumber: "",
+        plusMoreNumber: ""
+      });
+      oWizardModel.setProperty("/productSearchQuery", "");
 
       var oWizard = this.byId("salesOrderWizard");
       if (oWizard) {
         var oStep1 = this.byId("stepCustomer");
         if (oStep1) {
           oStep1.setValidated(false);
-          oWizard.goToStep(oStep1);
+          oWizard.discardProgress(oStep1);
+          oWizard.goToStep(oStep1, true);
         }
         var oStepConsent = this.byId("stepConsent");
         if (oStepConsent) {
           oStepConsent.setValidated(false);
         }
+        var oStepProducts = this.byId("stepProducts");
+        if (oStepProducts) {
+          oStepProducts.setValidated(false);
+        }
       }
-      MessageToast.show("Ready for new sales order flow");
+
+      var oSelectPriority = this.byId("selReviewShipmentPriority");
+      if (oSelectPriority) {
+        oSelectPriority.setSelectedKey("");
+        oSelectPriority.setValueState("None");
+      }
+
+      this.recalculateTotals();
+      this._updatePendingActionText();
     }
   });
 });
