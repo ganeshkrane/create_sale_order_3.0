@@ -114,16 +114,33 @@ sap.ui.define([
       });
     },
 
+    onSelectAddressItem: function (oEvent) {
+      var oItem = oEvent.getParameter("listItem");
+      if (oItem && oItem.getBindingContext("addresses")) {
+        var sPath = oItem.getBindingContext("addresses").getPath();
+        this.getModel("appState").setProperty("/selectedAddressPath", sPath);
+      }
+    },
+
     onConfirmAddressDialog: function (oEvent) {
       var oAppState = this.getModel("appState");
       var sSelectedPath = oAppState.getProperty("/selectedAddressPath");
       var oAddressesModel = this.getModel("addresses");
       var oSelectedAddress = null;
 
-      if (sSelectedPath) {
+      var oList = this.byId("suggestedAddressList");
+      if (oList && oList.getSelectedItem && oList.getSelectedItem()) {
+        var oCtx = oList.getSelectedItem().getBindingContext("addresses");
+        if (oCtx) {
+          oSelectedAddress = oCtx.getObject();
+        }
+      }
+
+      if (!oSelectedAddress && sSelectedPath && oAddressesModel) {
         oSelectedAddress = oAddressesModel.getProperty(sSelectedPath);
-      } else {
-        // Default to first item
+      }
+
+      if (!oSelectedAddress && oAddressesModel) {
         var aList = oAddressesModel.getData() || [];
         oSelectedAddress = aList[0];
       }

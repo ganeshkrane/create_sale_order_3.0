@@ -1,23 +1,23 @@
 [
   {
-    "key": "DELIVERY",
-    "title": "Delivery to Customer",
-    "subtitle": "Ship from warehouse / store",
+    "key": "CND",
+    "title": "Delivery (CND)",
+    "subtitle": "Deliver to customer address",
     "icon": "sap-icon://shipping-status",
     "selected": true
   },
   {
-    "key": "COLLECTION",
-    "title": "In-Store Collection",
-    "subtitle": "Customer collects today",
+    "key": "CNC",
+    "title": "Click & Collect (CNC)",
+    "subtitle": "Collect from store",
     "icon": "sap-icon://retail-store",
     "selected": false
   },
   {
-    "key": "WAREHOUSE",
-    "title": "Warehouse Pickup",
-    "subtitle": "Customer collects from DC",
-    "icon": "sap-icon://factory",
+    "key": "CNP",
+    "title": "BOPIS (CNP)",
+    "subtitle": "Collect from pickup point",
+    "icon": "sap-icon://map-pin-point",
     "selected": false
   }
 ]

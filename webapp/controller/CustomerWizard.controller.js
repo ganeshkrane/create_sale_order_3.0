@@ -87,6 +87,28 @@ sap.ui.define([
       this.getView().addDependent(this._oMessagePopover);
     },
 
+    onAfterRendering: function () {
+      this._attachDeliveryCardEvents();
+    },
+
+    _attachDeliveryCardEvents: function () {
+      var that = this;
+      var fnAttach = function (sId, fnHandler) {
+        var oCard = that.byId(sId);
+        if (oCard) {
+          oCard.attachBrowserEvent("click", fnHandler);
+          var oDom = oCard.getDomRef();
+          if (oDom) {
+            oDom.onclick = fnHandler;
+          }
+        }
+      };
+
+      fnAttach("cardCND", function () { that.onSelectDeliveryCND(); });
+      fnAttach("cardCNC", function () { that.onSelectClickAndCollectCNC(); });
+      fnAttach("cardCNP", function () { that.onSelectBopisCNP(); });
+    },
+
     _setupDatePickerLimits: function () {
       var dToday = new Date();
       var dMaxDate = new Date(dToday.getFullYear() - 18, dToday.getMonth(), dToday.getDate());
@@ -1455,25 +1477,88 @@ sap.ui.define([
     },
 
     // ========================================================
-    // STEP 6: DELIVERY
+    // STEP 5: DELIVERY METHOD
     // ========================================================
-    onSelectDeliveryMethodToCustomer: function () {
+    onSelectDeliveryCND: function () {
       var oAppState = this.getModel("appState");
-      oAppState.setProperty("/delivery/methodKey", "DELIVERY");
-      oAppState.setProperty("/delivery/methodTitle", "Delivery to Customer");
+      oAppState.setProperty("/delivery/methodKey", "CND");
+      oAppState.setProperty("/delivery/methodTitle", "Delivery (CND)");
+      oAppState.setProperty("/delivery/methodSubtitle", "Deliver to customer address");
+      oAppState.setProperty("/delivery/deliveryType", "Delivery");
+      oAppState.setProperty("/review/shippingDetails/deliveryMethod", "Delivery (CND)");
+      MessageToast.show("Delivery Method: Delivery (CND)");
+    },
+
+    onOpenDeliveryAddressValidation: function () {
+      var that = this;
+      var oAppState = this.getModel("appState");
+
+      this.openAddressValidationDialog("Delivery Address", function (oSelectedAddress) {
+        if (oSelectedAddress) {
+          var sFormatted = oSelectedAddress.formatted || (oSelectedAddress.street + ", " + oSelectedAddress.city + ", " + (oSelectedAddress.region || "") + " " + (oSelectedAddress.postalCode || ""));
+          
+          var oAddrObj = {
+            street: oSelectedAddress.street || "",
+            city: oSelectedAddress.city || "",
+            postalCode: oSelectedAddress.postalCode || "",
+            region: oSelectedAddress.region || "",
+            country: oSelectedAddress.country || "South Africa",
+            formatted: sFormatted,
+            status: oSelectedAddress.status || "VALIDATED",
+            statusState: that.formatter && that.formatter.addressStatusState ? that.formatter.addressStatusState(oSelectedAddress.status || "VALIDATED") : "Success",
+            validated: true
+          };
+
+          oAppState.setProperty("/delivery/deliveryAddress", oAddrObj);
+          
+          // Also sync to shipToAddress for downstream review steps
+          oAppState.setProperty("/delivery/shipToAddress/street", oSelectedAddress.street || "");
+          oAppState.setProperty("/delivery/shipToAddress/city", oSelectedAddress.city || "");
+          oAppState.setProperty("/delivery/shipToAddress/postalCode", oSelectedAddress.postalCode || "");
+          oAppState.setProperty("/delivery/shipToAddress/state", oSelectedAddress.region || "");
+          oAppState.setProperty("/delivery/shipToAddress/formatted", sFormatted);
+          oAppState.setProperty("/review/shippingDetails/address", sFormatted);
+
+          MessageToast.show("Delivery Address validated: " + sFormatted);
+        }
+      });
+    },
+
+    onSelectClickAndCollectCNC: function () {
+      var oAppState = this.getModel("appState");
+      oAppState.setProperty("/delivery/methodKey", "CNC");
+      oAppState.setProperty("/delivery/methodTitle", "Click & Collect (CNC)");
+      oAppState.setProperty("/delivery/methodSubtitle", "Collect from store");
+      oAppState.setProperty("/delivery/deliveryType", "Pick");
+      oAppState.setProperty("/review/shippingDetails/deliveryMethod", "Click & Collect (CNC)");
+      MessageToast.show("Delivery Method: Click & Collect (CNC)");
+    },
+
+    onSelectBopisCNP: function () {
+      var oAppState = this.getModel("appState");
+      oAppState.setProperty("/delivery/methodKey", "CNP");
+      oAppState.setProperty("/delivery/methodTitle", "BOPIS (CNP)");
+      oAppState.setProperty("/delivery/methodSubtitle", "Collect from pickup point");
+      oAppState.setProperty("/delivery/deliveryType", "Warehouse");
+      oAppState.setProperty("/review/shippingDetails/deliveryMethod", "BOPIS (CNP)");
+      MessageToast.show("Delivery Method: BOPIS (CNP)");
+    },
+
+    onSelectDeliveryMethodToCustomer: function () {
+      this.onSelectDeliveryCND();
     },
 
     onSelectInStoreCollection: function () {
-      var oAppState = this.getModel("appState");
-      oAppState.setProperty("/delivery/methodKey", "COLLECTION");
-      oAppState.setProperty("/delivery/methodTitle", "In-Store Collection");
+      this.onSelectClickAndCollectCNC();
     },
 
     onSelectWarehousePickup: function () {
-      var oAppState = this.getModel("appState");
-      oAppState.setProperty("/delivery/methodKey", "WAREHOUSE");
-      oAppState.setProperty("/delivery/methodTitle", "Warehouse Pickup");
+      this.onSelectBopisCNP();
     },
+
+    // ========================================================
+    // STEP 6: REVIEW SHIPPING
+    // ========================================================
 
     onPayeeSelectChange: function (oEvent) {
       var oItem = oEvent.getParameter("selectedItem");

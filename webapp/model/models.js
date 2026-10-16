@@ -112,8 +112,9 @@ sap.ui.define([
         },
         // Delivery choices and address (Review Shipping 23 fields)
         delivery: {
-          methodKey: "DELIVERY",
-          methodTitle: "Delivery to Customer",
+          methodKey: "CND",
+          methodTitle: "Delivery (CND)",
+          methodSubtitle: "Deliver to customer address",
           payee: "1000234571",
           payeeText: "1000234571 - Thabo Mokoena",
           poNumber: "PO-2026-99482",

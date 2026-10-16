@@ -911,12 +911,161 @@
         </WizardStep>
 
         <!-- ============================================== -->
-        <!-- STEP 5: REVIEW SHIPPING (23 Fields)            -->
+        <!-- STEP 5: DELIVERY METHOD                        -->
+        <!-- ============================================== -->
+        <WizardStep
+          id="stepDeliveryMethod"
+          title="{i18n>step5DeliveryMethod}"
+          icon="sap-icon://shipping-status"
+          validated="true">
+          <VBox
+            alignItems="Center"
+            justifyContent="Center"
+            width="100%"
+            class="deliveryCenterWrapper sapUiSmallMarginTop">
+            
+            <!-- 3 Separate Selectable Square Option Cards in one line -->
+            <HBox
+              alignItems="Center"
+              justifyContent="Center"
+              wrap="NoWrap"
+              class="deliveryMethodScreenCardsRow">
+              
+              <!-- Square 1: Delivery (CND) -->
+              <VBox
+                id="cardCND"
+                alignItems="Center"
+                justifyContent="Center"
+                class="deliveryMethodScreenCard {= ${appState>/delivery/methodKey} === 'CND' ? 'deliveryMethodScreenCardSelected' : ''} cursorPointer">
+                <Button
+                  type="Transparent"
+                  tooltip="Select Delivery (CND)"
+                  press=".onSelectDeliveryCND"
+                  class="cardFullOverlayButton" />
+                <HBox
+                  alignItems="Center"
+                  justifyContent="Center"
+                  class="deliveryMethodCardIconBox cursorPointer">
+                  <Image
+                    src="{= ${appState>/delivery/methodKey} === 'CND' ? './webapp/css/icons/delivery-truck-blue.svg' : './webapp/css/icons/delivery-truck.svg' }"
+                    width="46px"
+                    height="46px"
+                    class="deliveryMethodSvgIcon" />
+                </HBox>
+                <Text text="{i18n>deliveryMethodCND}" class="deliveryMethodCardTitle boldText" />
+                <Text text="{i18n>deliveryMethodCNDSubtitle}" class="deliveryMethodCardSubtitle" />
+              </VBox>
+
+              <!-- Square 2: Click & Collect (CNC) -->
+              <VBox
+                id="cardCNC"
+                alignItems="Center"
+                justifyContent="Center"
+                class="deliveryMethodScreenCard {= ${appState>/delivery/methodKey} === 'CNC' ? 'deliveryMethodScreenCardSelected' : ''} cursorPointer">
+                <Button
+                  type="Transparent"
+                  tooltip="Select Click &amp; Collect (CNC)"
+                  press=".onSelectClickAndCollectCNC"
+                  class="cardFullOverlayButton" />
+                <HBox
+                  alignItems="Center"
+                  justifyContent="Center"
+                  class="deliveryMethodCardIconBox cursorPointer">
+                  <Image
+                    src="{= ${appState>/delivery/methodKey} === 'CNC' ? './webapp/css/icons/click-collect-store-blue.svg' : './webapp/css/icons/click-collect-store.svg' }"
+                    width="46px"
+                    height="46px"
+                    class="deliveryMethodSvgIcon" />
+                </HBox>
+                <Text text="{i18n>deliveryMethodCNC}" class="deliveryMethodCardTitle boldText" />
+                <Text text="{i18n>deliveryMethodCNCSubtitle}" class="deliveryMethodCardSubtitle" />
+              </VBox>
+
+              <!-- Square 3: BOPIS (CNP) with Google Map Pin icon -->
+              <VBox
+                id="cardCNP"
+                alignItems="Center"
+                justifyContent="Center"
+                class="deliveryMethodScreenCard {= ${appState>/delivery/methodKey} === 'CNP' ? 'deliveryMethodScreenCardSelected' : ''} cursorPointer">
+                <Button
+                  type="Transparent"
+                  tooltip="Select BOPIS (CNP)"
+                  press=".onSelectBopisCNP"
+                  class="cardFullOverlayButton" />
+                <HBox
+                  alignItems="Center"
+                  justifyContent="Center"
+                  class="deliveryMethodCardIconBox cursorPointer">
+                  <Image
+                    src="{= ${appState>/delivery/methodKey} === 'CNP' ? './webapp/css/icons/google-maps-pin-blue.svg' : './webapp/css/icons/google-maps-pin.svg' }"
+                    width="44px"
+                    height="44px"
+                    class="deliveryMethodSvgIcon" />
+                </HBox>
+                <Text text="{i18n>deliveryMethodCNP}" class="deliveryMethodCardTitle boldText" />
+                <Text text="{i18n>deliveryMethodCNPSubtitle}" class="deliveryMethodCardSubtitle" />
+              </VBox>
+            </HBox>
+
+            <!-- CND Address Section: Displayed when Delivery (CND) is selected -->
+            <VBox
+              visible="{= ${appState>/delivery/methodKey} === 'CND' }"
+              alignItems="Center"
+              justifyContent="Center"
+              width="100%"
+              class="cndAddressSection sapUiMediumMarginTop">
+              
+              <!-- Validate / Select Address Button -->
+              <Button
+                id="btnValidateDeliveryAddress"
+                text="{= ${appState>/delivery/deliveryAddress/formatted} ? 'Change / Re-validate Address' : 'Validate / Select Address' }"
+                icon="sap-icon://map-2"
+                type="Emphasized"
+                press=".onOpenDeliveryAddressValidation"
+                class="validateAddressBtn sapUiSmallMarginBottom cursorPointer" />
+
+              <!-- Display Selected Address on Screen -->
+              <VBox
+                visible="{= !!${appState>/delivery/deliveryAddress/formatted} }"
+                class="cndSelectedAddressCard sapUiTinyMarginTop">
+                <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                  <HBox alignItems="Center">
+                    <core:Icon src="sap-icon://addresses" color="#0070f2" class="sapUiTinyMarginEnd" />
+                    <Text text="Selected Delivery Address" class="boldText" />
+                  </HBox>
+                  <ObjectStatus
+                    text="{= ${appState>/delivery/deliveryAddress/status} || 'VALIDATED' }"
+                    state="{= ${appState>/delivery/deliveryAddress/statusState} || 'Success' }"
+                    icon="sap-icon://sys-enter-2" />
+                </HBox>
+
+                <Text
+                  text="{appState>/delivery/deliveryAddress/formatted}"
+                  class="cndAddressFormattedText sapUiTinyMarginBottom" />
+
+                <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiTinyMarginTop">
+                  <Text
+                    text="{= 'Region: ' + (${appState>/delivery/deliveryAddress/region} || 'Gauteng') + ' · Postal Code: ' + (${appState>/delivery/deliveryAddress/postalCode} || '2196') + ' · ' + (${appState>/delivery/deliveryAddress/country} || 'South Africa') }"
+                    class="sapUiThemeColor-dim" />
+                  <Button
+                    text="Change"
+                    icon="sap-icon://edit"
+                    type="Transparent"
+                    press=".onOpenDeliveryAddressValidation"
+                    class="cursorPointer" />
+                </HBox>
+              </VBox>
+            </VBox>
+          </VBox>
+        </WizardStep>
+
+        <!-- ============================================== -->
+        <!-- STEP 6: REVIEW SHIPPING (23 Fields)            -->
         <!-- ============================================== -->
         <WizardStep
           id="stepDelivery"
-          title="{i18n>step5ReviewShipping}"
-          icon="sap-icon://shipping-status"
+          title="{i18n>step6ReviewShipping}"
+          icon="sap-icon://form"
           validated="true">
           <VBox class="sapUiSmallMargin">
             <!-- Review Shipping Master Panel -->
@@ -1243,11 +1392,11 @@
         </WizardStep>
 
         <!-- ============================================== -->
-        <!-- STEP 6: REVIEW (Screen 15)                     -->
+        <!-- STEP 7: REVIEW (Screen 15)                     -->
         <!-- ============================================== -->
         <WizardStep
           id="stepReview"
-          title="{i18n>step6Review}"
+          title="{i18n>step7Review}"
           icon="sap-icon://survey"
           validated="true">
           <VBox class="sapUiSmallMargin">
@@ -1256,6 +1405,10 @@
               <Panel headerText="Shipping Details" class="fioriStandardBorderPanel">
                 <content>
                   <VBox class="sapUiSmallMargin">
+                    <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                      <Text text="Delivery Method" class="priceRowLabel" />
+                      <Text text="{= ${appState>/delivery/methodTitle} || 'Delivery (CND)' }" class="summaryHeaderValue" />
+                    </HBox>
                     <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
                       <Text text="Ship To" class="priceRowLabel" />
                       <Text text="{= ${appState>/delivery/shipToName} || ${appState>/review/shippingDetails/shipTo} || '1000234571 - Thabo Mokoena' }" class="summaryHeaderValue" />
