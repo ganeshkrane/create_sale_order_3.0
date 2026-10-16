@@ -103,6 +103,17 @@ sap.ui.define([
         ],
         cart: [],
         cartCount: 0,
+        // Sourcing status summary per SRS V3.3 decision rules
+        sourcingSummary: {
+          methodKey: "CND",
+          totalItems: 0,
+          blockingCount: 0,
+          actionableCount: 0,
+          hasErrors: false,
+          statusState: "Success",
+          statusTitle: "Delivery Sourcing Ready",
+          statusDescription: "Select your preferred delivery method to evaluate inventory sourcing."
+        },
         // Pricing summary breakdown
         pricing: {
           netValue: 0.00,

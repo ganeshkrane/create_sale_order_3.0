@@ -5,23 +5,18 @@ sap.ui.define([
 
   return {
     /**
-     * Formats currency amounts in South African Rand (R)
+     * Formats amounts with 2 decimal places without currency unit
      */
     formatCurrency: function (fValue, sCurrency) {
       if (fValue === undefined || fValue === null || isNaN(fValue)) {
-        return "R 0.00";
+        return "0.00";
       }
-      var oCurrencyFormat = NumberFormat.getCurrencyInstance({
-        currencyCode: false,
-        customCurrencies: {
-          "ZAR": {
-            symbol: "R",
-            decimals: 2
-          }
-        }
+      var oFormat = NumberFormat.getFloatInstance({
+        minFractionDigits: 2,
+        maxFractionDigits: 2,
+        groupingEnabled: true
       });
-      var sFormatted = oCurrencyFormat.format(fValue, "ZAR");
-      return "R " + sFormatted.replace("ZAR", "").trim();
+      return oFormat.format(Number(fValue));
     },
 
     /**
@@ -78,6 +73,56 @@ sap.ui.define([
         return "1.000";
       }
       return Number(nQty).toFixed(3);
+    },
+
+    /**
+     * Maps sourcing state to icon
+     */
+    sourcingStatusIcon: function (sState) {
+      switch (sState) {
+        case "Success":
+          return "sap-icon://sys-enter-2";
+        case "Warning":
+          return "sap-icon://alert";
+        case "Error":
+          return "sap-icon://error";
+        case "Information":
+          return "sap-icon://information";
+        default:
+          return "sap-icon://shipping-status";
+      }
+    },
+
+    /**
+     * Maps article status to badge state
+     */
+    articleStatusState: function (sStatus) {
+      if (sStatus === "M") {
+        return "Information";
+      } else if (sStatus === "Not M") {
+        return "Warning";
+      } else if (sStatus === "NLAG") {
+        return "None";
+      }
+      return "None";
+    },
+
+    /**
+     * Maps sourcing state to status color hex for status flag / color icon
+     */
+    sourcingStatusColor: function (sState) {
+      switch (sState) {
+        case "Success":
+          return "#107e3e";
+        case "Warning":
+          return "#e9730c";
+        case "Error":
+          return "#bb0000";
+        case "Information":
+          return "#0070f2";
+        default:
+          return "#6a6d70";
+      }
     }
   };
 });

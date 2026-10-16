@@ -917,7 +917,8 @@
           id="stepDeliveryMethod"
           title="{i18n>step5DeliveryMethod}"
           icon="sap-icon://shipping-status"
-          validated="true">
+          activate=".onDeliveryMethodStepActivate"
+          validated="{= !!${appState>/deliveryValidationPassed} }">
           <HBox width="100%" alignItems="Stretch" wrap="NoWrap" class="deliverySideBySideLayout sapUiSmallMarginTop">
             
             <!-- ============================================== -->
@@ -1231,35 +1232,52 @@
                   <core:Icon src="sap-icon://cart" size="3.5rem" color="#94a3b8" class="sapUiSmallMarginBottom" />
                   <Text text="Your cart is currently empty" class="boldText cartEmptyStateTitle" />
                   <Text text="Add products from the catalog to proceed with your order" class="sapUiThemeColor-dim sapUiSmallMarginBottom" />
-                  <Button
-                    text="Add Article"
-                    icon="sap-icon://add"
-                    type="Emphasized"
-                    press=".onOpenAddArticleDialog"
-                    class="cursorPointer" />
+                  <HBox>
+                    <Button
+                      text="Add Article"
+                      icon="sap-icon://add"
+                      type="Emphasized"
+                      press=".onOpenAddArticleDialog"
+                      class="cursorPointer" />
+                  </HBox>
                 </VBox>
 
-                <!-- Populated Cart Table -->
+                <!-- Populated Cart Table with Original 6-Column Layout -->
                 <VBox visible="{= (${appState>/cartCount} || 0) > 0 }">
+                  
+                  <!-- Compact Sourcing Summary Banner -->
+                  <HBox
+                    alignItems="Center"
+                    justifyContent="SpaceBetween"
+                    wrap="Wrap"
+                    class="sourcingBannerBox sourcingBannerState-{appState>/sourcingSummary/statusState} sapUiTinyMarginBottom">
+                    <HBox alignItems="Center">
+                      <core:Icon
+                        src="{path: 'appState>/sourcingSummary/statusState', formatter: '.formatter.sourcingStatusIcon'}"
+                        class="sapUiTinyMarginEnd sourcingIcon-{appState>/sourcingSummary/statusState}" />
+                      <Text text="{appState>/sourcingSummary/statusTitle}" class="boldText" />
+                    </HBox>
+                  </HBox>
+
                   <ScrollContainer horizontal="true" vertical="false" width="100%">
                     <Table
                       id="deliveryStepCartSummaryTable"
                       items="{appState>/cart}"
                       noDataText="No articles in cart.">
                       <columns>
-                        <Column width="55px" hAlign="Center">
+                        <Column width="50px" hAlign="Center">
                           <Text text="Item" class="boldText" />
                         </Column>
-                        <Column minWidth="220px">
+                        <Column minWidth="200px">
                           <Text text="Article / Description" class="boldText" />
                         </Column>
-                        <Column width="150px" hAlign="Center">
+                        <Column width="140px" hAlign="Center">
                           <Text text="Quantity" class="boldText" />
                         </Column>
-                        <Column width="120px" hAlign="End">
+                        <Column width="110px" hAlign="End">
                           <Text text="Price/Unit" class="boldText" />
                         </Column>
-                        <Column width="130px" hAlign="End">
+                        <Column width="115px" hAlign="End">
                           <Text text="Total" class="boldText" />
                         </Column>
                         <Column width="70px" hAlign="Center">
@@ -1269,13 +1287,35 @@
                       <items>
                         <ColumnListItem class="{= ${appState>isSubItem} ? 'subItemRow' : 'mainItemRow' }">
                           <cells>
+                            <!-- Col 1: Item -->
                             <Text text="{appState>item}" />
-                            <VBox>
-                              <Text text="{= ${appState>description} || ${appState>name} }" class="productTableTitle boldText" />
-                              <Text text="{= (${appState>articleId} ? ('Art. ' + ${appState>articleId} + ' · ') : '') + (${appState>productNo} || '') }" class="sapUiThemeColor-dim" />
-                            </VBox>
+                            
+                            <!-- Col 2: Article / Description with status color flag & tooltip -->
+                            <HBox alignItems="Center">
+                              <!-- Status color flag with tooltip displaying full sourcing message -->
+                              <core:Icon
+                                src="sap-icon://flag"
+                                size="1.25rem"
+                                color="{path: 'appState>sourcingState', formatter: '.formatter.sourcingStatusColor'}"
+                                class="sapUiTinyMarginEnd cursorPointer statusFlagIcon"
+                                tooltip="{= ${appState>sourcingTooltip} || ((${appState>sourcingStatusText} || 'Status') + ': ' + (${appState>sourcingActionText} || '')) }" />
+                              <VBox>
+                                <Text
+                                  text="{= ${appState>description} || ${appState>name} }"
+                                  class="productTableTitle boldText" />
+                                <HBox alignItems="Center">
+                                  <Text
+                                    text="{= 'Art. ' + (${appState>articleId} || '') + (${appState>productNo} ? (' · ' + ${appState>productNo}) : '') }"
+                                    class="sapUiThemeColor-dim" />
+                                  <Text
+                                    visible="{= !!${appState>sourcingIdentifier} }"
+                                    text="{= ' · ' + ${appState>sourcingIdentifier} }"
+                                    class="sapUiThemeColor-dim boldText" />
+                                </HBox>
+                              </VBox>
+                            </HBox>
 
-                            <!-- Interactive Quantity Stepper -->
+                            <!-- Col 3: Interactive Quantity Stepper -->
                             <HBox alignItems="Center" justifyContent="Center" class="cartItemQtyBox">
                               <Button
                                 icon="sap-icon://less"
@@ -1293,16 +1333,36 @@
                                 class="qtyControlBtn cursorPointer" />
                             </HBox>
 
+                            <!-- Col 4: Price/Unit -->
                             <Text text="{path: 'appState>netPrice', formatter: '.formatter.formatCurrency'}" />
+
+                            <!-- Col 5: Total -->
                             <Text text="{path: 'appState>netValue', formatter: '.formatter.formatCurrency'}" class="priceTextBold boldText" />
 
-                            <!-- Remove Item -->
-                            <Button
-                              icon="sap-icon://delete"
-                              type="Transparent"
-                              tooltip="Remove item from cart"
-                              press=".onRemoveCartItem"
-                              class="deleteCartItemBtn cursorPointer" />
+                            <!-- Col 6: Action with smart resolution buttons -->
+                            <HBox alignItems="Center" justifyContent="Center">
+                              <Button
+                                visible="{= !!${appState>mustRemove} }"
+                                icon="sap-icon://delete"
+                                type="Reject"
+                                press=".onRemoveSourcingItem"
+                                tooltip="{= 'Required per SRS rule: Remove item (' + ${appState>sourcingStatusText} + ')' }"
+                                class="cursorPointer" />
+                              <Button
+                                visible="{= !!${appState>canReduce} }"
+                                icon="sap-icon://navigation-down-arrow"
+                                type="Critical"
+                                press=".onReduceQtyToAvailable"
+                                tooltip="{= 'Reduce quantity to ' + ${appState>recommendedQty} + ' EA (Available amount)' }"
+                                class="cursorPointer" />
+                              <Button
+                                visible="{= !${appState>mustRemove} &amp;&amp; !${appState>canReduce} }"
+                                icon="sap-icon://delete"
+                                type="Transparent"
+                                tooltip="Remove item from cart"
+                                press=".onRemoveCartItem"
+                                class="deleteCartItemBtn cursorPointer" />
+                            </HBox>
                           </cells>
                         </ColumnListItem>
                       </items>
@@ -1327,6 +1387,39 @@
                       <Text text="Total:" class="sapUiTinyMarginEnd boldText cartGrandTotalLabel" />
                       <Text text="{path: 'appState>/pricing/total', formatter: '.formatter.formatCurrency'}" class="boldText cartGrandTotalAmount" />
                     </HBox>
+                  </HBox>
+
+                  <!-- Validation Notice MessageStrip -->
+                  <MessageStrip
+                    visible="{= !!${appState>/deliveryValidationNotice} }"
+                    text="{appState>/deliveryValidationNotice}"
+                    type="{= ${appState>/deliveryValidationNoticeType} || 'Information' }"
+                    showIcon="true"
+                    showCloseButton="true"
+                    class="sapUiSmallMarginTop" />
+
+                  <!-- Bottom Action Bar Below Cart Box -->
+                  <HBox
+                    justifyContent="End"
+                    alignItems="Center"
+                    class="sapUiSmallMarginTop cartSummaryActionBar">
+                    <Button
+                      id="btnDeliveryContinue"
+                      text="Continue"
+                      type="{= ${appState>/deliveryValidationPassed} ? 'Default' : 'Emphasized' }"
+                      icon="sap-icon://navigation-right-arrow"
+                      press=".onDeliveryContinuePress"
+                      tooltip="Validate cart items and check stock availability"
+                      class="cursorPointer sapUiTinyMarginEnd" />
+                    <Button
+                      id="btnProceedToStep6"
+                      text="Step 6: Review Shipping"
+                      type="Accept"
+                      icon="sap-icon://form"
+                      press=".onProceedToStep6"
+                      visible="{= !!${appState>/deliveryValidationPassed} }"
+                      tooltip="Stock confirmed. Proceed to Step 6: Review Shipping"
+                      class="cursorPointer" />
                   </HBox>
                 </VBox>
               </content>

@@ -1,0 +1,204 @@
+<core:FragmentDefinition
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core">
+  <Dialog
+    id="sourcingDecisionTableDialog"
+    title="Delivery Sourcing Status Decision Table (SRS V3.3 &amp; V3.0)"
+    contentWidth="960px"
+    contentHeight="600px"
+    resizable="true"
+    draggable="true">
+    <customHeader>
+      <Toolbar>
+        <core:Icon src="sap-icon://shipping-status" color="#0070f2" class="sapUiTinyMarginBegin sapUiTinyMarginEnd" />
+        <Title text="Delivery Sourcing Status Decision Table" titleStyle="H5" class="boldText" />
+        <ToolbarSpacer />
+        <Button icon="sap-icon://decline" type="Transparent" press=".onCloseSourcingReferenceDialog" />
+      </Toolbar>
+    </customHeader>
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <MessageStrip
+          text="Reference based on SRS V3.3 PDF and V3.0 DOCX: What to do for each delivery method, OAA response, and article status."
+          type="Information"
+          showIcon="true"
+          class="sapUiSmallMarginBottom" />
+
+        <ScrollContainer horizontal="true" vertical="true" width="100%">
+          <Table width="100%" class="sourcingDecisionReferenceTable">
+            <columns>
+              <Column width="16%">
+                <Text text="Delivery Method" class="boldText" />
+              </Column>
+              <Column width="20%">
+                <Text text="Sourcing Response" class="boldText" />
+              </Column>
+              <Column width="16%">
+                <Text text="Article Status" class="boldText" />
+              </Column>
+              <Column width="48%">
+                <Text text="What the App Should Do (SRS Rule)" class="boldText" />
+              </Column>
+            </columns>
+            <items>
+              <!-- CND Row 1 -->
+              <ColumnListItem>
+                <cells>
+                  <VBox>
+                    <Text text="Click &amp; Deliver" class="boldText" />
+                    <ObjectStatus text="CND" state="Information" />
+                  </VBox>
+                  <ObjectStatus text="Full stock available" state="Success" icon="sap-icon://sys-enter-2" />
+                  <Text text="Any" />
+                  <Text text="Reserve the requested quantity at the OAA source. OAA determines the supplying site and shipping point automatically." />
+                </cells>
+              </ColumnListItem>
+
+              <!-- CND Row 2 -->
+              <ColumnListItem>
+                <cells>
+                  <VBox>
+                    <Text text="Click &amp; Deliver" class="boldText" />
+                    <ObjectStatus text="CND" state="Information" />
+                  </VBox>
+                  <ObjectStatus text="F001 · No stock" state="Warning" icon="sap-icon://alert" />
+                  <ObjectStatus text="Status M" state="Information" />
+                  <Text text="Do not reserve the unavailable line. Assign it to the customer’s Base DC (example: QL30) and allow the order to proceed." />
+                </cells>
+              </ColumnListItem>
+
+              <!-- CND Row 3 -->
+              <ColumnListItem>
+                <cells>
+                  <VBox>
+                    <Text text="Click &amp; Deliver" class="boldText" />
+                    <ObjectStatus text="CND" state="Information" />
+                  </VBox>
+                  <ObjectStatus text="F001 · No stock" state="Error" icon="sap-icon://error" />
+                  <ObjectStatus text="Not M" state="Warning" />
+                  <Text text="Show the affected item. Require the user to remove it, then run sourcing again. (Order blocked until removed)" />
+                </cells>
+              </ColumnListItem>
+
+              <!-- CND Row 4 -->
+              <ColumnListItem>
+                <cells>
+                  <VBox>
+                    <Text text="Click &amp; Deliver" class="boldText" />
+                    <ObjectStatus text="CND" state="Information" />
+                  </VBox>
+                  <ObjectStatus text="F002 · Partial stock" state="Information" icon="sap-icon://information" />
+                  <ObjectStatus text="Status M" state="Information" />
+                  <Text text="Reserve the available quantity and route the remainder to the Base DC. The PDF describes the remainder as an additional line. Allow the order to proceed." />
+                </cells>
+              </ColumnListItem>
+
+              <!-- CND Row 5 -->
+              <ColumnListItem>
+                <cells>
+                  <VBox>
+                    <Text text="Click &amp; Deliver" class="boldText" />
+                    <ObjectStatus text="CND" state="Information" />
+                  </VBox>
+                  <ObjectStatus text="F002 · Partial stock" state="Error" icon="sap-icon://error" />
+                  <ObjectStatus text="Not M" state="Warning" />
+                  <Text text="Remove the line item from the cart, then run sourcing again. This is the corrected rule per V3.3 PDF." />
+                </cells>
+              </ColumnListItem>
+
+              <!-- CNC Row 6 -->
+              <ColumnListItem>
+                <cells>
+                  <VBox>
+                    <Text text="Store Collection" class="boldText" />
+                    <ObjectStatus text="CNC" state="Information" />
+                  </VBox>
+                  <ObjectStatus text="Full stock available" state="Success" icon="sap-icon://sys-enter-2" />
+                  <Text text="Eligible articles" />
+                  <Text text="Show stores with the full quantity available. User selects a store; reserve stock there." />
+                </cells>
+              </ColumnListItem>
+
+              <!-- CNC Row 7 -->
+              <ColumnListItem>
+                <cells>
+                  <VBox>
+                    <Text text="Store Collection" class="boldText" />
+                    <ObjectStatus text="CNC" state="Information" />
+                  </VBox>
+                  <ObjectStatus text="F002 · Partial stock" state="Warning" icon="sap-icon://alert" />
+                  <Text text="Any, including M" />
+                  <Text text="Show eligible stores ranked by available stock. Ask the user to reduce quantity to the available amount; reserve that quantity." />
+                </cells>
+              </ColumnListItem>
+
+              <!-- CNP Row 8 -->
+              <ColumnListItem>
+                <cells>
+                  <VBox>
+                    <Text text="BOPIS Point" class="boldText" />
+                    <ObjectStatus text="CNP" state="Information" />
+                  </VBox>
+                  <ObjectStatus text="Full stock available" state="Success" icon="sap-icon://sys-enter-2" />
+                  <Text text="Eligible articles" />
+                  <Text text="Show pickup points with stock available. User selects a point; reserve stock there." />
+                </cells>
+              </ColumnListItem>
+
+              <!-- CNP Row 9 -->
+              <ColumnListItem>
+                <cells>
+                  <VBox>
+                    <Text text="BOPIS Point" class="boldText" />
+                    <ObjectStatus text="CNP" state="Information" />
+                  </VBox>
+                  <ObjectStatus text="F002 · Partial stock" state="Warning" icon="sap-icon://alert" />
+                  <Text text="Any" />
+                  <Text text="Show pickup points ranked by available quantity. Ask the user to reduce quantity; reserve the available amount." />
+                </cells>
+              </ColumnListItem>
+
+              <!-- CNC/CNP Row 10 -->
+              <ColumnListItem>
+                <cells>
+                  <VBox>
+                    <Text text="Store Collection or BOPIS" class="boldText" />
+                    <ObjectStatus text="CNC / CNP" state="Information" />
+                  </VBox>
+                  <ObjectStatus text="No eligible location returned" state="Error" icon="sap-icon://error" />
+                  <Text text="Any" />
+                  <Text text="Identify the item causing the sourcing issue. User removes it, then the app calls the wrapper again." />
+                </cells>
+              </ColumnListItem>
+
+              <!-- NLAG Row 11 -->
+              <ColumnListItem>
+                <cells>
+                  <VBox>
+                    <Text text="All Methods" class="boldText" />
+                    <ObjectStatus text="CND / CNC / CNP" state="None" />
+                  </VBox>
+                  <ObjectStatus text="Excluded from OAA" state="None" />
+                  <ObjectStatus text="NLAG (Non-stock)" state="None" />
+                  <Text text="Applies to all sourcing calls. Exclude NLAG items from the OAA request. Directly confirmed without stock reservation." />
+                </cells>
+              </ColumnListItem>
+            </items>
+          </Table>
+        </ScrollContainer>
+
+        <!-- General Sourcing Notes -->
+        <VBox class="sapUiSmallMarginTop sourcingNotesCard">
+          <Text text="General Sourcing &amp; Reservation Rules:" class="boldText sapUiTinyMarginBottom" />
+          <Text text="• Exclude NLAG items from the OAA request." class="sapUiTinyMarginBottom" />
+          <Text text="• For delivery (CND), pass the geolocated customer address, required postal code, and sales organisation. OAA selects the supplying site and shipping point; users do not choose the shipping point manually." class="sapUiTinyMarginBottom" />
+          <Text text="• Reservation and checkout: After sourcing and location selection, create the cart reservation for reservable stock. At checkout, create the sales order and update reservation from Cart (C) to Order (O)." class="sapUiTinyMarginBottom" />
+          <Text text="• Version note: V3.0 DOCX says to prompt a quantity change for F002 non-M delivery; V3.3 PDF says remove the item. This table applies the user's correction: remove the line item. The Base DC exception is specified for delivery; collection has no Base DC fallback defined." />
+        </VBox>
+      </VBox>
+    </content>
+    <buttons>
+      <Button text="Close" type="Emphasized" press=".onCloseSourcingReferenceDialog" />
+    </buttons>
+  </Dialog>
+</core:FragmentDefinition>

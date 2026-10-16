@@ -50,10 +50,17 @@
         <items>
           <ColumnListItem type="Active">
             <cells>
-              <VBox>
-                <Text text="{products>articleId}" class="boldText" />
-                <Text text="{products>name}" class="sapUiTinyMarginTop" />
-              </VBox>
+              <HBox alignItems="Center">
+                <core:Icon
+                  src="sap-icon://flag"
+                  color="{path: 'products>stockState', formatter: '.formatter.sourcingStatusColor'}"
+                  tooltip="{= (${products>sourcingIdentifier} || 'Sourcing Status') + ': ' + (${products>sourcingResponse} || '') }"
+                  class="sapUiTinyMarginEnd statusFlagIcon cursorPointer" />
+                <VBox>
+                  <Text text="{products>articleId}" class="boldText" />
+                  <Text text="{products>name}" class="sapUiTinyMarginTop" />
+                </VBox>
+              </HBox>
               <Text text="{products>site}" />
               <Text text="{= ${products>stockText} || ${products>stock} || 'In Stock' }" />
               <Text text="{path: 'products>qty', formatter: '.formatter.formatQtyDecimal'}" />

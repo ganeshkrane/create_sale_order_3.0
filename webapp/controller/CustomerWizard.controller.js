@@ -995,7 +995,17 @@ sap.ui.define([
           discountPct: 0,
           hasCondition: false,
           conditionText: "",
-          isSubItem: false
+          isSubItem: false,
+          // Sourcing identifiers and properties
+          articleStatus: oProduct.articleStatus || "M",
+          sourcingIdentifier: oProduct.sourcingIdentifier || "[Status M]",
+          sourcingCode: oProduct.sourcingCode || "CND_FULL",
+          availableQty: (oProduct.availableQty !== undefined ? oProduct.availableQty : (oProduct.stock !== undefined ? oProduct.stock : 10)),
+          stock: (oProduct.stock !== undefined ? oProduct.stock : 10),
+          baseDC: oProduct.baseDC || "QL30",
+          oaaSource: oProduct.oaaSource || "DC M001",
+          shippingPoint: oProduct.shippingPoint || "SP-01",
+          sourcingRuleDescription: oProduct.sourcingRuleDescription || ""
         };
         aCart.push(oNewItem);
 
@@ -1025,7 +1035,10 @@ sap.ui.define([
             hasCondition: false,
             conditionText: "",
             isSubItem: true,
-            parentItem: String(nItemNo)
+            parentItem: String(nItemNo),
+            articleStatus: "NLAG",
+            sourcingIdentifier: "[Warranty Plan]",
+            sourcingCode: "NLAG"
           });
         }
       }
@@ -1033,6 +1046,7 @@ sap.ui.define([
       oAppState.setProperty("/cart", aCart);
       oAppState.setProperty("/cartCount", aCart.length);
       this.recalculateTotals();
+      this.updateCartSourcingEvaluation();
 
       var oStepProducts = this.byId("stepProducts");
       if (oStepProducts) {
@@ -1064,6 +1078,7 @@ sap.ui.define([
         });
       }
       this.recalculateTotals();
+      this.updateCartSourcingEvaluation();
     },
 
     onDecreaseQty: function (oEvent) {
@@ -1081,6 +1096,7 @@ sap.ui.define([
           });
         }
         this.recalculateTotals();
+        this.updateCartSourcingEvaluation();
       }
     },
 
@@ -1244,6 +1260,7 @@ sap.ui.define([
             oAppState.setProperty("/cart", aFiltered);
             oAppState.setProperty("/cartCount", aFiltered.length);
             that.recalculateTotals();
+            that.updateCartSourcingEvaluation();
             var oStepProducts = that.byId("stepProducts");
             if (oStepProducts) {
               oStepProducts.setValidated(aFiltered.length > 0);
@@ -1477,7 +1494,7 @@ sap.ui.define([
     },
 
     // ========================================================
-    // STEP 5: DELIVERY METHOD
+    // STEP 5: DELIVERY METHOD & SOURCING STRATEGY (SRS V3.3)
     // ========================================================
     onSelectDeliveryCND: function () {
       var oAppState = this.getModel("appState");
@@ -1486,6 +1503,7 @@ sap.ui.define([
       oAppState.setProperty("/delivery/methodSubtitle", "Deliver to customer address");
       oAppState.setProperty("/delivery/deliveryType", "Delivery");
       oAppState.setProperty("/review/shippingDetails/deliveryMethod", "Delivery (CND)");
+      this.updateCartSourcingEvaluation();
       MessageToast.show("Delivery Method: Delivery (CND)");
     },
 
@@ -1519,6 +1537,7 @@ sap.ui.define([
           oAppState.setProperty("/delivery/shipToAddress/formatted", sFormatted);
           oAppState.setProperty("/review/shippingDetails/address", sFormatted);
 
+          that.updateCartSourcingEvaluation();
           MessageToast.show("Delivery Address validated: " + sFormatted);
         }
       });
@@ -1536,6 +1555,7 @@ sap.ui.define([
         oAppState.setProperty("/review/shippingDetails/shipTo", oStore.storeName);
         oAppState.setProperty("/review/shippingDetails/address", oStore.address);
       }
+      this.updateCartSourcingEvaluation();
       MessageToast.show("Delivery Method: Click & Collect (CNC)");
     },
 
@@ -1551,6 +1571,7 @@ sap.ui.define([
         oAppState.setProperty("/review/shippingDetails/shipTo", oPoint.pointName);
         oAppState.setProperty("/review/shippingDetails/address", oPoint.location);
       }
+      this.updateCartSourcingEvaluation();
       MessageToast.show("Delivery Method: BOPIS (CNP)");
     },
 
@@ -1569,6 +1590,7 @@ sap.ui.define([
         oAppState.setProperty("/delivery/collectionStore", Object.assign({}, oStore));
         oAppState.setProperty("/review/shippingDetails/shipTo", oStore.storeName);
         oAppState.setProperty("/review/shippingDetails/address", oStore.address);
+        this.updateCartSourcingEvaluation();
         MessageToast.show("Store selected: " + oStore.storeName);
       }
     },
@@ -1588,8 +1610,893 @@ sap.ui.define([
         oAppState.setProperty("/delivery/pickupPoint", Object.assign({}, oPoint));
         oAppState.setProperty("/review/shippingDetails/shipTo", oPoint.pointName);
         oAppState.setProperty("/review/shippingDetails/address", oPoint.location);
+        this.updateCartSourcingEvaluation();
         MessageToast.show("Pickup point selected: " + oPoint.pointName);
       }
+    },
+
+    onDeliveryMethodStepActivate: function () {
+      var oAppState = this.getModel("appState");
+      if (oAppState) {
+        oAppState.setProperty("/deliveryValidationPassed", false);
+        oAppState.setProperty("/deliveryValidationNotice", "");
+      }
+      this.updateCartSourcingEvaluation();
+    },
+
+    onRefreshSourcing: function () {
+      this.updateCartSourcingEvaluation();
+      MessageToast.show("Sourcing logic re-evaluated for current cart items");
+    },
+
+    /**
+     * Sourcing Logic Engine based on SRS V3.3 Decision Table:
+     * Evaluates all cart items against the currently selected delivery method (CND, CNC, CNP)
+     */
+    updateCartSourcingEvaluation: function () {
+      var oAppState = this.getModel("appState");
+      if (!oAppState) return;
+
+      var sMethod = oAppState.getProperty("/delivery/methodKey") || "CND";
+      var aCart = oAppState.getProperty("/cart") || [];
+      var oStore = oAppState.getProperty("/delivery/collectionStore") || { storeName: "Centurion Lifestyle Centre" };
+      var oPoint = oAppState.getProperty("/delivery/pickupPoint") || { pointName: "Centurion Mall Locker Hub" };
+      var sAddress = oAppState.getProperty("/delivery/deliveryAddress/formatted") || "12 Rivonia Road, Sandton, 2196";
+
+      var nBlockingCount = 0;
+      var nActionableCount = 0;
+
+      aCart.forEach(function (item) {
+        if (item.isSubItem) {
+          item.sourcingStatusText = "Attached Service";
+          item.sourcingState = "None";
+          item.sourcingActionText = "Linked to parent line item " + (item.parentItem || "");
+          item.routingTarget = "Fulfilled with parent item";
+          item.isBlocking = false;
+          item.mustRemove = false;
+          item.canReduce = false;
+          item.isSplit = false;
+          item.isAssignedBaseDC = false;
+          item.isReserved = false;
+          item.sourcingTooltip = "Attached Service: Linked to parent line item " + (item.parentItem || "");
+          return;
+        }
+
+        // Rule Note 1: Exclude NLAG items from OAA request
+        if (item.itemCat === "NLAG" || item.articleStatus === "NLAG" || item.sourcingCode === "NLAG") {
+          item.sourcingStatusText = "Excluded from OAA";
+          item.sourcingState = "None";
+          item.sourcingActionText = "Applies to all sourcing calls: Exclude NLAG items from OAA request. Directly confirmed non-stock service.";
+          item.routingTarget = "Direct Fulfillment / Non-stock";
+          item.isBlocking = false;
+          item.mustRemove = false;
+          item.canReduce = false;
+          item.isSplit = false;
+          item.isAssignedBaseDC = false;
+          item.isReserved = false;
+          item.sourcingTooltip = "Excluded from OAA: Non-stock service item is excluded from OAA sourcing per SRS V3.3 rules.";
+          return;
+        }
+
+        var sStatus = item.articleStatus || "M";
+        var nAvail = (item.availableQty !== undefined) ? item.availableQty : (item.stock !== undefined ? item.stock : 10);
+        var nReq = item.qty || 1;
+
+        if (sMethod === "CND") {
+          // ==========================================
+          // CLICK & DELIVER (CND)
+          // ==========================================
+          if (nAvail === 0 || item.sourcingCode === "CND_F001_M" || item.sourcingCode === "CND_F001_NOT_M") {
+            if (sStatus === "M") {
+              // Row 2: F001 · No stock | M
+              item.sourcingStatusText = "F001 · No Stock (M)";
+              item.sourcingState = "Warning";
+              item.sourcingActionText = "Do not reserve the unavailable line. Assign it to customer's Base DC (" + (item.baseDC || "QL30") + ") and allow the order to proceed.";
+              item.routingTarget = "Customer Base DC (" + (item.baseDC || "QL30") + ")";
+              item.isBlocking = false;
+              item.mustRemove = false;
+              item.canReduce = false;
+              item.isSplit = false;
+              item.isAssignedBaseDC = true;
+              item.isReserved = false;
+              nActionableCount++;
+            } else {
+              // Row 3: F001 · No stock | Not M
+              item.sourcingStatusText = "F001 · No Stock (Not M)";
+              item.sourcingState = "Error";
+              item.sourcingActionText = "Show the affected item. Require the user to remove it, then run sourcing again. (Order blocked until removed)";
+              item.routingTarget = "Blocked (Unavailable)";
+              item.isBlocking = true;
+              item.mustRemove = true;
+              item.canReduce = false;
+              item.isSplit = false;
+              item.isAssignedBaseDC = false;
+              item.isReserved = false;
+              nBlockingCount++;
+            }
+          } else if (nAvail < nReq || item.sourcingCode === "CND_F002_M" || item.sourcingCode === "CND_F002_NOT_M") {
+            if (sStatus === "M") {
+              // Row 4: F002 · Partial stock | M
+              var nAvailToReserve = Math.min(nAvail, nReq);
+              var nRemainder = nReq - nAvailToReserve;
+              item.sourcingStatusText = "F002 · Partial Stock (M)";
+              item.sourcingState = "Information";
+              item.sourcingActionText = "Reserve available quantity (" + nAvailToReserve + " EA) and route remainder (" + nRemainder + " EA) to Base DC (" + (item.baseDC || "QL30") + ") as additional line. Allow order to proceed.";
+              item.routingTarget = nAvailToReserve + " EA @ OAA | " + nRemainder + " EA @ Base DC (" + (item.baseDC || "QL30") + ")";
+              item.isBlocking = false;
+              item.mustRemove = false;
+              item.canReduce = false;
+              item.isSplit = (nRemainder > 0);
+              item.splitAvailQty = nAvailToReserve;
+              item.splitRemainderQty = nRemainder;
+              nActionableCount++;
+            } else {
+              // Row 5: F002 · Partial stock | Not M
+              item.sourcingStatusText = "F002 · Partial Stock (Not M)";
+              item.sourcingState = "Error";
+              item.sourcingActionText = "V3.3 Corrected Rule: Remove the line item from the cart, then run sourcing again.";
+              item.routingTarget = "Blocked (Remove Item)";
+              item.isBlocking = true;
+              item.mustRemove = true;
+              item.canReduce = false;
+              item.isSplit = false;
+              nBlockingCount++;
+            }
+          } else {
+            // Row 1: Full stock available | Any
+            item.sourcingStatusText = "Full Stock Available";
+            item.sourcingState = "Success";
+            item.sourcingActionText = "Reserve requested quantity (" + nReq + " EA) at OAA source. OAA determines supplying site (" + (item.site || "M001") + ") and shipping point (" + (item.shippingPoint || "SP-01") + ") automatically.";
+            item.routingTarget = "OAA Source (" + (item.site || "M001") + ") · " + (item.shippingPoint || "SP-01");
+            item.isBlocking = false;
+            item.mustRemove = false;
+            item.canReduce = false;
+            item.isSplit = false;
+            item.isReserved = true;
+            item.isAssignedBaseDC = false;
+          }
+        } else if (sMethod === "CNC") {
+          // ==========================================
+          // STORE COLLECTION (CNC)
+          // ==========================================
+          if (item.sourcingCode === "NO_LOCATION") {
+            // Row 10: Store Collection or BOPIS | No eligible location returned
+            item.sourcingStatusText = "No Eligible Store Location";
+            item.sourcingState = "Error";
+            item.sourcingActionText = "Identify item causing sourcing issue. User removes it, then app calls wrapper again.";
+            item.routingTarget = "No Store Eligible";
+            item.isBlocking = true;
+            item.mustRemove = true;
+            item.canReduce = false;
+            item.isSplit = false;
+            nBlockingCount++;
+          } else if (nAvail < nReq || item.sourcingCode === "CNC_PARTIAL" || item.sourcingCode === "CND_F002_M" || item.sourcingCode === "CND_F002_NOT_M") {
+            // Row 7: Store Collection CNC | F002 · Partial stock | Any
+            var nAvailStore = Math.min(nAvail, nReq);
+            item.sourcingStatusText = "F002 · Partial Stock (Store)";
+            item.sourcingState = "Warning";
+            item.sourcingActionText = "Show eligible stores ranked by available stock. Ask user to reduce quantity to available amount (" + nAvailStore + " EA); reserve that quantity.";
+            item.routingTarget = (oStore.storeName || "Store S101") + " (" + nAvailStore + " EA on hand)";
+            item.canReduce = (nReq > nAvailStore);
+            item.recommendedQty = nAvailStore;
+            item.isBlocking = (nReq > nAvailStore);
+            item.mustRemove = false;
+            item.isSplit = false;
+            if (item.isBlocking) nBlockingCount++;
+            nActionableCount++;
+          } else {
+            // Row 6: Store Collection CNC | Full stock available | Eligible articles
+            item.sourcingStatusText = "Full Stock at Store";
+            item.sourcingState = "Success";
+            item.sourcingActionText = "Show stores with full quantity available. Stock (" + nReq + " EA) will be reserved at " + (oStore.storeName || "Store S101") + ".";
+            item.routingTarget = (oStore.storeName || "Store S101") + " · Reserved";
+            item.isBlocking = false;
+            item.mustRemove = false;
+            item.canReduce = false;
+            item.isSplit = false;
+            item.isReserved = true;
+            item.isAssignedBaseDC = false;
+          }
+        } else if (sMethod === "CNP") {
+          // ==========================================
+          // BOPIS POINT (CNP)
+          // ==========================================
+          if (item.sourcingCode === "NO_LOCATION") {
+            // Row 10: Store Collection or BOPIS | No eligible location returned
+            item.sourcingStatusText = "No Eligible BOPIS Point";
+            item.sourcingState = "Error";
+            item.sourcingActionText = "Identify item causing sourcing issue. User removes it, then app calls wrapper again.";
+            item.routingTarget = "No Point Eligible";
+            item.isBlocking = true;
+            item.mustRemove = true;
+            item.canReduce = false;
+            item.isSplit = false;
+            nBlockingCount++;
+          } else if (nAvail < nReq || item.sourcingCode === "CNP_PARTIAL" || item.sourcingCode === "CNC_PARTIAL" || item.sourcingCode === "CND_F002_M" || item.sourcingCode === "CND_F002_NOT_M") {
+            // Row 9: BOPIS Point CNP | F002 · Partial stock | Any
+            var nAvailHub = Math.min(nAvail, nReq);
+            item.sourcingStatusText = "F002 · Partial Stock (BOPIS)";
+            item.sourcingState = "Warning";
+            item.sourcingActionText = "Show pickup points ranked by available quantity. Ask user to reduce quantity (to " + nAvailHub + " EA); reserve available amount.";
+            item.routingTarget = (oPoint.pointName || "BOPIS Hub") + " (" + nAvailHub + " EA available)";
+            item.canReduce = (nReq > nAvailHub);
+            item.recommendedQty = nAvailHub;
+            item.isBlocking = (nReq > nAvailHub);
+            item.mustRemove = false;
+            item.isSplit = false;
+            if (item.isBlocking) nBlockingCount++;
+            nActionableCount++;
+          } else {
+            // Row 8: BOPIS Point CNP | Full stock available | Eligible articles
+            item.sourcingStatusText = "Full Stock at Hub";
+            item.sourcingState = "Success";
+            item.sourcingActionText = "Show pickup points with stock available. Stock (" + nReq + " EA) will be reserved at " + (oPoint.pointName || "BOPIS Hub") + ".";
+            item.routingTarget = (oPoint.pointName || "BOPIS Hub") + " · Reserved";
+            item.isBlocking = false;
+            item.mustRemove = false;
+            item.canReduce = false;
+            item.isSplit = false;
+            item.isReserved = true;
+            item.isAssignedBaseDC = false;
+          }
+        }
+
+        item.sourcingTooltip = (item.sourcingStatusText || "Status") + ": " + (item.sourcingActionText || "") + (item.routingTarget ? (" · Target: " + item.routingTarget) : "");
+      });
+
+      var oSourcingSummary = {
+        methodKey: sMethod,
+        totalItems: aCart.filter(function (it) { return !it.isSubItem; }).length,
+        blockingCount: nBlockingCount,
+        actionableCount: nActionableCount,
+        hasErrors: nBlockingCount > 0,
+        statusState: nBlockingCount > 0 ? "Error" : (nActionableCount > 0 ? "Warning" : "Success"),
+        statusTitle: nBlockingCount > 0
+          ? "Sourcing Action Required: " + nBlockingCount + " item(s) cannot proceed per SRS V3.3 rules"
+          : (nActionableCount > 0
+              ? "Sourcing Verified: Rule assignments applied per SRS V3.3 decision table"
+              : "All items sourced successfully. Reservable stock determined."),
+        statusDescription: nBlockingCount > 0
+          ? "Affected lines must be removed or reduced to available quantities before continuing to Review Shipping."
+          : (sMethod === "CND"
+              ? "OAA geolocated address (" + sAddress + "). Supplying sites and Base DC (QL30) assignments verified."
+              : (sMethod === "CNC"
+                  ? "Items verified against " + (oStore.storeName || "Centurion Centre") + ". Cart reservations created."
+                  : "Items verified against " + (oPoint.pointName || "Centurion Hub") + ". Cart reservations created."))
+      };
+
+      oAppState.setProperty("/sourcingSummary", oSourcingSummary);
+      oAppState.setProperty("/cart", aCart);
+
+      var bPassed = oAppState.getProperty("/deliveryValidationPassed") === true;
+      if (nBlockingCount > 0) {
+        bPassed = false;
+        oAppState.setProperty("/deliveryValidationPassed", false);
+      }
+
+      var oStep5 = this.byId("stepDeliveryMethod");
+      var oWizard = this.byId("salesOrderWizard");
+      var bStep5Valid = (aCart.length > 0) && (nBlockingCount === 0) && bPassed;
+      if (oStep5) {
+        oStep5.setValidated(bStep5Valid);
+        if (oWizard) {
+          if (bStep5Valid) {
+            oWizard.validateStep(oStep5);
+          } else {
+            oWizard.invalidateStep(oStep5);
+          }
+        }
+      }
+    },
+
+    onRemoveSourcingItem: function (oEvent) {
+      var oSource = oEvent.getSource();
+      var oContext = oSource.getBindingContext("appState");
+      if (!oContext) return;
+      var oItem = oContext.getObject();
+      var oAppState = this.getModel("appState");
+      var aCart = oAppState.getProperty("/cart") || [];
+      var aFiltered = aCart.filter(function (it) {
+        return it.item !== oItem.item && it.parentItem !== oItem.item;
+      });
+      oAppState.setProperty("/cart", aFiltered);
+      oAppState.setProperty("/cartCount", aFiltered.length);
+      this.recalculateTotals();
+      this.updateCartSourcingEvaluation();
+      MessageToast.show("Removed " + (oItem.name || oItem.item) + ". Sourcing re-run successfully.");
+    },
+
+    onReduceQtyToAvailable: function (oEvent) {
+      var oSource = oEvent.getSource();
+      var oContext = oSource.getBindingContext("appState");
+      if (!oContext) return;
+      var oItem = oContext.getObject();
+      var nNewQty = oItem.recommendedQty || oItem.availableQty || 1;
+      oItem.qty = nNewQty;
+      oItem.targetQty = nNewQty;
+      this.recalculateTotals();
+      this.updateCartSourcingEvaluation();
+      MessageToast.show("Reduced quantity for " + (oItem.name || oItem.item) + " to available amount (" + nNewQty + " EA). Stock reserved.");
+    },
+
+    onSplitLineToBaseDC: function (oEvent) {
+      var oSource = oEvent.getSource();
+      var oContext = oSource.getBindingContext("appState");
+      if (!oContext) return;
+      var oItem = oContext.getObject();
+      var nAvail = oItem.splitAvailQty || oItem.availableQty || 1;
+      var nRemainder = oItem.splitRemainderQty || (oItem.qty - nAvail);
+      if (nRemainder <= 0) return;
+
+      oItem.qty = nAvail;
+      oItem.targetQty = nAvail;
+      oItem.isSplit = false;
+      oItem.isReserved = true;
+
+      var oAppState = this.getModel("appState");
+      var aCart = oAppState.getProperty("/cart") || [];
+      var nIdx = aCart.indexOf(oItem);
+
+      var oRemainderLine = {
+        item: oItem.item + "B",
+        articleId: oItem.articleId,
+        targetQty: nRemainder,
+        qty: nRemainder,
+        um: oItem.um || "EA",
+        description: oItem.name + " [Base DC Remainder]",
+        name: oItem.name + " [Base DC Remainder]",
+        productNo: (oItem.productNo || "") + "-REM",
+        valueAdds: "-",
+        pricePerUnit: oItem.pricePerUnit || oItem.netPrice,
+        netPrice: oItem.netPrice,
+        itemPrice: +(nRemainder * oItem.netPrice).toFixed(2),
+        netValue: +(nRemainder * oItem.netPrice).toFixed(2),
+        salesPersonId: oItem.salesPersonId || "SP-1042",
+        site: oItem.site || "M001",
+        itemCat: oItem.itemCat || "TAN",
+        extendedGuarantee: "-",
+        rejReason: "-",
+        discountPct: 0,
+        hasCondition: false,
+        conditionText: "",
+        isSubItem: false,
+        articleStatus: "M",
+        sourcingIdentifier: "[M · Base DC Remainder]",
+        sourcingCode: "CND_F001_M",
+        availableQty: 0,
+        stock: 0,
+        baseDC: oItem.baseDC || "QL30",
+        oaaSource: "Customer Base DC (" + (oItem.baseDC || "QL30") + ")",
+        shippingPoint: "SP-QL30",
+        sourcingStatusText: "Routed to Base DC (QL30)",
+        sourcingState: "Warning",
+        sourcingActionText: "Backorder remainder routed to Base DC QL30 as additional line per SRS V3.3 rule.",
+        routingTarget: "Base DC (" + (oItem.baseDC || "QL30") + ")",
+        isAssignedBaseDC: true,
+        isSplit: false,
+        isBlocking: false,
+        mustRemove: false,
+        canReduce: false,
+        isReserved: false
+      };
+
+      if (nIdx >= 0) {
+        aCart.splice(nIdx + 1, 0, oRemainderLine);
+      } else {
+        aCart.push(oRemainderLine);
+      }
+
+      oAppState.setProperty("/cart", aCart);
+      oAppState.setProperty("/cartCount", aCart.length);
+      this.recalculateTotals();
+      this.updateCartSourcingEvaluation();
+      MessageToast.show("Line split applied: " + nAvail + " EA reserved @ OAA source; " + nRemainder + " EA routed to Base DC QL30.");
+    },
+
+    onAutoResolveSourcingIssues: function () {
+      var oAppState = this.getModel("appState");
+      var aCart = oAppState.getProperty("/cart") || [];
+      var aResolvedCart = [];
+
+      aCart.forEach(function (item) {
+        if (item.mustRemove) {
+          // Rule: Remove affected item from cart
+          return;
+        }
+        if (item.canReduce) {
+          // Rule: Reduce quantity to available amount
+          item.qty = item.recommendedQty || item.availableQty || 1;
+          item.targetQty = item.qty;
+          aResolvedCart.push(item);
+          return;
+        }
+        if (item.isSplit && item.splitRemainderQty > 0) {
+          // Rule: Split line into reservable OAA and Base DC remainder line
+          var nAvail = item.splitAvailQty || item.availableQty || 1;
+          var nRem = item.splitRemainderQty;
+          item.qty = nAvail;
+          item.targetQty = nAvail;
+          item.isSplit = false;
+          item.isReserved = true;
+          aResolvedCart.push(item);
+
+          var oRemainder = Object.assign({}, item, {
+            item: item.item + "B",
+            name: item.name + " [Base DC Remainder]",
+            description: item.description + " [Base DC Remainder]",
+            qty: nRem,
+            targetQty: nRem,
+            availableQty: 0,
+            stock: 0,
+            sourcingIdentifier: "[M · Base DC Remainder]",
+            sourcingCode: "CND_F001_M",
+            sourcingStatusText: "Routed to Base DC (QL30)",
+            sourcingState: "Warning",
+            sourcingActionText: "Backorder remainder routed to Base DC QL30 per SRS V3.3 rule.",
+            routingTarget: "Base DC (" + (item.baseDC || "QL30") + ")",
+            isAssignedBaseDC: true,
+            isSplit: false,
+            isBlocking: false,
+            mustRemove: false,
+            canReduce: false,
+            isReserved: false
+          });
+          aResolvedCart.push(oRemainder);
+          return;
+        }
+        aResolvedCart.push(item);
+      });
+
+      oAppState.setProperty("/cart", aResolvedCart);
+      oAppState.setProperty("/cartCount", aResolvedCart.length);
+      this.recalculateTotals();
+      this.updateCartSourcingEvaluation();
+      MessageBox.success("All cart items have been auto-resolved per SRS V3.3 Decision Rules:\n\n• Unavailable Non-M lines removed\n• Quantities reduced to available stock\n• Core M lines routed / split to Base DC (QL30)\n\nDelivery Step is now validated and ready to proceed!", {
+        title: "Sourcing Auto-Resolution Complete"
+      });
+    },
+
+    onDeliveryContinuePress: function () {
+      this.updateCartSourcingEvaluation();
+      var oAppState = this.getModel("appState");
+      var aCart = oAppState.getProperty("/cart") || [];
+
+      if (!aCart || aCart.length === 0) {
+        MessageBox.warning("Your cart is currently empty. Please add products before continuing.", {
+          title: "Empty Cart"
+        });
+        oAppState.setProperty("/deliveryValidationPassed", false);
+        return;
+      }
+
+      var aItemsToRemove = [];
+      var aItemsToChangeQty = [];
+
+      aCart.forEach(function (item) {
+        var sItemName = item.description || item.name || ("Item " + item.item);
+        var sArticleId = item.articleId ? " (Art: " + item.articleId + ")" : "";
+
+        // Check if item must be removed (no stock available / blocked per SRS rules)
+        if (item.mustRemove || item.sourcingState === "Error" || (item.availableQty === 0 && item.stockState !== "M")) {
+          var sStatusText = item.sourcingStatusText || "No stock available";
+          aItemsToRemove.push("• " + sItemName + sArticleId + " - Status: " + sStatusText + " (Please remove this item from the cart)");
+        } else if (item.canReduce || (item.availableQty !== undefined && item.qty > item.availableQty && item.stockState !== "M")) {
+          // Check if item quantity needs to be changed / reduced to available stock
+          var nAvail = item.recommendedQty || item.availableQty || 0;
+          aItemsToChangeQty.push("• " + sItemName + sArticleId + " - Requested: " + item.qty + " EA | Available Stock: " + nAvail + " EA (Please change quantity to " + nAvail + " EA)");
+        }
+      });
+
+      var oSourcingSummary = oAppState.getProperty("/sourcingSummary") || {};
+      var bHasStockIssues = (aItemsToRemove.length > 0) || (aItemsToChangeQty.length > 0) || (oSourcingSummary.blockingCount > 0);
+
+      if (bHasStockIssues) {
+        oAppState.setProperty("/deliveryValidationPassed", false);
+
+        var aMsgSections = [];
+        if (aItemsToRemove.length > 0) {
+          aMsgSections.push("Remove Item(s) with No Stock:\n" + aItemsToRemove.join("\n"));
+        }
+        if (aItemsToChangeQty.length > 0) {
+          aMsgSections.push("Change Quantity to Available Stock:\n" + aItemsToChangeQty.join("\n"));
+        }
+
+        var sFullMessage = aMsgSections.join("\n\n") + "\n\nPlease change the quantity or remove the item(s) in the cart table above, then click Continue again.";
+
+        oAppState.setProperty("/deliveryValidationNotice", "Validation Notice: Stock action required. Please change quantity or remove items as indicated in the message.");
+        oAppState.setProperty("/deliveryValidationNoticeType", "Warning");
+
+        var oStep5Err = this.byId("stepDeliveryMethod");
+        var oWizardErr = this.byId("salesOrderWizard");
+        if (oStep5Err) {
+          oStep5Err.setValidated(false);
+          if (oWizardErr) {
+            oWizardErr.invalidateStep(oStep5Err);
+          }
+        }
+
+        MessageBox.warning(sFullMessage, {
+          title: "Stock & Sourcing Validation",
+          actions: [MessageBox.Action.OK],
+          emphasizedAction: MessageBox.Action.OK
+        });
+      } else {
+        // Status is fine (all items have stock / valid routing)
+        oAppState.setProperty("/deliveryValidationPassed", true);
+        oAppState.setProperty("/deliveryValidationNotice", "All items verified. Sufficient stock is available. You can now proceed to Step 6: Review Shipping.");
+        oAppState.setProperty("/deliveryValidationNoticeType", "Success");
+
+        var oStep5Ok = this.byId("stepDeliveryMethod");
+        var oWizardOk = this.byId("salesOrderWizard");
+        if (oStep5Ok) {
+          oStep5Ok.setValidated(true);
+          if (oWizardOk) {
+            oWizardOk.validateStep(oStep5Ok);
+          }
+        }
+
+        MessageToast.show("Stock verified! Step 6 button is now displayed below.");
+      }
+    },
+
+    onProceedToStep6: function () {
+      var oWizard = this.byId("salesOrderWizard");
+      var oStepDelivery = this.byId("stepDelivery");
+      if (oWizard && oStepDelivery) {
+        oStepDelivery.setValidated(true);
+        oWizard.goToStep(oStepDelivery, true);
+      }
+    },
+
+    onOpenSourcingReferenceDialog: function () {
+      var oView = this.getView();
+      if (!this._pSourcingDialog) {
+        this._pSourcingDialog = Fragment.load({
+          id: oView.getId(),
+          name: "sap.ui.salesorder.store.view.fragments.SourcingDecisionTableDialog",
+          controller: this
+        }).then(function (oDialog) {
+          oView.addDependent(oDialog);
+          return oDialog;
+        });
+      }
+      this._pSourcingDialog.then(function (oDialog) {
+        oDialog.open();
+      });
+    },
+
+    onCloseSourcingReferenceDialog: function () {
+      if (this._pSourcingDialog) {
+        this._pSourcingDialog.then(function (oDialog) {
+          oDialog.close();
+        });
+      }
+    },
+
+    onLoadAllSourcingDemoCases: function () {
+      var oAppState = this.getModel("appState");
+      var oWizardModel = this.getView().getModel("wizardModel");
+
+      // 1. Setup valid customer
+      var oCustomer = {
+        bpNumber: "1000234571",
+        name: "Thabo Mokoena",
+        firstName: "Thabo",
+        lastName: "Mokoena",
+        title: "Mr.",
+        telephone: "+27 82 555 0192",
+        email: "thabo.mokoena@email.co.za",
+        type: "Individual",
+        dateOfBirth: "1988-05-14",
+        gender: "Male",
+        idType: "SA ID Number",
+        idPassport: "8805145028084",
+        language: "English",
+        salesOrg: "1000",
+        distChannel: "10",
+        division: "00",
+        address: {
+          street: "12 Rivonia Road",
+          city: "Sandton",
+          postalCode: "2196",
+          region: "Gauteng",
+          country: "ZA",
+          formatted: "12 Rivonia Road, Sandton, 2196, Gauteng",
+          type: "Default / Billing",
+          status: "EXISTING",
+          statusState: "Success"
+        }
+      };
+      oAppState.setProperty("/customer", oCustomer);
+      oAppState.setProperty("/marketing/marketToYou", "YES");
+      oAppState.setProperty("/marketing/marketingLanguage", "English");
+      oAppState.setProperty("/marketing/marketingCorrespondenceMethod", "EMAIL");
+      oAppState.setProperty("/marketing/statementCorrespondenceMethod", "EMAIL");
+      oAppState.setProperty("/marketing/creditBureauCheck", "YES");
+      oAppState.setProperty("/orderHeader/orderType", "ZOR");
+      oAppState.setProperty("/orderHeader/orderTypeName", "Delivery Order");
+
+      var oAddrObj = {
+        street: "12 Rivonia Road",
+        city: "Sandton",
+        postalCode: "2196",
+        region: "Gauteng",
+        country: "South Africa",
+        formatted: "12 Rivonia Road, Sandton, 2196, Gauteng",
+        status: "VALIDATED",
+        statusState: "Success",
+        validated: true
+      };
+      oAppState.setProperty("/delivery/deliveryAddress", oAddrObj);
+      oAppState.setProperty("/delivery/shipToAddress/street", "12 Rivonia Road");
+      oAppState.setProperty("/delivery/shipToAddress/city", "Sandton");
+      oAppState.setProperty("/delivery/shipToAddress/postalCode", "2196");
+      oAppState.setProperty("/delivery/shipToAddress/state", "Gauteng");
+      oAppState.setProperty("/delivery/shipToAddress/formatted", "12 Rivonia Road, Sandton, 2196, Gauteng");
+      oAppState.setProperty("/review/shippingDetails/address", "12 Rivonia Road, Sandton, 2196, Gauteng");
+      oAppState.setProperty("/delivery/methodKey", "CND");
+      oAppState.setProperty("/delivery/methodTitle", "Delivery (CND)");
+      oAppState.setProperty("/delivery/methodSubtitle", "Deliver to customer address");
+
+      if (oWizardModel) {
+        oWizardModel.setProperty("/customerSelected", true);
+        oWizardModel.setProperty("/addressValidated", true);
+      }
+
+      // 2. Preload products covering ALL decision table rows
+      var aDemoProducts = [
+        {
+          articleId: "ART-CND-01",
+          name: "Samsung 65\" QLED 4K Smart TV",
+          sourcingIdentifier: "[M · Full Stock]",
+          sourcingCode: "CND_FULL",
+          articleStatus: "M",
+          site: "M001",
+          price: 14999.00,
+          qty: 1,
+          availableQty: 25,
+          stock: 25,
+          itemCat: "TAN",
+          baseDC: "QL30",
+          oaaSource: "DC M001 (Centurion DC)",
+          shippingPoint: "SP-01",
+          sourcingRuleDescription: "Reserve requested quantity at OAA source."
+        },
+        {
+          articleId: "ART-CND-02",
+          name: "Bosch Series 6 Front Loader 9kg",
+          sourcingIdentifier: "[M · F001 No Stock → Base DC QL30]",
+          sourcingCode: "CND_F001_M",
+          articleStatus: "M",
+          site: "M001",
+          price: 8999.00,
+          qty: 1,
+          availableQty: 0,
+          stock: 0,
+          itemCat: "TAN",
+          baseDC: "QL30",
+          oaaSource: "Customer Base DC (QL30)",
+          shippingPoint: "SP-QL30",
+          sourcingRuleDescription: "Do not reserve line. Assign to Base DC QL30 and allow order to proceed."
+        },
+        {
+          articleId: "ART-CND-03",
+          name: "Smeg 50s Retro 2-Slice Toaster",
+          sourcingIdentifier: "[Not M · F001 No Stock → Blocked]",
+          sourcingCode: "CND_F001_NOT_M",
+          articleStatus: "Not M",
+          site: "M001",
+          price: 2499.00,
+          qty: 1,
+          availableQty: 0,
+          stock: 0,
+          itemCat: "TAN",
+          baseDC: "-",
+          oaaSource: "None",
+          shippingPoint: "-",
+          sourcingRuleDescription: "Require user to remove it, then run sourcing again."
+        },
+        {
+          articleId: "ART-CND-04",
+          name: "LG 635L Side-by-Side Inverter Refrigerator",
+          sourcingIdentifier: "[M · F002 Partial Stock → Split Base DC]",
+          sourcingCode: "CND_F002_M",
+          articleStatus: "M",
+          site: "M001",
+          price: 19999.00,
+          qty: 3,
+          availableQty: 2,
+          stock: 2,
+          itemCat: "TAN",
+          baseDC: "QL30",
+          oaaSource: "DC M001 (Centurion DC)",
+          shippingPoint: "SP-01",
+          sourcingRuleDescription: "Reserve available (2 EA), route remainder (1 EA) to Base DC QL30 as additional line."
+        },
+        {
+          articleId: "ART-CND-05",
+          name: "Philips Hue Gradient Ambience Lightstrip",
+          sourcingIdentifier: "[Not M · F002 Partial Stock → Must Remove]",
+          sourcingCode: "CND_F002_NOT_M",
+          articleStatus: "Not M",
+          site: "M001",
+          price: 1899.00,
+          qty: 3,
+          availableQty: 1,
+          stock: 1,
+          itemCat: "TAN",
+          baseDC: "-",
+          oaaSource: "DC M001",
+          shippingPoint: "SP-01",
+          sourcingRuleDescription: "V3.3 Rule: Remove line item from cart, then run sourcing again."
+        },
+        {
+          articleId: "ART-CNC-06",
+          name: "DeLonghi Magnifica S Coffee Maker",
+          sourcingIdentifier: "[Eligible · CNC Full Stock]",
+          sourcingCode: "CNC_FULL",
+          articleStatus: "M",
+          site: "S101",
+          price: 7499.00,
+          qty: 1,
+          availableQty: 12,
+          stock: 12,
+          itemCat: "TAN",
+          baseDC: "QL30",
+          oaaSource: "Store S101 (Centurion)",
+          shippingPoint: "Store Pickup",
+          sourcingRuleDescription: "Show stores with full quantity available. Reserve stock there."
+        },
+        {
+          articleId: "ART-CNC-07",
+          name: "Weber Master-Touch 57cm Charcoal Braai",
+          sourcingIdentifier: "[CNC · F002 Partial Stock → Prompt Reduce Qty]",
+          sourcingCode: "CNC_PARTIAL",
+          articleStatus: "M",
+          site: "S101",
+          price: 4299.00,
+          qty: 3,
+          availableQty: 1,
+          stock: 1,
+          itemCat: "TAN",
+          baseDC: "QL30",
+          oaaSource: "Store S101",
+          shippingPoint: "Store Pickup",
+          sourcingRuleDescription: "Ask user to reduce quantity to available amount (1 EA); reserve that quantity."
+        },
+        {
+          articleId: "ART-CNP-08",
+          name: "JBL PartyBox Stage 320 Bluetooth Speaker",
+          sourcingIdentifier: "[Eligible · CNP Full Stock]",
+          sourcingCode: "CNP_FULL",
+          articleStatus: "M",
+          site: "P001",
+          price: 6999.00,
+          qty: 1,
+          availableQty: 16,
+          stock: 16,
+          itemCat: "TAN",
+          baseDC: "QL30",
+          oaaSource: "BOPIS Hub (Centurion Mall)",
+          shippingPoint: "Hub Pickup",
+          sourcingRuleDescription: "Show pickup points with stock available. Reserve stock there."
+        },
+        {
+          articleId: "ART-CNP-09",
+          name: "Sony WH-1000XM5 Wireless ANC Headphones",
+          sourcingIdentifier: "[CNP · F002 Partial Stock → Prompt Reduce Qty]",
+          sourcingCode: "CNP_PARTIAL",
+          articleStatus: "Not M",
+          site: "P001",
+          price: 5999.00,
+          qty: 2,
+          availableQty: 1,
+          stock: 1,
+          itemCat: "TAN",
+          baseDC: "-",
+          oaaSource: "BOPIS Hub (Centurion Mall)",
+          shippingPoint: "Hub Pickup",
+          sourcingRuleDescription: "Ask user to reduce quantity (to 1 EA); reserve available amount."
+        },
+        {
+          articleId: "ART-ERR-10",
+          name: "Makita 18V Cordless Rotary Hammer Drill",
+          sourcingIdentifier: "[CNC/CNP · No Eligible Location → Must Remove]",
+          sourcingCode: "NO_LOCATION",
+          articleStatus: "M",
+          site: "S101",
+          price: 3299.00,
+          qty: 1,
+          availableQty: 0,
+          stock: 0,
+          itemCat: "TAN",
+          baseDC: "QL30",
+          oaaSource: "None returned",
+          shippingPoint: "None",
+          sourcingRuleDescription: "Identify item causing sourcing issue. User removes it, then app calls wrapper again."
+        },
+        {
+          articleId: "ART-NLAG-11",
+          name: "White Glove Appliance Installation & Tech Support",
+          sourcingIdentifier: "[NLAG · Excluded from OAA]",
+          sourcingCode: "NLAG",
+          articleStatus: "NLAG",
+          site: "M001",
+          price: 650.00,
+          qty: 1,
+          availableQty: 999,
+          stock: 999,
+          itemCat: "NLAG",
+          baseDC: "-",
+          oaaSource: "Direct Fulfillment",
+          shippingPoint: "None",
+          sourcingRuleDescription: "Exclude NLAG items from OAA request. Directly confirmed without stock reservation."
+        }
+      ];
+
+      var aCart = aDemoProducts.map(function (prod, idx) {
+        var nItemNo = (idx + 1) * 10;
+        return {
+          item: String(nItemNo),
+          articleId: prod.articleId,
+          targetQty: prod.qty,
+          qty: prod.qty,
+          um: "EA",
+          description: prod.name,
+          name: prod.name,
+          productNo: "PRD-" + prod.articleId,
+          valueAdds: "-",
+          pricePerUnit: prod.price,
+          netPrice: prod.price,
+          itemPrice: +(prod.qty * prod.price).toFixed(2),
+          netValue: +(prod.qty * prod.price).toFixed(2),
+          salesPersonId: "SP-1042",
+          site: prod.site,
+          itemCat: prod.itemCat,
+          extendedGuarantee: "-",
+          rejReason: "-",
+          discountPct: 0,
+          hasCondition: false,
+          conditionText: "",
+          isSubItem: false,
+          articleStatus: prod.articleStatus,
+          sourcingIdentifier: prod.sourcingIdentifier,
+          sourcingCode: prod.sourcingCode,
+          availableQty: prod.availableQty,
+          stock: prod.stock,
+          baseDC: prod.baseDC,
+          oaaSource: prod.oaaSource,
+          shippingPoint: prod.shippingPoint,
+          sourcingRuleDescription: prod.sourcingRuleDescription
+        };
+      });
+
+      oAppState.setProperty("/cart", aCart);
+      oAppState.setProperty("/cartCount", aCart.length);
+      this.recalculateTotals();
+
+      // Validate steps
+      var oStepCustomer = this.byId("stepCustomer");
+      var oStepConsent = this.byId("stepConsent");
+      var oStepProducts = this.byId("stepProducts");
+      var oStepDeliveryMethod = this.byId("stepDeliveryMethod");
+      var oWizard = this.byId("salesOrderWizard");
+
+      if (oStepCustomer) oStepCustomer.setValidated(true);
+      if (oStepConsent) oStepConsent.setValidated(true);
+      if (oStepProducts) oStepProducts.setValidated(true);
+
+      if (oWizard) {
+        if (oStepCustomer) oWizard.validateStep(oStepCustomer);
+        if (oStepConsent) oWizard.validateStep(oStepConsent);
+        if (oStepProducts) oWizard.validateStep(oStepProducts);
+        if (oStepDeliveryMethod) {
+          oWizard.goToStep(oStepDeliveryMethod, true);
+        }
+      }
+
+      this.updateCartSourcingEvaluation();
+      MessageToast.show("Loaded all 11 Decision Table sourcing test cases on Delivery Method screen!");
     },
 
     onSelectDeliveryMethodToCustomer: function () {
