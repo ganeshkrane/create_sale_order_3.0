@@ -918,145 +918,421 @@
           title="{i18n>step5DeliveryMethod}"
           icon="sap-icon://shipping-status"
           validated="true">
-          <VBox
-            alignItems="Center"
-            justifyContent="Center"
-            width="100%"
-            class="deliveryCenterWrapper sapUiSmallMarginTop">
+          <HBox width="100%" alignItems="Stretch" wrap="NoWrap" class="deliverySideBySideLayout sapUiSmallMarginTop">
             
-            <!-- 3 Separate Selectable Square Option Cards in one line -->
-            <HBox
-              alignItems="Center"
-              justifyContent="Center"
-              wrap="NoWrap"
-              class="deliveryMethodScreenCardsRow">
-              
-              <!-- Square 1: Delivery (CND) -->
-              <VBox
-                id="cardCND"
-                alignItems="Center"
-                justifyContent="Center"
-                class="deliveryMethodScreenCard {= ${appState>/delivery/methodKey} === 'CND' ? 'deliveryMethodScreenCardSelected' : ''} cursorPointer">
-                <Button
-                  type="Transparent"
-                  tooltip="Select Delivery (CND)"
-                  press=".onSelectDeliveryCND"
-                  class="cardFullOverlayButton" />
-                <HBox
-                  alignItems="Center"
-                  justifyContent="Center"
-                  class="deliveryMethodCardIconBox cursorPointer">
-                  <Image
-                    src="{= ${appState>/delivery/methodKey} === 'CND' ? './webapp/css/icons/delivery-truck-blue.svg' : './webapp/css/icons/delivery-truck.svg' }"
-                    width="46px"
-                    height="46px"
-                    class="deliveryMethodSvgIcon" />
-                </HBox>
-                <Text text="{i18n>deliveryMethodCND}" class="deliveryMethodCardTitle boldText" />
-                <Text text="{i18n>deliveryMethodCNDSubtitle}" class="deliveryMethodCardSubtitle" />
-              </VBox>
-
-              <!-- Square 2: Click & Collect (CNC) -->
-              <VBox
-                id="cardCNC"
-                alignItems="Center"
-                justifyContent="Center"
-                class="deliveryMethodScreenCard {= ${appState>/delivery/methodKey} === 'CNC' ? 'deliveryMethodScreenCardSelected' : ''} cursorPointer">
-                <Button
-                  type="Transparent"
-                  tooltip="Select Click &amp; Collect (CNC)"
-                  press=".onSelectClickAndCollectCNC"
-                  class="cardFullOverlayButton" />
-                <HBox
-                  alignItems="Center"
-                  justifyContent="Center"
-                  class="deliveryMethodCardIconBox cursorPointer">
-                  <Image
-                    src="{= ${appState>/delivery/methodKey} === 'CNC' ? './webapp/css/icons/click-collect-store-blue.svg' : './webapp/css/icons/click-collect-store.svg' }"
-                    width="46px"
-                    height="46px"
-                    class="deliveryMethodSvgIcon" />
-                </HBox>
-                <Text text="{i18n>deliveryMethodCNC}" class="deliveryMethodCardTitle boldText" />
-                <Text text="{i18n>deliveryMethodCNCSubtitle}" class="deliveryMethodCardSubtitle" />
-              </VBox>
-
-              <!-- Square 3: BOPIS (CNP) with Google Map Pin icon -->
-              <VBox
-                id="cardCNP"
-                alignItems="Center"
-                justifyContent="Center"
-                class="deliveryMethodScreenCard {= ${appState>/delivery/methodKey} === 'CNP' ? 'deliveryMethodScreenCardSelected' : ''} cursorPointer">
-                <Button
-                  type="Transparent"
-                  tooltip="Select BOPIS (CNP)"
-                  press=".onSelectBopisCNP"
-                  class="cardFullOverlayButton" />
-                <HBox
-                  alignItems="Center"
-                  justifyContent="Center"
-                  class="deliveryMethodCardIconBox cursorPointer">
-                  <Image
-                    src="{= ${appState>/delivery/methodKey} === 'CNP' ? './webapp/css/icons/google-maps-pin-blue.svg' : './webapp/css/icons/google-maps-pin.svg' }"
-                    width="44px"
-                    height="44px"
-                    class="deliveryMethodSvgIcon" />
-                </HBox>
-                <Text text="{i18n>deliveryMethodCNP}" class="deliveryMethodCardTitle boldText" />
-                <Text text="{i18n>deliveryMethodCNPSubtitle}" class="deliveryMethodCardSubtitle" />
-              </VBox>
-            </HBox>
-
-            <!-- CND Address Section: Displayed when Delivery (CND) is selected -->
-            <VBox
-              visible="{= ${appState>/delivery/methodKey} === 'CND' }"
-              alignItems="Center"
-              justifyContent="Center"
-              width="100%"
-              class="cndAddressSection sapUiMediumMarginTop">
-              
-              <!-- Validate / Select Address Button -->
-              <Button
-                id="btnValidateDeliveryAddress"
-                text="{= ${appState>/delivery/deliveryAddress/formatted} ? 'Change / Re-validate Address' : 'Validate / Select Address' }"
-                icon="sap-icon://map-2"
-                type="Emphasized"
-                press=".onOpenDeliveryAddressValidation"
-                class="validateAddressBtn sapUiSmallMarginBottom cursorPointer" />
-
-              <!-- Display Selected Address on Screen -->
-              <VBox
-                visible="{= !!${appState>/delivery/deliveryAddress/formatted} }"
-                class="cndSelectedAddressCard sapUiTinyMarginTop">
-                <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
-                  <HBox alignItems="Center">
-                    <core:Icon src="sap-icon://addresses" color="#0070f2" class="sapUiTinyMarginEnd" />
-                    <Text text="Selected Delivery Address" class="boldText" />
-                  </HBox>
+            <!-- ============================================== -->
+            <!-- LEFT COLUMN: DELIVERY OPTIONS & DESTINATION   -->
+            <!-- ============================================== -->
+            <VBox width="50%" class="deliverySideColumn deliveryOptionsSideColumn">
+              <Panel
+                id="deliveryOptionsPanel"
+                expandable="false"
+                expanded="true"
+                class="fioriStandardBorderPanel deliverySidePanel">
+              <headerToolbar>
+                <Toolbar>
+                  <core:Icon src="sap-icon://shipping-status" color="#0070f2" class="sapUiTinyMarginEnd" />
+                  <Title text="1. Delivery Method &amp; Destination" titleStyle="H5" class="boldText" />
+                  <ToolbarSpacer />
                   <ObjectStatus
-                    text="{= ${appState>/delivery/deliveryAddress/status} || 'VALIDATED' }"
-                    state="{= ${appState>/delivery/deliveryAddress/statusState} || 'Success' }"
-                    icon="sap-icon://sys-enter-2" />
-                </HBox>
+                    text="{= ${appState>/delivery/methodTitle} || 'Delivery (CND)' }"
+                    state="Information"
+                    icon="{= ${appState>/delivery/methodKey} === 'CND' ? 'sap-icon://shipping-status' : (${appState>/delivery/methodKey} === 'CNC' ? 'sap-icon://retail-store' : 'sap-icon://map-pin-point') }" />
+                </Toolbar>
+              </headerToolbar>
+              <content>
+                <VBox
+                  alignItems="Center"
+                  justifyContent="Center"
+                  width="100%"
+                  class="deliveryCenterWrapper sapUiTinyMarginTop">
+                  
+                  <!-- 3 Delivery Option Cards -->
+                  <HBox
+                    alignItems="Center"
+                    justifyContent="Center"
+                    wrap="NoWrap"
+                    class="deliveryMethodScreenCardsRow">
+                    
+                    <!-- Square 1: Delivery (CND) -->
+                    <VBox
+                      id="cardCND"
+                      alignItems="Center"
+                      justifyContent="Center"
+                      class="deliveryMethodScreenCard {= ${appState>/delivery/methodKey} === 'CND' ? 'deliveryMethodScreenCardSelected' : ''} cursorPointer">
+                      <Button
+                        type="Transparent"
+                        tooltip="Select Delivery (CND)"
+                        press=".onSelectDeliveryCND"
+                        class="cardFullOverlayButton" />
+                      <HBox
+                        alignItems="Center"
+                        justifyContent="Center"
+                        class="deliveryMethodCardIconBox cursorPointer">
+                        <Image
+                          src="{= ${appState>/delivery/methodKey} === 'CND' ? './webapp/css/icons/delivery-truck-blue.svg' : './webapp/css/icons/delivery-truck.svg' }"
+                          width="46px"
+                          height="46px"
+                          class="deliveryMethodSvgIcon" />
+                      </HBox>
+                      <Text text="{i18n>deliveryMethodCND}" class="deliveryMethodCardTitle boldText" />
+                      <Text text="{i18n>deliveryMethodCNDSubtitle}" class="deliveryMethodCardSubtitle" />
+                    </VBox>
 
-                <Text
-                  text="{appState>/delivery/deliveryAddress/formatted}"
-                  class="cndAddressFormattedText sapUiTinyMarginBottom" />
+                    <!-- Square 2: Click & Collect (CNC) -->
+                    <VBox
+                      id="cardCNC"
+                      alignItems="Center"
+                      justifyContent="Center"
+                      class="deliveryMethodScreenCard {= ${appState>/delivery/methodKey} === 'CNC' ? 'deliveryMethodScreenCardSelected' : ''} cursorPointer">
+                      <Button
+                        type="Transparent"
+                        tooltip="Select Click &amp; Collect (CNC)"
+                        press=".onSelectClickAndCollectCNC"
+                        class="cardFullOverlayButton" />
+                      <HBox
+                        alignItems="Center"
+                        justifyContent="Center"
+                        class="deliveryMethodCardIconBox cursorPointer">
+                        <Image
+                          src="{= ${appState>/delivery/methodKey} === 'CNC' ? './webapp/css/icons/click-collect-store-blue.svg' : './webapp/css/icons/click-collect-store.svg' }"
+                          width="46px"
+                          height="46px"
+                          class="deliveryMethodSvgIcon" />
+                      </HBox>
+                      <Text text="{i18n>deliveryMethodCNC}" class="deliveryMethodCardTitle boldText" />
+                      <Text text="{i18n>deliveryMethodCNCSubtitle}" class="deliveryMethodCardSubtitle" />
+                    </VBox>
 
-                <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiTinyMarginTop">
-                  <Text
-                    text="{= 'Region: ' + (${appState>/delivery/deliveryAddress/region} || 'Gauteng') + ' · Postal Code: ' + (${appState>/delivery/deliveryAddress/postalCode} || '2196') + ' · ' + (${appState>/delivery/deliveryAddress/country} || 'South Africa') }"
-                    class="sapUiThemeColor-dim" />
-                  <Button
-                    text="Change"
-                    icon="sap-icon://edit"
-                    type="Transparent"
-                    press=".onOpenDeliveryAddressValidation"
-                    class="cursorPointer" />
-                </HBox>
-              </VBox>
+                    <!-- Square 3: BOPIS (CNP) -->
+                    <VBox
+                      id="cardCNP"
+                      alignItems="Center"
+                      justifyContent="Center"
+                      class="deliveryMethodScreenCard {= ${appState>/delivery/methodKey} === 'CNP' ? 'deliveryMethodScreenCardSelected' : ''} cursorPointer">
+                      <Button
+                        type="Transparent"
+                        tooltip="Select BOPIS (CNP)"
+                        press=".onSelectBopisCNP"
+                        class="cardFullOverlayButton" />
+                      <HBox
+                        alignItems="Center"
+                        justifyContent="Center"
+                        class="deliveryMethodCardIconBox cursorPointer">
+                        <Image
+                          src="{= ${appState>/delivery/methodKey} === 'CNP' ? './webapp/css/icons/google-maps-pin-blue.svg' : './webapp/css/icons/google-maps-pin.svg' }"
+                          width="46px"
+                          height="46px"
+                          class="deliveryMethodSvgIcon" />
+                      </HBox>
+                      <Text text="{i18n>deliveryMethodCNP}" class="deliveryMethodCardTitle boldText" />
+                      <Text text="{i18n>deliveryMethodCNPSubtitle}" class="deliveryMethodCardSubtitle" />
+                    </VBox>
+                  </HBox>
+
+                  <!-- CND Address Section: Displayed when Delivery (CND) is selected -->
+                  <VBox
+                    visible="{= ${appState>/delivery/methodKey} === 'CND' }"
+                    alignItems="Center"
+                    justifyContent="Center"
+                    width="100%"
+                    class="cndAddressSection sapUiMediumMarginTop">
+                    
+                    <!-- Validate / Select Address Button -->
+                    <Button
+                      id="btnValidateDeliveryAddress"
+                      text="{= ${appState>/delivery/deliveryAddress/formatted} ? 'Change / Re-validate Address' : 'Validate / Select Address' }"
+                      icon="sap-icon://map-2"
+                      type="Emphasized"
+                      press=".onOpenDeliveryAddressValidation"
+                      class="validateAddressBtn sapUiSmallMarginBottom cursorPointer" />
+
+                    <!-- Display Selected Address on Screen -->
+                    <VBox
+                      visible="{= !!${appState>/delivery/deliveryAddress/formatted} }"
+                      class="cndSelectedAddressCard sapUiTinyMarginTop">
+                      <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                        <HBox alignItems="Center">
+                          <core:Icon src="sap-icon://addresses" color="#0070f2" class="sapUiTinyMarginEnd" />
+                          <Text text="Selected Delivery Address" class="boldText" />
+                        </HBox>
+                        <ObjectStatus
+                          text="{= ${appState>/delivery/deliveryAddress/status} || 'VALIDATED' }"
+                          state="{= ${appState>/delivery/deliveryAddress/statusState} || 'Success' }"
+                          icon="sap-icon://sys-enter-2" />
+                      </HBox>
+
+                      <Text
+                        text="{appState>/delivery/deliveryAddress/formatted}"
+                        class="cndAddressFormattedText sapUiTinyMarginBottom" />
+
+                      <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiTinyMarginTop">
+                        <Text
+                          text="{= 'Region: ' + (${appState>/delivery/deliveryAddress/region} || 'Gauteng') + ' · Postal Code: ' + (${appState>/delivery/deliveryAddress/postalCode} || '2196') + ' · ' + (${appState>/delivery/deliveryAddress/country} || 'South Africa') }"
+                          class="sapUiThemeColor-dim" />
+                        <Button
+                          text="Change"
+                          icon="sap-icon://edit"
+                          type="Transparent"
+                          press=".onOpenDeliveryAddressValidation"
+                          class="cursorPointer" />
+                      </HBox>
+                    </VBox>
+                  </VBox>
+
+                  <!-- CNC Store Collection Section: Displayed when Click & Collect (CNC) is selected -->
+                  <VBox
+                    id="cncStoreCollectionSection"
+                    visible="{= ${appState>/delivery/methodKey} === 'CNC' }"
+                    width="100%"
+                    class="deliverySubScreenContainer sapUiMediumMarginTop">
+                    
+                    <!-- Header Row: Title & Required Badge -->
+                    <HBox alignItems="Center" justifyContent="SpaceBetween" width="100%" class="deliverySubScreenHeaderRow">
+                      <Text text="Choose a collection store" class="deliverySubScreenTitle" />
+                      <HBox alignItems="Center" class="deliveryRequirementBadge">
+                        <Text text="✓ Store required" class="deliveryRequiredLabelText" />
+                      </HBox>
+                    </HBox>
+                    
+                    <!-- Subtitle -->
+                    <Text
+                      text="Nearby stores are returned based on the customer location and item availability."
+                      class="deliverySubScreenSubtitle sapUiTinyMarginTop sapUiSmallMarginBottom" />
+
+                    <!-- Form Row: 2 Columns (COLLECT FROM and STORE ADDRESS) -->
+                    <HBox alignItems="Stretch" width="100%" class="deliveryFormRow">
+                      <!-- Column 1: COLLECT FROM -->
+                      <VBox class="deliveryFormFieldColumn">
+                        <Label text="COLLECT FROM" class="deliveryFieldLabel" />
+                        <Select
+                          id="selectCollectionStore"
+                          selectedKey="{appState>/delivery/collectionStore/storeId}"
+                          change=".onCollectionStoreChange"
+                          items="{appState>/delivery/collectionStores}"
+                          width="100%">
+                          <core:Item key="{appState>storeId}" text="{appState>storeName}" />
+                        </Select>
+                      </VBox>
+
+                      <!-- Column 2: STORE ADDRESS -->
+                      <VBox class="deliveryFormFieldColumn">
+                        <Label text="STORE ADDRESS" class="deliveryFieldLabel" />
+                        <HBox alignItems="Center" class="deliveryInfoCard">
+                          <!-- Pink/Magenta Location Pin Icon matching screenshot -->
+                          <HBox alignItems="Center" justifyContent="Center" class="deliveryInfoIconWrap sapUiTinyMarginEnd">
+                            <Image
+                              src="./webapp/css/icons/pink-pin.svg"
+                              width="18px"
+                              height="18px"
+                              class="deliverySmallSvgIcon" />
+                          </HBox>
+                          <VBox justifyContent="Center" class="deliveryInfoContent">
+                            <Text text="{appState>/delivery/collectionStore/address}" class="deliveryInfoTitle" />
+                            <Text text="{appState>/delivery/collectionStore/distance}" class="deliveryInfoSubtitle" />
+                          </VBox>
+                        </HBox>
+                      </VBox>
+                    </HBox>
+                  </VBox>
+
+                  <!-- CNP BOPIS Pickup Point Section: Displayed when BOPIS (CNP) is selected -->
+                  <VBox
+                    id="cnpPickupPointSection"
+                    visible="{= ${appState>/delivery/methodKey} === 'CNP' }"
+                    width="100%"
+                    class="deliverySubScreenContainer sapUiMediumMarginTop">
+                    
+                    <!-- Header Row: Title & Required Badge -->
+                    <HBox alignItems="Center" justifyContent="SpaceBetween" width="100%" class="deliverySubScreenHeaderRow">
+                      <Text text="Choose a BOPIS pickup point" class="deliverySubScreenTitle" />
+                      <HBox alignItems="Center" class="deliveryRequirementBadge">
+                        <Text text="✓ Pickup point required" class="deliveryRequiredLabelText" />
+                      </HBox>
+                    </HBox>
+                    
+                    <!-- Subtitle -->
+                    <Text
+                      text="Select a pickup point. Items will be delivered there for the customer to collect."
+                      class="deliverySubScreenSubtitle sapUiTinyMarginTop sapUiSmallMarginBottom" />
+
+                    <!-- Form Row: 2 Columns (PICKUP POINT and LOCATION) -->
+                    <HBox alignItems="Stretch" width="100%" class="deliveryFormRow">
+                      <!-- Column 1: PICKUP POINT -->
+                      <VBox class="deliveryFormFieldColumn">
+                        <Label text="PICKUP POINT" class="deliveryFieldLabel" />
+                        <Select
+                          id="selectPickupPoint"
+                          selectedKey="{appState>/delivery/pickupPoint/pointId}"
+                          change=".onPickupPointChange"
+                          items="{appState>/delivery/pickupPoints}"
+                          width="100%">
+                          <core:Item key="{appState>pointId}" text="{appState>pointName}" />
+                        </Select>
+                      </VBox>
+
+                      <!-- Column 2: LOCATION -->
+                      <VBox class="deliveryFormFieldColumn">
+                        <Label text="LOCATION" class="deliveryFieldLabel" />
+                        <HBox alignItems="Center" class="deliveryInfoCard">
+                          <!-- Location Target Crosshair Icon matching screenshot -->
+                          <HBox alignItems="Center" justifyContent="Center" class="deliveryInfoIconWrap sapUiTinyMarginEnd">
+                            <Image
+                              src="./webapp/css/icons/target-crosshair.svg"
+                              width="18px"
+                              height="18px"
+                              class="deliverySmallSvgIcon" />
+                          </HBox>
+                          <VBox justifyContent="Center" class="deliveryInfoContent">
+                            <Text text="{appState>/delivery/pickupPoint/location}" class="deliveryInfoTitle" />
+                            <Text text="{appState>/delivery/pickupPoint/distance}" class="deliveryInfoSubtitle" />
+                          </VBox>
+                        </HBox>
+                      </VBox>
+                    </HBox>
+                  </VBox>
+                </VBox>
+              </content>
+              </Panel>
             </VBox>
-          </VBox>
+
+            <!-- ============================================== -->
+            <!-- RIGHT COLUMN: CART SUMMARY (SIDE BY SIDE)      -->
+            <!-- ============================================== -->
+            <VBox width="50%" class="deliverySideColumn deliveryCartSideColumn">
+              <Panel
+                id="deliveryStepCartSummaryPanel"
+                expandable="false"
+                expanded="true"
+                class="fioriStandardBorderPanel deliverySidePanel">
+                <headerToolbar>
+                <Toolbar>
+                  <core:Icon src="sap-icon://cart" color="#0070f2" class="sapUiTinyMarginEnd" />
+                  <Title
+                    text="{= '2. Cart Summary (' + (${appState>/cartCount} !== undefined ? ${appState>/cartCount} : 0) + ' items)' }"
+                    titleStyle="H5"
+                    class="boldText" />
+                  <ToolbarSpacer />
+                  <Button
+                    text="Add Article"
+                    icon="sap-icon://add"
+                    type="Emphasized"
+                    press=".onOpenAddArticleDialog"
+                    class="cursorPointer" />
+                </Toolbar>
+              </headerToolbar>
+              <content>
+                <!-- Empty Cart State -->
+                <VBox
+                  visible="{= (${appState>/cartCount} || 0) === 0 }"
+                  alignItems="Center"
+                  justifyContent="Center"
+                  class="cartEmptyStateBox sapUiMediumMarginTop sapUiMediumMarginBottom">
+                  <core:Icon src="sap-icon://cart" size="3.5rem" color="#94a3b8" class="sapUiSmallMarginBottom" />
+                  <Text text="Your cart is currently empty" class="boldText cartEmptyStateTitle" />
+                  <Text text="Add products from the catalog to proceed with your order" class="sapUiThemeColor-dim sapUiSmallMarginBottom" />
+                  <Button
+                    text="Add Article"
+                    icon="sap-icon://add"
+                    type="Emphasized"
+                    press=".onOpenAddArticleDialog"
+                    class="cursorPointer" />
+                </VBox>
+
+                <!-- Populated Cart Table -->
+                <VBox visible="{= (${appState>/cartCount} || 0) > 0 }">
+                  <ScrollContainer horizontal="true" vertical="false" width="100%">
+                    <Table
+                      id="deliveryStepCartSummaryTable"
+                      items="{appState>/cart}"
+                      noDataText="No articles in cart.">
+                      <columns>
+                        <Column width="55px" hAlign="Center">
+                          <Text text="Item" class="boldText" />
+                        </Column>
+                        <Column minWidth="220px">
+                          <Text text="Article / Description" class="boldText" />
+                        </Column>
+                        <Column width="150px" hAlign="Center">
+                          <Text text="Quantity" class="boldText" />
+                        </Column>
+                        <Column width="120px" hAlign="End">
+                          <Text text="Price/Unit" class="boldText" />
+                        </Column>
+                        <Column width="130px" hAlign="End">
+                          <Text text="Total" class="boldText" />
+                        </Column>
+                        <Column width="70px" hAlign="Center">
+                          <Text text="Action" class="boldText" />
+                        </Column>
+                      </columns>
+                      <items>
+                        <ColumnListItem class="{= ${appState>isSubItem} ? 'subItemRow' : 'mainItemRow' }">
+                          <cells>
+                            <Text text="{appState>item}" />
+                            <VBox>
+                              <Text text="{= ${appState>description} || ${appState>name} }" class="productTableTitle boldText" />
+                              <Text text="{= (${appState>articleId} ? ('Art. ' + ${appState>articleId} + ' · ') : '') + (${appState>productNo} || '') }" class="sapUiThemeColor-dim" />
+                            </VBox>
+
+                            <!-- Interactive Quantity Stepper -->
+                            <HBox alignItems="Center" justifyContent="Center" class="cartItemQtyBox">
+                              <Button
+                                icon="sap-icon://less"
+                                type="Transparent"
+                                press=".onDecreaseQty"
+                                enabled="{= ${appState>qty} > 1 }"
+                                tooltip="Decrease quantity"
+                                class="qtyControlBtn cursorPointer" />
+                              <Text text="{appState>qty}" class="cartItemQtyText sapUiTinyMarginBeginEnd boldText" />
+                              <Button
+                                icon="sap-icon://add"
+                                type="Transparent"
+                                press=".onIncreaseQty"
+                                tooltip="Increase quantity"
+                                class="qtyControlBtn cursorPointer" />
+                            </HBox>
+
+                            <Text text="{path: 'appState>netPrice', formatter: '.formatter.formatCurrency'}" />
+                            <Text text="{path: 'appState>netValue', formatter: '.formatter.formatCurrency'}" class="priceTextBold boldText" />
+
+                            <!-- Remove Item -->
+                            <Button
+                              icon="sap-icon://delete"
+                              type="Transparent"
+                              tooltip="Remove item from cart"
+                              press=".onRemoveCartItem"
+                              class="deleteCartItemBtn cursorPointer" />
+                          </cells>
+                        </ColumnListItem>
+                      </items>
+                    </Table>
+                  </ScrollContainer>
+
+                  <!-- Order Pricing Totals Bar -->
+                  <HBox justifyContent="End" alignItems="Center" wrap="Wrap" class="cartSummaryTotalsBar sapUiSmallMarginTop">
+                    <HBox alignItems="Center" class="sapUiSmallMarginEnd">
+                      <Text text="Items:" class="sapUiTinyMarginEnd sapUiThemeColor-dim" />
+                      <Text text="{= ${appState>/cartCount} !== undefined ? ${appState>/cartCount} : 0 }" class="boldText" />
+                    </HBox>
+                    <HBox alignItems="Center" class="sapUiSmallMarginEnd">
+                      <Text text="Net:" class="sapUiTinyMarginEnd sapUiThemeColor-dim" />
+                      <Text text="{path: 'appState>/pricing/netValue', formatter: '.formatter.formatCurrency'}" class="boldText" />
+                    </HBox>
+                    <HBox alignItems="Center" class="sapUiSmallMarginEnd">
+                      <Text text="VAT (15%):" class="sapUiTinyMarginEnd sapUiThemeColor-dim" />
+                      <Text text="{path: 'appState>/pricing/vat', formatter: '.formatter.formatCurrency'}" class="boldText" />
+                    </HBox>
+                    <HBox alignItems="Center" class="cartSummaryGrandTotalBox">
+                      <Text text="Total:" class="sapUiTinyMarginEnd boldText cartGrandTotalLabel" />
+                      <Text text="{path: 'appState>/pricing/total', formatter: '.formatter.formatCurrency'}" class="boldText cartGrandTotalAmount" />
+                    </HBox>
+                  </HBox>
+                </VBox>
+              </content>
+              </Panel>
+            </VBox>
+          </HBox>
         </WizardStep>
 
         <!-- ============================================== -->

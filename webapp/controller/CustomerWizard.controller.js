@@ -1531,6 +1531,11 @@ sap.ui.define([
       oAppState.setProperty("/delivery/methodSubtitle", "Collect from store");
       oAppState.setProperty("/delivery/deliveryType", "Pick");
       oAppState.setProperty("/review/shippingDetails/deliveryMethod", "Click & Collect (CNC)");
+      var oStore = oAppState.getProperty("/delivery/collectionStore");
+      if (oStore && oStore.storeName) {
+        oAppState.setProperty("/review/shippingDetails/shipTo", oStore.storeName);
+        oAppState.setProperty("/review/shippingDetails/address", oStore.address);
+      }
       MessageToast.show("Delivery Method: Click & Collect (CNC)");
     },
 
@@ -1541,7 +1546,50 @@ sap.ui.define([
       oAppState.setProperty("/delivery/methodSubtitle", "Collect from pickup point");
       oAppState.setProperty("/delivery/deliveryType", "Warehouse");
       oAppState.setProperty("/review/shippingDetails/deliveryMethod", "BOPIS (CNP)");
+      var oPoint = oAppState.getProperty("/delivery/pickupPoint");
+      if (oPoint && oPoint.pointName) {
+        oAppState.setProperty("/review/shippingDetails/shipTo", oPoint.pointName);
+        oAppState.setProperty("/review/shippingDetails/address", oPoint.location);
+      }
       MessageToast.show("Delivery Method: BOPIS (CNP)");
+    },
+
+    onCollectionStoreChange: function (oEvent) {
+      var oItem = oEvent.getParameter("selectedItem");
+      if (!oItem) {
+        return;
+      }
+      var sKey = oItem.getKey();
+      var oAppState = this.getModel("appState");
+      var aStores = oAppState.getProperty("/delivery/collectionStores") || [];
+      var oStore = aStores.find(function (s) {
+        return s.storeId === sKey;
+      });
+      if (oStore) {
+        oAppState.setProperty("/delivery/collectionStore", Object.assign({}, oStore));
+        oAppState.setProperty("/review/shippingDetails/shipTo", oStore.storeName);
+        oAppState.setProperty("/review/shippingDetails/address", oStore.address);
+        MessageToast.show("Store selected: " + oStore.storeName);
+      }
+    },
+
+    onPickupPointChange: function (oEvent) {
+      var oItem = oEvent.getParameter("selectedItem");
+      if (!oItem) {
+        return;
+      }
+      var sKey = oItem.getKey();
+      var oAppState = this.getModel("appState");
+      var aPoints = oAppState.getProperty("/delivery/pickupPoints") || [];
+      var oPoint = aPoints.find(function (p) {
+        return p.pointId === sKey;
+      });
+      if (oPoint) {
+        oAppState.setProperty("/delivery/pickupPoint", Object.assign({}, oPoint));
+        oAppState.setProperty("/review/shippingDetails/shipTo", oPoint.pointName);
+        oAppState.setProperty("/review/shippingDetails/address", oPoint.location);
+        MessageToast.show("Pickup point selected: " + oPoint.pointName);
+      }
     },
 
     onSelectDeliveryMethodToCustomer: function () {

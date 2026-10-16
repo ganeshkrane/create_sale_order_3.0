@@ -115,6 +115,84 @@ sap.ui.define([
           methodKey: "CND",
           methodTitle: "Delivery (CND)",
           methodSubtitle: "Deliver to customer address",
+          // CNC Store Collection Data (from Image 1)
+          collectionStore: {
+            storeId: "store-centurion",
+            storeName: "Centurion Lifestyle Centre",
+            address: "Shop 18, Lenchen Ave, Centurion",
+            distance: "Available · 4.2 km away"
+          },
+          collectionStores: [
+            {
+              storeId: "store-centurion",
+              storeName: "Centurion Lifestyle Centre",
+              address: "Shop 18, Lenchen Ave, Centurion",
+              distance: "Available · 4.2 km away"
+            },
+            {
+              storeId: "store-menlyn",
+              storeName: "Menlyn Park Shopping Centre",
+              address: "Atterbury Rd & Lois Ave, Menlyn, Pretoria",
+              distance: "Available · 6.8 km away"
+            },
+            {
+              storeId: "store-mall-of-africa",
+              storeName: "Mall of Africa",
+              address: "Magwa Cres, Midrand, Johannesburg",
+              distance: "Available · 12.1 km away"
+            },
+            {
+              storeId: "store-sandton-city",
+              storeName: "Sandton City Store",
+              address: "Rivonia Rd & 5th St, Sandton",
+              distance: "Available · 18.4 km away"
+            },
+            {
+              storeId: "store-brooklyn",
+              storeName: "Brooklyn Mall",
+              address: "Veale St & Fehrsen St, Nieuw Muckleneuk, Pretoria",
+              distance: "Available · 7.5 km away"
+            }
+          ],
+          // CNP BOPIS Pickup Point Data (from Image 2)
+          pickupPoint: {
+            pointId: "pickup-centurion-mall",
+            pointName: "Centurion Mall Locker Hub",
+            location: "Centurion Mall, Pretoria",
+            distance: "Open today · 4.2 km away"
+          },
+          pickupPoints: [
+            {
+              pointId: "pickup-centurion-mall",
+              pointName: "Centurion Mall Locker Hub",
+              location: "Centurion Mall, Pretoria",
+              distance: "Open today · 4.2 km away"
+            },
+            {
+              pointId: "pickup-pretoria-east",
+              pointName: "Pretoria East Pargo Point",
+              location: "Garsfontein Rd, Pretoria East",
+              distance: "Open today · 8.1 km away"
+            },
+            {
+              pointId: "pickup-midrand-postnet",
+              pointName: "Midrand PostNet Hub",
+              location: "Old Pretoria Rd, Midrand",
+              distance: "Open today · 11.5 km away"
+            },
+            {
+              pointId: "pickup-rosebank-locker",
+              pointName: "Rosebank Station Locker",
+              location: "Oxford Rd, Rosebank, Johannesburg",
+              distance: "Open today · 21.0 km away"
+            },
+            {
+              pointId: "pickup-hatfield-plaza",
+              pointName: "Hatfield Plaza Pickup",
+              location: "Burnett St, Hatfield, Pretoria",
+              distance: "Open today · 9.3 km away"
+            }
+          ],
           payee: "1000234571",
           payeeText: "1000234571 - Thabo Mokoena",
           poNumber: "PO-2026-99482",
