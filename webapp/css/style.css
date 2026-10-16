@@ -1,5 +1,12 @@
 /* SAP Fiori Standard Store Sales Styling */
 
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 .boldText {
   font-weight: 700 !important;
   color: #1d2d3e !important;
@@ -1364,3 +1371,13 @@
 .statusFlagIcon:hover {
   transform: scale(1.3) !important;
 }
+
+/* Stock Validation MessageStrip with clean multi-line display */
+.stockValidationMessageStrip,
+.stockValidationMessageStrip .sapMMsgStripText,
+.stockValidationMessageStrip .sapMMsgStripMessage {
+  white-space: pre-line !important;
+  line-height: 1.5 !important;
+  font-size: 0.92rem !important;
+}
+

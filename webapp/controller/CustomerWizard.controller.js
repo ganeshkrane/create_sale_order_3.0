@@ -1259,6 +1259,10 @@ sap.ui.define([
             });
             oAppState.setProperty("/cart", aFiltered);
             oAppState.setProperty("/cartCount", aFiltered.length);
+            var aCurrentNotices = oAppState.getProperty("/deliveryValidationNotices") || [];
+            oAppState.setProperty("/deliveryValidationNotices", aCurrentNotices.filter(function (n) {
+              return n.itemKey !== oItem.item;
+            }));
             that.recalculateTotals();
             that.updateCartSourcingEvaluation();
             var oStepProducts = that.byId("stepProducts");
@@ -1620,6 +1624,7 @@ sap.ui.define([
       if (oAppState) {
         oAppState.setProperty("/deliveryValidationPassed", false);
         oAppState.setProperty("/deliveryValidationNotice", "");
+        oAppState.setProperty("/deliveryValidationNotices", []);
       }
       this.updateCartSourcingEvaluation();
     },
@@ -1658,7 +1663,7 @@ sap.ui.define([
           item.isSplit = false;
           item.isAssignedBaseDC = false;
           item.isReserved = false;
-          item.sourcingTooltip = "Attached Service: Linked to parent line item " + (item.parentItem || "");
+          item.sourcingTooltip = "Attached Service";
           return;
         }
 
@@ -1674,7 +1679,7 @@ sap.ui.define([
           item.isSplit = false;
           item.isAssignedBaseDC = false;
           item.isReserved = false;
-          item.sourcingTooltip = "Excluded from OAA: Non-stock service item is excluded from OAA sourcing per SRS V3.3 rules.";
+          item.sourcingTooltip = "NLAG · Non-stock";
           return;
         }
 
@@ -1693,6 +1698,7 @@ sap.ui.define([
               item.sourcingState = "Warning";
               item.sourcingActionText = "Do not reserve the unavailable line. Assign it to customer's Base DC (" + (item.baseDC || "QL30") + ") and allow the order to proceed.";
               item.routingTarget = "Customer Base DC (" + (item.baseDC || "QL30") + ")";
+              item.sourcingTooltip = "F001 (M) · Stock not available";
               item.isBlocking = false;
               item.mustRemove = false;
               item.canReduce = false;
@@ -1706,6 +1712,7 @@ sap.ui.define([
               item.sourcingState = "Error";
               item.sourcingActionText = "Show the affected item. Require the user to remove it, then run sourcing again. (Order blocked until removed)";
               item.routingTarget = "Blocked (Unavailable)";
+              item.sourcingTooltip = "F001 (Not M) · Stock not available";
               item.isBlocking = true;
               item.mustRemove = true;
               item.canReduce = false;
@@ -1723,6 +1730,7 @@ sap.ui.define([
               item.sourcingState = "Information";
               item.sourcingActionText = "Reserve available quantity (" + nAvailToReserve + " EA) and route remainder (" + nRemainder + " EA) to Base DC (" + (item.baseDC || "QL30") + ") as additional line. Allow order to proceed.";
               item.routingTarget = nAvailToReserve + " EA @ OAA | " + nRemainder + " EA @ Base DC (" + (item.baseDC || "QL30") + ")";
+              item.sourcingTooltip = "F002 (M) · Partially available";
               item.isBlocking = false;
               item.mustRemove = false;
               item.canReduce = false;
@@ -1736,6 +1744,7 @@ sap.ui.define([
               item.sourcingState = "Error";
               item.sourcingActionText = "V3.3 Corrected Rule: Remove the line item from the cart, then run sourcing again.";
               item.routingTarget = "Blocked (Remove Item)";
+              item.sourcingTooltip = "F002 (Not M) · Partially available";
               item.isBlocking = true;
               item.mustRemove = true;
               item.canReduce = false;
@@ -1748,6 +1757,7 @@ sap.ui.define([
             item.sourcingState = "Success";
             item.sourcingActionText = "Reserve requested quantity (" + nReq + " EA) at OAA source. OAA determines supplying site (" + (item.site || "M001") + ") and shipping point (" + (item.shippingPoint || "SP-01") + ") automatically.";
             item.routingTarget = "OAA Source (" + (item.site || "M001") + ") · " + (item.shippingPoint || "SP-01");
+            item.sourcingTooltip = "CND · Stock available";
             item.isBlocking = false;
             item.mustRemove = false;
             item.canReduce = false;
@@ -1759,12 +1769,13 @@ sap.ui.define([
           // ==========================================
           // STORE COLLECTION (CNC)
           // ==========================================
-          if (item.sourcingCode === "NO_LOCATION") {
-            // Row 10: Store Collection or BOPIS | No eligible location returned
-            item.sourcingStatusText = "No Eligible Store Location";
+          if (nAvail === 0 || item.sourcingCode === "NO_LOCATION" || item.sourcingCode === "CND_F001_NOT_M" || item.sourcingCode === "CND_F001_M") {
+            // Row 10: Store Collection | No stock / No eligible store location
+            item.sourcingStatusText = "No Stock at Store";
             item.sourcingState = "Error";
-            item.sourcingActionText = "Identify item causing sourcing issue. User removes it, then app calls wrapper again.";
-            item.routingTarget = "No Store Eligible";
+            item.sourcingActionText = "Item has 0 stock at store location. Remove line item from cart.";
+            item.routingTarget = "No Store Eligible (0 Stock)";
+            item.sourcingTooltip = "CNC · F001 · Stock not available";
             item.isBlocking = true;
             item.mustRemove = true;
             item.canReduce = false;
@@ -1777,10 +1788,11 @@ sap.ui.define([
             item.sourcingState = "Warning";
             item.sourcingActionText = "Show eligible stores ranked by available stock. Ask user to reduce quantity to available amount (" + nAvailStore + " EA); reserve that quantity.";
             item.routingTarget = (oStore.storeName || "Store S101") + " (" + nAvailStore + " EA on hand)";
-            item.canReduce = (nReq > nAvailStore);
+            item.sourcingTooltip = "CNC · F002 · Partially available";
+            item.canReduce = (nReq > nAvailStore && nAvailStore > 0);
             item.recommendedQty = nAvailStore;
             item.isBlocking = (nReq > nAvailStore);
-            item.mustRemove = false;
+            item.mustRemove = (nAvailStore === 0);
             item.isSplit = false;
             if (item.isBlocking) nBlockingCount++;
             nActionableCount++;
@@ -1790,6 +1802,7 @@ sap.ui.define([
             item.sourcingState = "Success";
             item.sourcingActionText = "Show stores with full quantity available. Stock (" + nReq + " EA) will be reserved at " + (oStore.storeName || "Store S101") + ".";
             item.routingTarget = (oStore.storeName || "Store S101") + " · Reserved";
+            item.sourcingTooltip = "CNC · Stock available";
             item.isBlocking = false;
             item.mustRemove = false;
             item.canReduce = false;
@@ -1801,12 +1814,13 @@ sap.ui.define([
           // ==========================================
           // BOPIS POINT (CNP)
           // ==========================================
-          if (item.sourcingCode === "NO_LOCATION") {
-            // Row 10: Store Collection or BOPIS | No eligible location returned
-            item.sourcingStatusText = "No Eligible BOPIS Point";
+          if (nAvail === 0 || item.sourcingCode === "NO_LOCATION" || item.sourcingCode === "CND_F001_NOT_M" || item.sourcingCode === "CND_F001_M") {
+            // Row 10: BOPIS | No stock / No eligible pickup hub
+            item.sourcingStatusText = "No Stock at BOPIS Hub";
             item.sourcingState = "Error";
-            item.sourcingActionText = "Identify item causing sourcing issue. User removes it, then app calls wrapper again.";
-            item.routingTarget = "No Point Eligible";
+            item.sourcingActionText = "Item has 0 stock at pickup point hub. Remove line item from cart.";
+            item.routingTarget = "No Point Eligible (0 Stock)";
+            item.sourcingTooltip = "CNP · F001 · Stock not available";
             item.isBlocking = true;
             item.mustRemove = true;
             item.canReduce = false;
@@ -1819,10 +1833,11 @@ sap.ui.define([
             item.sourcingState = "Warning";
             item.sourcingActionText = "Show pickup points ranked by available quantity. Ask user to reduce quantity (to " + nAvailHub + " EA); reserve available amount.";
             item.routingTarget = (oPoint.pointName || "BOPIS Hub") + " (" + nAvailHub + " EA available)";
-            item.canReduce = (nReq > nAvailHub);
+            item.sourcingTooltip = "CNP · F002 · Partially available";
+            item.canReduce = (nReq > nAvailHub && nAvailHub > 0);
             item.recommendedQty = nAvailHub;
             item.isBlocking = (nReq > nAvailHub);
-            item.mustRemove = false;
+            item.mustRemove = (nAvailHub === 0);
             item.isSplit = false;
             if (item.isBlocking) nBlockingCount++;
             nActionableCount++;
@@ -1832,6 +1847,7 @@ sap.ui.define([
             item.sourcingState = "Success";
             item.sourcingActionText = "Show pickup points with stock available. Stock (" + nReq + " EA) will be reserved at " + (oPoint.pointName || "BOPIS Hub") + ".";
             item.routingTarget = (oPoint.pointName || "BOPIS Hub") + " · Reserved";
+            item.sourcingTooltip = "CNP · Stock available";
             item.isBlocking = false;
             item.mustRemove = false;
             item.canReduce = false;
@@ -1840,8 +1856,6 @@ sap.ui.define([
             item.isAssignedBaseDC = false;
           }
         }
-
-        item.sourcingTooltip = (item.sourcingStatusText || "Status") + ": " + (item.sourcingActionText || "") + (item.routingTarget ? (" · Target: " + item.routingTarget) : "");
       });
 
       var oSourcingSummary = {
@@ -1872,6 +1886,9 @@ sap.ui.define([
       if (nBlockingCount > 0) {
         bPassed = false;
         oAppState.setProperty("/deliveryValidationPassed", false);
+      } else if (nBlockingCount === 0 && aCart.length > 0) {
+        oAppState.setProperty("/deliveryValidationNotice", "");
+        oAppState.setProperty("/deliveryValidationNotices", []);
       }
 
       var oStep5 = this.byId("stepDeliveryMethod");
@@ -1901,6 +1918,10 @@ sap.ui.define([
       });
       oAppState.setProperty("/cart", aFiltered);
       oAppState.setProperty("/cartCount", aFiltered.length);
+      var aCurrentNotices = oAppState.getProperty("/deliveryValidationNotices") || [];
+      oAppState.setProperty("/deliveryValidationNotices", aCurrentNotices.filter(function (n) {
+        return n.itemKey !== oItem.item;
+      }));
       this.recalculateTotals();
       this.updateCartSourcingEvaluation();
       MessageToast.show("Removed " + (oItem.name || oItem.item) + ". Sourcing re-run successfully.");
@@ -1914,6 +1935,11 @@ sap.ui.define([
       var nNewQty = oItem.recommendedQty || oItem.availableQty || 1;
       oItem.qty = nNewQty;
       oItem.targetQty = nNewQty;
+      var oAppState = this.getModel("appState");
+      var aCurrentNotices = oAppState.getProperty("/deliveryValidationNotices") || [];
+      oAppState.setProperty("/deliveryValidationNotices", aCurrentNotices.filter(function (n) {
+        return n.itemKey !== oItem.item;
+      }));
       this.recalculateTotals();
       this.updateCartSourcingEvaluation();
       MessageToast.show("Reduced quantity for " + (oItem.name || oItem.item) + " to available amount (" + nNewQty + " EA). Stock reserved.");
@@ -2051,9 +2077,16 @@ sap.ui.define([
       oAppState.setProperty("/cartCount", aResolvedCart.length);
       this.recalculateTotals();
       this.updateCartSourcingEvaluation();
-      MessageBox.success("All cart items have been auto-resolved per SRS V3.3 Decision Rules:\n\n• Unavailable Non-M lines removed\n• Quantities reduced to available stock\n• Core M lines routed / split to Base DC (QL30)\n\nDelivery Step is now validated and ready to proceed!", {
-        title: "Sourcing Auto-Resolution Complete"
-      });
+      oAppState.setProperty("/deliveryValidationPassed", true);
+      oAppState.setProperty("/deliveryValidationNotice", "");
+      var oStep5Resolved = this.byId("stepDeliveryMethod");
+      var oWizardResolved = this.byId("salesOrderWizard");
+      if (oStep5Resolved) {
+        oStep5Resolved.setValidated(true);
+        if (oWizardResolved) {
+          oWizardResolved.validateStep(oStep5Resolved);
+        }
+      }
     },
 
     onDeliveryContinuePress: function () {
@@ -2062,49 +2095,61 @@ sap.ui.define([
       var aCart = oAppState.getProperty("/cart") || [];
 
       if (!aCart || aCart.length === 0) {
-        MessageBox.warning("Your cart is currently empty. Please add products before continuing.", {
-          title: "Empty Cart"
-        });
+        // Display separate short MessageStrip for empty cart; no MessageBox popup!
+        oAppState.setProperty("/deliveryValidationNotices", [
+          {
+            id: "empty_cart",
+            itemKey: "empty",
+            type: "Warning",
+            text: "Cart is empty. Please add products."
+          }
+        ]);
+        oAppState.setProperty("/deliveryValidationNotice", "");
         oAppState.setProperty("/deliveryValidationPassed", false);
+        var oStep5Empty = this.byId("stepDeliveryMethod");
+        var oWizardEmpty = this.byId("salesOrderWizard");
+        if (oStep5Empty) {
+          oStep5Empty.setValidated(false);
+          if (oWizardEmpty) {
+            oWizardEmpty.invalidateStep(oStep5Empty);
+          }
+        }
         return;
       }
 
-      var aItemsToRemove = [];
-      var aItemsToChangeQty = [];
+      var aNotices = [];
 
       aCart.forEach(function (item) {
         var sItemName = item.description || item.name || ("Item " + item.item);
-        var sArticleId = item.articleId ? " (Art: " + item.articleId + ")" : "";
 
         // Check if item must be removed (no stock available / blocked per SRS rules)
         if (item.mustRemove || item.sourcingState === "Error" || (item.availableQty === 0 && item.stockState !== "M")) {
-          var sStatusText = item.sourcingStatusText || "No stock available";
-          aItemsToRemove.push("• " + sItemName + sArticleId + " - Status: " + sStatusText + " (Please remove this item from the cart)");
+          aNotices.push({
+            id: "remove_" + item.item,
+            itemKey: item.item,
+            type: "Error",
+            text: sItemName + ": No stock. Please remove item."
+          });
         } else if (item.canReduce || (item.availableQty !== undefined && item.qty > item.availableQty && item.stockState !== "M")) {
           // Check if item quantity needs to be changed / reduced to available stock
           var nAvail = item.recommendedQty || item.availableQty || 0;
-          aItemsToChangeQty.push("• " + sItemName + sArticleId + " - Requested: " + item.qty + " EA | Available Stock: " + nAvail + " EA (Please change quantity to " + nAvail + " EA)");
+          aNotices.push({
+            id: "qty_" + item.item,
+            itemKey: item.item,
+            type: "Warning",
+            text: sItemName + ": Only " + nAvail + " EA available. Change quantity to " + nAvail + " EA."
+          });
         }
       });
 
       var oSourcingSummary = oAppState.getProperty("/sourcingSummary") || {};
-      var bHasStockIssues = (aItemsToRemove.length > 0) || (aItemsToChangeQty.length > 0) || (oSourcingSummary.blockingCount > 0);
+      var bHasStockIssues = (aNotices.length > 0) || (oSourcingSummary.blockingCount > 0);
 
       if (bHasStockIssues) {
         oAppState.setProperty("/deliveryValidationPassed", false);
-
-        var aMsgSections = [];
-        if (aItemsToRemove.length > 0) {
-          aMsgSections.push("Remove Item(s) with No Stock:\n" + aItemsToRemove.join("\n"));
-        }
-        if (aItemsToChangeQty.length > 0) {
-          aMsgSections.push("Change Quantity to Available Stock:\n" + aItemsToChangeQty.join("\n"));
-        }
-
-        var sFullMessage = aMsgSections.join("\n\n") + "\n\nPlease change the quantity or remove the item(s) in the cart table above, then click Continue again.";
-
-        oAppState.setProperty("/deliveryValidationNotice", "Validation Notice: Stock action required. Please change quantity or remove items as indicated in the message.");
-        oAppState.setProperty("/deliveryValidationNoticeType", "Warning");
+        // Display separate short MessageStrip for each product with a negative case!
+        oAppState.setProperty("/deliveryValidationNotices", aNotices);
+        oAppState.setProperty("/deliveryValidationNotice", "");
 
         var oStep5Err = this.byId("stepDeliveryMethod");
         var oWizardErr = this.byId("salesOrderWizard");
@@ -2114,17 +2159,12 @@ sap.ui.define([
             oWizardErr.invalidateStep(oStep5Err);
           }
         }
-
-        MessageBox.warning(sFullMessage, {
-          title: "Stock & Sourcing Validation",
-          actions: [MessageBox.Action.OK],
-          emphasizedAction: MessageBox.Action.OK
-        });
       } else {
         // Status is fine (all items have stock / valid routing)
         oAppState.setProperty("/deliveryValidationPassed", true);
-        oAppState.setProperty("/deliveryValidationNotice", "All items verified. Sufficient stock is available. You can now proceed to Step 6: Review Shipping.");
-        oAppState.setProperty("/deliveryValidationNoticeType", "Success");
+        // Do not display any message for full stock, stock available, or sufficient stock!
+        oAppState.setProperty("/deliveryValidationNotices", []);
+        oAppState.setProperty("/deliveryValidationNotice", "");
 
         var oStep5Ok = this.byId("stepDeliveryMethod");
         var oWizardOk = this.byId("salesOrderWizard");
@@ -2134,8 +2174,27 @@ sap.ui.define([
             oWizardOk.validateStep(oStep5Ok);
           }
         }
+      }
+    },
 
-        MessageToast.show("Stock verified! Step 6 button is now displayed below.");
+    onDismissSingleDeliveryNotice: function (oEvent) {
+      var oSource = oEvent.getSource();
+      var oContext = oSource.getBindingContext("appState");
+      if (!oContext) return;
+      var oNotice = oContext.getObject();
+      var oAppState = this.getModel("appState");
+      var aNotices = oAppState.getProperty("/deliveryValidationNotices") || [];
+      var aUpdated = aNotices.filter(function (n) {
+        return n !== oNotice && n.id !== oNotice.id;
+      });
+      oAppState.setProperty("/deliveryValidationNotices", aUpdated);
+    },
+
+    onCloseDeliveryValidationNotice: function () {
+      var oAppState = this.getModel("appState");
+      if (oAppState) {
+        oAppState.setProperty("/deliveryValidationNotice", "");
+        oAppState.setProperty("/deliveryValidationNotices", []);
       }
     },
 

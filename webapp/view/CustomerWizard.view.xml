@@ -971,7 +971,7 @@
                         justifyContent="Center"
                         class="deliveryMethodCardIconBox cursorPointer">
                         <Image
-                          src="{= ${appState>/delivery/methodKey} === 'CND' ? './webapp/css/icons/delivery-truck-blue.svg' : './webapp/css/icons/delivery-truck.svg' }"
+                          src="{= ${appState>/delivery/methodKey} === 'CND' ? './css/icons/delivery-truck-blue.png' : './css/icons/delivery-truck.png' }"
                           width="46px"
                           height="46px"
                           class="deliveryMethodSvgIcon" />
@@ -996,7 +996,7 @@
                         justifyContent="Center"
                         class="deliveryMethodCardIconBox cursorPointer">
                         <Image
-                          src="{= ${appState>/delivery/methodKey} === 'CNC' ? './webapp/css/icons/click-collect-store-blue.svg' : './webapp/css/icons/click-collect-store.svg' }"
+                          src="{= ${appState>/delivery/methodKey} === 'CNC' ? './css/icons/click-collect-store-blue.png' : './css/icons/click-collect-store.png' }"
                           width="46px"
                           height="46px"
                           class="deliveryMethodSvgIcon" />
@@ -1021,7 +1021,7 @@
                         justifyContent="Center"
                         class="deliveryMethodCardIconBox cursorPointer">
                         <Image
-                          src="{= ${appState>/delivery/methodKey} === 'CNP' ? './webapp/css/icons/google-maps-pin-blue.svg' : './webapp/css/icons/google-maps-pin.svg' }"
+                          src="{= ${appState>/delivery/methodKey} === 'CNP' ? './css/icons/google-maps-pin-blue.png' : './css/icons/google-maps-pin.png' }"
                           width="46px"
                           height="46px"
                           class="deliveryMethodSvgIcon" />
@@ -1123,7 +1123,7 @@
                           <!-- Pink/Magenta Location Pin Icon matching screenshot -->
                           <HBox alignItems="Center" justifyContent="Center" class="deliveryInfoIconWrap sapUiTinyMarginEnd">
                             <Image
-                              src="./webapp/css/icons/pink-pin.svg"
+                              src="./css/icons/pink-pin.png"
                               width="18px"
                               height="18px"
                               class="deliverySmallSvgIcon" />
@@ -1179,7 +1179,7 @@
                           <!-- Location Target Crosshair Icon matching screenshot -->
                           <HBox alignItems="Center" justifyContent="Center" class="deliveryInfoIconWrap sapUiTinyMarginEnd">
                             <Image
-                              src="./webapp/css/icons/target-crosshair.svg"
+                              src="./css/icons/target-crosshair.png"
                               width="18px"
                               height="18px"
                               class="deliverySmallSvgIcon" />
@@ -1244,21 +1244,6 @@
 
                 <!-- Populated Cart Table with Original 6-Column Layout -->
                 <VBox visible="{= (${appState>/cartCount} || 0) > 0 }">
-                  
-                  <!-- Compact Sourcing Summary Banner -->
-                  <HBox
-                    alignItems="Center"
-                    justifyContent="SpaceBetween"
-                    wrap="Wrap"
-                    class="sourcingBannerBox sourcingBannerState-{appState>/sourcingSummary/statusState} sapUiTinyMarginBottom">
-                    <HBox alignItems="Center">
-                      <core:Icon
-                        src="{path: 'appState>/sourcingSummary/statusState', formatter: '.formatter.sourcingStatusIcon'}"
-                        class="sapUiTinyMarginEnd sourcingIcon-{appState>/sourcingSummary/statusState}" />
-                      <Text text="{appState>/sourcingSummary/statusTitle}" class="boldText" />
-                    </HBox>
-                  </HBox>
-
                   <ScrollContainer horizontal="true" vertical="false" width="100%">
                     <Table
                       id="deliveryStepCartSummaryTable"
@@ -1292,13 +1277,13 @@
                             
                             <!-- Col 2: Article / Description with status color flag & tooltip -->
                             <HBox alignItems="Center">
-                              <!-- Status color flag with tooltip displaying full sourcing message -->
+                              <!-- Status color flag with short sourcing and status tooltip -->
                               <core:Icon
                                 src="sap-icon://flag"
                                 size="1.25rem"
                                 color="{path: 'appState>sourcingState', formatter: '.formatter.sourcingStatusColor'}"
                                 class="sapUiTinyMarginEnd cursorPointer statusFlagIcon"
-                                tooltip="{= ${appState>sourcingTooltip} || ((${appState>sourcingStatusText} || 'Status') + ': ' + (${appState>sourcingActionText} || '')) }" />
+                                tooltip="{appState>sourcingTooltip}" />
                               <VBox>
                                 <Text
                                   text="{= ${appState>description} || ${appState>name} }"
@@ -1307,10 +1292,7 @@
                                   <Text
                                     text="{= 'Art. ' + (${appState>articleId} || '') + (${appState>productNo} ? (' · ' + ${appState>productNo}) : '') }"
                                     class="sapUiThemeColor-dim" />
-                                  <Text
-                                    visible="{= !!${appState>sourcingIdentifier} }"
-                                    text="{= ' · ' + ${appState>sourcingIdentifier} }"
-                                    class="sapUiThemeColor-dim boldText" />
+                                 
                                 </HBox>
                               </VBox>
                             </HBox>
@@ -1341,6 +1323,15 @@
 
                             <!-- Col 6: Action with smart resolution buttons -->
                             <HBox alignItems="Center" justifyContent="Center">
+                              <!-- Reduce quantity button for partial stock items -->
+                              <Button
+                                visible="{= !!${appState>canReduce} &amp;&amp; (${appState>recommendedQty} || 0) > 0 }"
+                                icon="sap-icon://navigation-down-arrow"
+                                type="Critical"
+                                press=".onReduceQtyToAvailable"
+                                tooltip="{= 'Reduce quantity to ' + ${appState>recommendedQty} + ' EA (Available amount)' }"
+                                class="cursorPointer sapUiTinyMarginEnd" />
+                              <!-- Red reject delete button if mustRemove -->
                               <Button
                                 visible="{= !!${appState>mustRemove} }"
                                 icon="sap-icon://delete"
@@ -1348,15 +1339,9 @@
                                 press=".onRemoveSourcingItem"
                                 tooltip="{= 'Required per SRS rule: Remove item (' + ${appState>sourcingStatusText} + ')' }"
                                 class="cursorPointer" />
+                              <!-- Standard delete button if not mustRemove -->
                               <Button
-                                visible="{= !!${appState>canReduce} }"
-                                icon="sap-icon://navigation-down-arrow"
-                                type="Critical"
-                                press=".onReduceQtyToAvailable"
-                                tooltip="{= 'Reduce quantity to ' + ${appState>recommendedQty} + ' EA (Available amount)' }"
-                                class="cursorPointer" />
-                              <Button
-                                visible="{= !${appState>mustRemove} &amp;&amp; !${appState>canReduce} }"
+                                visible="{= !${appState>mustRemove} }"
                                 icon="sap-icon://delete"
                                 type="Transparent"
                                 tooltip="Remove item from cart"
@@ -1389,14 +1374,31 @@
                     </HBox>
                   </HBox>
 
-                  <!-- Validation Notice MessageStrip -->
+                  <!-- Validation Notices (Separate MessageStrip for each negative case product) -->
+                  <VBox
+                    id="deliveryValidationNoticesContainer"
+                    items="{appState>/deliveryValidationNotices}"
+                    visible="{= (${appState>/deliveryValidationNotices} || []).length > 0 }"
+                    class="sapUiSmallMarginTop">
+                    <items>
+                      <MessageStrip
+                        text="{appState>text}"
+                        type="{= ${appState>type} || 'Warning' }"
+                        showIcon="true"
+                        showCloseButton="true"
+                        close=".onDismissSingleDeliveryNotice"
+                        class="sapUiTinyMarginBottom stockValidationMessageStrip" />
+                    </items>
+                  </VBox>
                   <MessageStrip
-                    visible="{= !!${appState>/deliveryValidationNotice} }"
+                    id="deliveryValidationMessageStrip"
+                    visible="{= !!${appState>/deliveryValidationNotice} &amp;&amp; (${appState>/deliveryValidationNotices} || []).length === 0 }"
                     text="{appState>/deliveryValidationNotice}"
-                    type="{= ${appState>/deliveryValidationNoticeType} || 'Information' }"
+                    type="{= ${appState>/deliveryValidationNoticeType} || 'Warning' }"
                     showIcon="true"
                     showCloseButton="true"
-                    class="sapUiSmallMarginTop" />
+                    close=".onCloseDeliveryValidationNotice"
+                    class="sapUiSmallMarginTop stockValidationMessageStrip" />
 
                   <!-- Bottom Action Bar Below Cart Box -->
                   <HBox
