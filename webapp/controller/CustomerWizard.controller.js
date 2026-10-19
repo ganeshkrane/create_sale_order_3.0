@@ -1502,6 +1502,7 @@ sap.ui.define([
     // ========================================================
     onSelectDeliveryCND: function () {
       var oAppState = this.getModel("appState");
+      oAppState.setProperty("/deliveryValidationPassed", false);
       oAppState.setProperty("/delivery/methodKey", "CND");
       oAppState.setProperty("/delivery/methodTitle", "Delivery (CND)");
       oAppState.setProperty("/delivery/methodSubtitle", "Deliver to customer address");
@@ -1549,6 +1550,7 @@ sap.ui.define([
 
     onSelectClickAndCollectCNC: function () {
       var oAppState = this.getModel("appState");
+      oAppState.setProperty("/deliveryValidationPassed", false);
       oAppState.setProperty("/delivery/methodKey", "CNC");
       oAppState.setProperty("/delivery/methodTitle", "Click & Collect (CNC)");
       oAppState.setProperty("/delivery/methodSubtitle", "Collect from store");
@@ -1565,6 +1567,7 @@ sap.ui.define([
 
     onSelectBopisCNP: function () {
       var oAppState = this.getModel("appState");
+      oAppState.setProperty("/deliveryValidationPassed", false);
       oAppState.setProperty("/delivery/methodKey", "CNP");
       oAppState.setProperty("/delivery/methodTitle", "BOPIS (CNP)");
       oAppState.setProperty("/delivery/methodSubtitle", "Collect from pickup point");
@@ -1770,17 +1773,33 @@ sap.ui.define([
           // STORE COLLECTION (CNC)
           // ==========================================
           if (nAvail === 0 || item.sourcingCode === "NO_LOCATION" || item.sourcingCode === "CND_F001_NOT_M" || item.sourcingCode === "CND_F001_M") {
-            // Row 10: Store Collection | No stock / No eligible store location
-            item.sourcingStatusText = "No Stock at Store";
-            item.sourcingState = "Error";
-            item.sourcingActionText = "Item has 0 stock at store location. Remove line item from cart.";
-            item.routingTarget = "No Store Eligible (0 Stock)";
-            item.sourcingTooltip = "CNC · F001 · Stock not available";
-            item.isBlocking = true;
-            item.mustRemove = true;
-            item.canReduce = false;
-            item.isSplit = false;
-            nBlockingCount++;
+            if (sStatus === "M" || item.articleStatus === "M") {
+              // F001 · No stock | M -> Allow user to proceed via Base DC
+              item.sourcingStatusText = "F001 · Assigned to Base DC (M)";
+              item.sourcingState = "Information";
+              item.sourcingActionText = "Do not reserve the unavailable line. Assign it to customer's Base DC (" + (item.baseDC || "QL30") + ") and allow the order to proceed.";
+              item.routingTarget = "Customer Base DC (" + (item.baseDC || "QL30") + ")";
+              item.sourcingTooltip = "F001 (M) · Base DC assignment · Proceed allowed";
+              item.isBlocking = false;
+              item.mustRemove = false;
+              item.canReduce = false;
+              item.isSplit = false;
+              item.isAssignedBaseDC = true;
+              item.isReserved = false;
+              nActionableCount++;
+            } else {
+              // Row 10: Store Collection | No stock / No eligible store location
+              item.sourcingStatusText = "No Stock at Store";
+              item.sourcingState = "Error";
+              item.sourcingActionText = "Item has 0 stock at store location. Remove line item from cart.";
+              item.routingTarget = "No Store Eligible (0 Stock)";
+              item.sourcingTooltip = "CNC · F001 · Stock not available";
+              item.isBlocking = true;
+              item.mustRemove = true;
+              item.canReduce = false;
+              item.isSplit = false;
+              nBlockingCount++;
+            }
           } else if (nAvail < nReq || item.sourcingCode === "CNC_PARTIAL" || item.sourcingCode === "CND_F002_M" || item.sourcingCode === "CND_F002_NOT_M") {
             // Row 7: Store Collection CNC | F002 · Partial stock | Any
             var nAvailStore = Math.min(nAvail, nReq);
@@ -1815,17 +1834,33 @@ sap.ui.define([
           // BOPIS POINT (CNP)
           // ==========================================
           if (nAvail === 0 || item.sourcingCode === "NO_LOCATION" || item.sourcingCode === "CND_F001_NOT_M" || item.sourcingCode === "CND_F001_M") {
-            // Row 10: BOPIS | No stock / No eligible pickup hub
-            item.sourcingStatusText = "No Stock at BOPIS Hub";
-            item.sourcingState = "Error";
-            item.sourcingActionText = "Item has 0 stock at pickup point hub. Remove line item from cart.";
-            item.routingTarget = "No Point Eligible (0 Stock)";
-            item.sourcingTooltip = "CNP · F001 · Stock not available";
-            item.isBlocking = true;
-            item.mustRemove = true;
-            item.canReduce = false;
-            item.isSplit = false;
-            nBlockingCount++;
+            if (sStatus === "M" || item.articleStatus === "M") {
+              // F001 · No stock | M -> Allow user to proceed via Base DC
+              item.sourcingStatusText = "F001 · Assigned to Base DC (M)";
+              item.sourcingState = "Information";
+              item.sourcingActionText = "Do not reserve the unavailable line. Assign it to customer's Base DC (" + (item.baseDC || "QL30") + ") and allow the order to proceed.";
+              item.routingTarget = "Customer Base DC (" + (item.baseDC || "QL30") + ")";
+              item.sourcingTooltip = "F001 (M) · Base DC assignment · Proceed allowed";
+              item.isBlocking = false;
+              item.mustRemove = false;
+              item.canReduce = false;
+              item.isSplit = false;
+              item.isAssignedBaseDC = true;
+              item.isReserved = false;
+              nActionableCount++;
+            } else {
+              // Row 10: BOPIS | No stock / No eligible pickup hub
+              item.sourcingStatusText = "No Stock at BOPIS Hub";
+              item.sourcingState = "Error";
+              item.sourcingActionText = "Item has 0 stock at pickup point hub. Remove line item from cart.";
+              item.routingTarget = "No Point Eligible (0 Stock)";
+              item.sourcingTooltip = "CNP · F001 · Stock not available";
+              item.isBlocking = true;
+              item.mustRemove = true;
+              item.canReduce = false;
+              item.isSplit = false;
+              nBlockingCount++;
+            }
           } else if (nAvail < nReq || item.sourcingCode === "CNP_PARTIAL" || item.sourcingCode === "CNC_PARTIAL" || item.sourcingCode === "CND_F002_M" || item.sourcingCode === "CND_F002_NOT_M") {
             // Row 9: BOPIS Point CNP | F002 · Partial stock | Any
             var nAvailHub = Math.min(nAvail, nReq);
@@ -2121,23 +2156,34 @@ sap.ui.define([
 
       aCart.forEach(function (item) {
         var sItemName = item.description || item.name || ("Item " + item.item);
+        var sStatus = item.articleStatus || item.stockState || "M";
+        var isStatusM = (sStatus === "M" || item.articleStatus === "M");
+        var nAvail = (item.availableQty !== undefined) ? item.availableQty : (item.stock !== undefined ? item.stock : 10);
+        var isF001 = (nAvail === 0 || item.sourcingCode === "CND_F001_M" || item.sourcingCode === "CND_F001_NOT_M" || (item.sourcingStatusText && item.sourcingStatusText.indexOf("F001") !== -1));
+
+        // Rule: for sourcing F001 and status M - allow user to proceed and dont show validation message
+        if (isF001 && isStatusM) {
+          item.mustRemove = false;
+          item.isBlocking = false;
+          return;
+        }
 
         // Check if item must be removed (no stock available / blocked per SRS rules)
-        if (item.mustRemove || item.sourcingState === "Error" || (item.availableQty === 0 && item.stockState !== "M")) {
+        if (item.mustRemove || item.sourcingState === "Error" || (nAvail === 0 && !isStatusM)) {
           aNotices.push({
             id: "remove_" + item.item,
             itemKey: item.item,
             type: "Error",
             text: sItemName + ": No stock. Please remove item."
           });
-        } else if (item.canReduce || (item.availableQty !== undefined && item.qty > item.availableQty && item.stockState !== "M")) {
+        } else if (item.canReduce || (nAvail !== undefined && item.qty > nAvail && !isStatusM)) {
           // Check if item quantity needs to be changed / reduced to available stock
-          var nAvail = item.recommendedQty || item.availableQty || 0;
+          var nAvailRec = item.recommendedQty || nAvail || 0;
           aNotices.push({
             id: "qty_" + item.item,
             itemKey: item.item,
             type: "Warning",
-            text: sItemName + ": Only " + nAvail + " EA available. Change quantity to " + nAvail + " EA."
+            text: sItemName + ": Only " + nAvailRec + " EA available. Change quantity to " + nAvailRec + " EA."
           });
         }
       });
@@ -2160,9 +2206,9 @@ sap.ui.define([
           }
         }
       } else {
-        // Status is fine (all items have stock / valid routing)
+        // Status is fine (all items have stock / valid routing or F001 with status M)
         oAppState.setProperty("/deliveryValidationPassed", true);
-        // Do not display any message for full stock, stock available, or sufficient stock!
+        // Do not display any message for full stock, stock available, or sufficient stock / F001 status M!
         oAppState.setProperty("/deliveryValidationNotices", []);
         oAppState.setProperty("/deliveryValidationNotice", "");
 
@@ -2174,6 +2220,8 @@ sap.ui.define([
             oWizardOk.validateStep(oStep5Ok);
           }
         }
+
+        MessageToast.show("Stock validated. Click 'Step 6: Review Shipping' to proceed.");
       }
     },
 

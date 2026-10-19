@@ -104,6 +104,8 @@ sap.ui.define([
         cart: [],
         cartCount: 0,
         deliveryValidationNotices: [],
+        deliveryValidationPassed: false,
+        deliveryValidationNotice: "",
         // Sourcing status summary per SRS V3.3 decision rules
         sourcingSummary: {
           methodKey: "CND",
