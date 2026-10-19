@@ -18,13 +18,7 @@
         icon="sap-icon://add"
         press=".onCreateSalesOrderPress"
         class="cursorPointer sapUiTinyMarginEnd" />
-      <Button
-        id="btnRefreshOrders"
-        icon="sap-icon://refresh"
-        tooltip="Refresh Sales Orders"
-        type="Transparent"
-        press=".onRefreshPress"
-        class="cursorPointer" />
+      
     </headerContent>
     <content>
       <VBox class="sapUiSmallMargin">
@@ -39,10 +33,10 @@
             <VBox class="sapUiSmallMargin">
               <l:Grid defaultSpan="XL3 L3 M6 S12" class="sapUiSmallMarginBottom">
                 <VBox class="customerSearchFieldGroup">
-                  <Label text="Search Order / Customer:" labelFor="filterSearchInput" class="customerSearchFieldLabel" />
+                  <Label text="Search Order Number:" labelFor="filterSearchInput" class="customerSearchFieldLabel" />
                   <Input
                     id="filterSearchInput"
-                    placeholder="Enter Order # or Customer..."
+                    placeholder="Enter Order Number"
                     value="{salesOrders>/filters/searchQuery}"
                     submit=".onApplyFilters"
                     showClearIcon="true"
