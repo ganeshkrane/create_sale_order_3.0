@@ -23,6 +23,12 @@ sap.ui.define([
       // Set shared reactive application state model
       this.setModel(models.createAppStateModel(), "appState");
 
+      // Set shared sales orders model
+      this.setModel(models.createSalesOrdersModel(), "salesOrders");
+
+      // Set global message model
+      this.setModel(sap.ui.getCore().getMessageManager().getMessageModel(), "messages");
+
       // Initialize the router
       this.getRouter().initialize();
     },

@@ -72,6 +72,7 @@ sap.ui.define([
           orderType: "ZOR",
           orderTypeName: "Standard Store Order",
           orderTypeDesc: "ZOR · Take-away / collect today",
+          tvLicenseType: "Existing License",
           soldToParty: "",
           shipToParty: "",
           customerReference: "REF-STORE-2026-001",
@@ -325,6 +326,46 @@ sap.ui.define([
       };
 
       return new JSONModel(oInitialState);
+    },
+
+    createSalesOrdersModel: function () {
+      var aInitialOrders = [];
+      try {
+        var sStored = localStorage.getItem("sap_sales_orders_store");
+        if (sStored) {
+          aInitialOrders = JSON.parse(sStored);
+        }
+      } catch (e) {
+        // fallback
+      }
+
+      var oModel = new JSONModel({
+        orders: aInitialOrders,
+        filteredOrders: aInitialOrders,
+        filters: {
+          searchQuery: "",
+          orderType: "",
+          tvLicenseType: "",
+          deliveryMethod: "",
+          status: ""
+        }
+      });
+
+      // If localStorage is empty, load seed from salesOrders.json
+      if (!aInitialOrders || aInitialOrders.length === 0) {
+        fetch(sap.ui.require.toUrl("sap/ui/salesorder/store/model/mockdata/salesOrders.json"))
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            oModel.setProperty("/orders", data);
+            oModel.setProperty("/filteredOrders", data);
+            try {
+              localStorage.setItem("sap_sales_orders_store", JSON.stringify(data));
+            } catch (e) {}
+          })
+          .catch(function () {});
+      }
+
+      return oModel;
     }
   };
 });

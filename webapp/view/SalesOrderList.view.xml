@@ -1,0 +1,203 @@
+<mvc:View
+  controllerName="sap.ui.salesorder.store.controller.SalesOrderList"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:l="sap.ui.layout">
+  <Page
+    id="salesOrderListPage"
+    title="Manage Sales Orders – Store"
+    titleAlignment="Auto"
+    showNavButton="false"
+    class="sapUiResponsiveContentPadding">
+    <headerContent>
+      <Button
+        id="btnCreateNewOrder"
+        text="Create Sales Order"
+        type="Emphasized"
+        icon="sap-icon://add"
+        press=".onCreateSalesOrderPress"
+        class="cursorPointer sapUiTinyMarginEnd" />
+      <Button
+        id="btnRefreshOrders"
+        icon="sap-icon://refresh"
+        tooltip="Refresh Sales Orders"
+        type="Transparent"
+        press=".onRefreshPress"
+        class="cursorPointer" />
+    </headerContent>
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <!-- Filter Bar Panel -->
+        <Panel
+          id="salesOrderFilterPanel"
+          headerText="Filter Orders"
+          expandable="true"
+          expanded="true"
+          class="fioriStandardBorderPanel sapUiSmallMarginBottom">
+          <content>
+            <VBox class="sapUiSmallMargin">
+              <l:Grid defaultSpan="XL3 L3 M6 S12" class="sapUiSmallMarginBottom">
+                <VBox class="customerSearchFieldGroup">
+                  <Label text="Search Order / Customer:" labelFor="filterSearchInput" class="customerSearchFieldLabel" />
+                  <Input
+                    id="filterSearchInput"
+                    placeholder="Enter Order # or Customer..."
+                    value="{salesOrders>/filters/searchQuery}"
+                    submit=".onApplyFilters"
+                    showClearIcon="true"
+                    class="customerSearchFieldInput" />
+                </VBox>
+
+                <VBox class="customerSearchFieldGroup">
+                  <Label text="Order Type:" labelFor="filterOrderTypeSelect" class="customerSearchFieldLabel" />
+                  <Select
+                    id="filterOrderTypeSelect"
+                    selectedKey="{salesOrders>/filters/orderType}"
+                    change=".onApplyFilters"
+                    width="100%">
+                    <core:Item key="" text="All Order Types" />
+                    <core:Item key="ZOR" text="ZOR - Standard Store Order" />
+                    <core:Item key="ZDL" text="ZDL - Delivery Order" />
+                    <core:Item key="ZSP" text="ZSP - Special / Supply Order" />
+                  </Select>
+                </VBox>
+
+                <VBox class="customerSearchFieldGroup">
+                  <Label text="TV License Type:" labelFor="filterTvLicenseSelect" class="customerSearchFieldLabel" />
+                  <Select
+                    id="filterTvLicenseSelect"
+                    selectedKey="{salesOrders>/filters/tvLicenseType}"
+                    change=".onApplyFilters"
+                    width="100%">
+                    <core:Item key="" text="All License Types" />
+                    <core:Item key="Existing License" text="Existing License" />
+                    <core:Item key="Cash Payment" text="Cash Payment" />
+                    <core:Item key="New License" text="New License" />
+                    <core:Item key="Other" text="Other" />
+                  </Select>
+                </VBox>
+
+                <VBox class="customerSearchFieldGroup">
+                  <Label text="Delivery Method:" labelFor="filterDeliveryMethodSelect" class="customerSearchFieldLabel" />
+                  <Select
+                    id="filterDeliveryMethodSelect"
+                    selectedKey="{salesOrders>/filters/deliveryMethod}"
+                    change=".onApplyFilters"
+                    width="100%">
+                    <core:Item key="" text="All Delivery Methods" />
+                    <core:Item key="CND" text="Click &amp; Deliver (CND)" />
+                    <core:Item key="CNC" text="Click &amp; Collect (CNC)" />
+                    <core:Item key="CNP" text="BOPIS (CNP)" />
+                  </Select>
+                </VBox>
+              </l:Grid>
+
+              <HBox justifyContent="End" alignItems="Center">
+                <Button
+                  id="btnApplyFilter"
+                  text="Go"
+                  type="Emphasized"
+                  icon="sap-icon://search"
+                  press=".onApplyFilters"
+                  class="cursorPointer sapUiTinyMarginEnd" />
+                <Button
+                  id="btnClearFilter"
+                  text="Clear Filters"
+                  type="Transparent"
+                  icon="sap-icon://clear-filter"
+                  press=".onClearFilters"
+                  class="cursorPointer" />
+              </HBox>
+            </VBox>
+          </content>
+        </Panel>
+
+        <!-- Sales Orders Table -->
+        <Panel class="fioriStandardBorderPanel">
+          <headerToolbar>
+            <Toolbar>
+              <core:Icon src="sap-icon://sales-order" color="#0070f2" class="sapUiTinyMarginEnd" />
+              <Title
+                text="{= 'Sales Orders (' + (${salesOrders>/filteredOrders} ? ${salesOrders>/filteredOrders}.length : 0) + ')' }"
+                titleStyle="H5"
+                class="boldText" />
+              <ToolbarSpacer />
+              <SearchField
+                width="220px"
+                placeholder="Quick search..."
+                value="{salesOrders>/filters/searchQuery}"
+                search=".onApplyFilters"
+                liveChange=".onApplyFilters"
+                class="sapUiTinyMarginEnd" />
+            </Toolbar>
+          </headerToolbar>
+          <content>
+            <Table
+              id="salesOrdersTable"
+              items="{salesOrders>/filteredOrders}"
+              noDataText="No sales orders found matching filters."
+              growing="true"
+              growingThreshold="20"
+              class="fioriResponsiveTable">
+              <columns>
+                <Column width="15%">
+                  <Text text="Order Number" class="boldText" />
+                </Column>
+                <Column width="12%">
+                  <Text text="Order Date" class="boldText" />
+                </Column>
+                <Column width="22%" minScreenWidth="Tablet" demandPopin="true">
+                  <Text text="Customer" class="boldText" />
+                </Column>
+                <Column width="15%" minScreenWidth="Tablet" demandPopin="true">
+                  <Text text="Order Type" class="boldText" />
+                </Column>
+                <Column width="17%" minScreenWidth="Desktop" demandPopin="true">
+                  <Text text="TV License Type" class="boldText" />
+                </Column>
+                <Column width="10%" minScreenWidth="Desktop" demandPopin="true">
+                  <Text text="Delivery" class="boldText" />
+                </Column>
+                <Column width="9%" hAlign="End">
+                  <Text text="Total (ZAR)" class="boldText" />
+                </Column>
+              </columns>
+              <items>
+                <ColumnListItem
+                  type="Navigation"
+                  press=".onOrderRowPress"
+                  class="cursorPointer">
+                  <cells>
+                    <ObjectIdentifier
+                      title="{salesOrders>salesOrderNo}"
+                      text="{salesOrders>poNumber}"
+                      titleActive="true"
+                      titlePress=".onOrderRowPress" />
+                    <Text text="{salesOrders>orderDate}" />
+                    <ObjectIdentifier
+                      title="{salesOrders>customerName}"
+                      text="{= 'BP: ' + ${salesOrders>customerBp} }" />
+                    <ObjectStatus
+                      text="{salesOrders>orderType}"
+                      state="Information" />
+                    <ObjectStatus
+                      text="{salesOrders>tvLicenseType}"
+                      state="None" />
+                    <ObjectStatus
+                      text="{salesOrders>deliveryMethod}"
+                      state="Information"
+                      icon="{= ${salesOrders>deliveryMethod} === 'CND' ? 'sap-icon://shipping-status' : (${salesOrders>deliveryMethod} === 'CNC' ? 'sap-icon://retail-store' : 'sap-icon://map-pin-point') }" />
+                    <Text
+                      text="{path: 'salesOrders>totalAmount', formatter: '.formatter.formatCurrency'}"
+                      class="boldText priceTextBold" />
+                  </cells>
+                </ColumnListItem>
+              </items>
+            </Table>
+          </content>
+        </Panel>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>

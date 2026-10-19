@@ -12,7 +12,14 @@
     showNavButton="false"
     class="sapUiContentPadding">
     <headerContent>
-      
+      <Button
+        id="btnViewAllSalesOrders"
+        text="View Orders List"
+        icon="sap-icon://list"
+        type="Transparent"
+        press=".onNavToSalesOrderList"
+        tooltip="View all created sales orders"
+        class="cursorPointer" />
     </headerContent>
     <content>
       <!-- Top Selected or Newly Created Customer Display (Above Wizard) in Bold -->
@@ -104,11 +111,11 @@
                     </VBox>
 
                     <VBox width="19%" class="customerSearchFieldGroup">
-                      <Label text="Customer ID Number:" labelFor="inpCustomerIdNumber" class="customerSearchFieldLabel" />
+                      <Label text="ID/Passport Number:" labelFor="inpCustomerIdNumber" class="customerSearchFieldLabel" />
                       <Input
                         id="inpCustomerIdNumber"
                         value="{wizardModel>/searchCriteria/idNumber}"
-                        placeholder="Enter ID Number"
+                        placeholder="Enter ID/Passport Number"
                         submit=".onSearchCustomerClick"
                         class="customerSearchFieldInput" />
                     </VBox>
@@ -144,14 +151,14 @@
                     </VBox>
                   </HBox>
 
-                  <!-- Row 2: Name and Lastname, Contact Number, Email Address, Spacer, Search/Clear buttons -->
+                  <!-- Row 2: Individual or Company Name, Contact Number, Email Address, Spacer, Search/Clear buttons -->
                   <HBox justifyContent="SpaceBetween" alignItems="End" width="100%" class="sapUiSmallMarginTop">
                     <VBox width="19%" class="customerSearchFieldGroup">
-                      <Label text="Name and Lastname:" labelFor="wizardSearchName" class="customerSearchFieldLabel" />
+                      <Label text="Individual or Company Name:" labelFor="wizardSearchName" class="customerSearchFieldLabel" />
                       <Input
                         id="wizardSearchName"
                         value="{wizardModel>/searchCriteria/customerName}"
-                        placeholder="Enter Name"
+                        placeholder="Enter Individual or Company Name"
                         submit=".onSearchCustomerClick"
                         class="customerSearchFieldInput" />
                     </VBox>
@@ -219,8 +226,8 @@
                     id="messagePopoverBtn"
                     icon="sap-icon://message-popup"
                     type="Negative"
-                    text="{= (${messages>/}.length || 0) + ' Errors' }"
-                    visible="{= (${messages>/}.length || 0) > 0 }"
+                    text="{= ((${messages>/} || []).length) + ' Errors' }"
+                    visible="{= ((${messages>/} || []).length) > 0 }"
                     press=".onMessagePopoverPress" />
                   <Button
                     text="Cancel"
@@ -235,11 +242,11 @@
                   <!-- Inline Error Messages Banner for Basic Details -->
                   <MessageStrip
                     id="basicDetailsErrorMessageStrip"
-                    text="{= 'Please correct the ' + (${messages>/}.length || 0) + ' highlighted error(s) in Basic Details before validating address.' }"
+                    text="{= 'Please correct the ' + ((${messages>/} || []).length) + ' highlighted error(s) in Basic Details before validating address.' }"
                     type="Error"
                     showIcon="true"
                     showCloseButton="true"
-                    visible="{= (${messages>/}.length || 0) > 0 }"
+                    visible="{= ((${messages>/} || []).length) > 0 }"
                     class="sapUiSmallMarginBottom">
                     <link>
                       <Link text="View all error messages" press=".onMessagePopoverPress" />
@@ -575,8 +582,8 @@
                             id="btnAddressErrorsPopover"
                             icon="sap-icon://message-popup"
                             type="Negative"
-                            text="{= (${messages>/}.length || 0) + ' Errors' }"
-                            visible="{= (${messages>/}.length || 0) > 0 }"
+                            text="{= ((${messages>/} || []).length) + ' Errors' }"
+                            visible="{= ((${messages>/} || []).length) > 0 }"
                             class="sapUiTinyMarginEnd"
                             press=".onMessagePopoverPress" />
                           <Button
@@ -743,19 +750,36 @@
           title="{i18n>step3OrderType}"
           icon="sap-icon://form"
           validated="true">
-          <VBox class="sapUiMediumMarginTopBottom sapUiSmallMarginBeginEnd" width="100%">
-            <HBox alignItems="Center" class="marketingRow">
-              <Label text="Order Type" labelFor="selOrderTypeDropdown" class="marketingQuestionLabel sapUiMediumMarginEnd" width="160px" />
-              <Select
-                id="selOrderTypeDropdown"
-                width="280px"
-                selectedKey="{appState>/orderHeader/orderType}"
-                change=".onOrderTypeChange"
-                class="customerSearchInput">
-                <core:Item key="ZOR" text="ZOR - Standard Store Order" />
-                <core:Item key="ZDL" text="ZDL - Delivery Order" />
-                <core:Item key="ZSP" text="ZSP - Special / Supply Order" />
-              </Select>
+          <VBox alignItems="Center" class="sapUiMediumMarginTopBottom" width="100%">
+            <HBox justifyContent="Center" alignItems="Center" wrap="Wrap" width="100%">
+              <HBox alignItems="Center" class="sapUiLargeMarginEnd sapUiTinyMarginBottom">
+                <Label text="Order Type:" labelFor="selOrderTypeDropdown" class="marketingQuestionLabel sapUiSmallMarginEnd" width="120px" />
+                <Select
+                  id="selOrderTypeDropdown"
+                  width="260px"
+                  selectedKey="{appState>/orderHeader/orderType}"
+                  change=".onOrderTypeChange"
+                  class="customerSearchInput">
+                  <core:Item key="ZOR" text="ZOR - Standard Store Order" />
+                  <core:Item key="ZDL" text="ZDL - Delivery Order" />
+                  <core:Item key="ZSP" text="ZSP - Special / Supply Order" />
+                </Select>
+              </HBox>
+
+              <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                <Label text="TV License Type:" labelFor="selTvLicenseTypeDropdown" class="marketingQuestionLabel sapUiSmallMarginEnd" width="130px" />
+                <Select
+                  id="selTvLicenseTypeDropdown"
+                  width="260px"
+                  selectedKey="{appState>/orderHeader/tvLicenseType}"
+                  change=".onTvLicenseTypeChange"
+                  class="customerSearchInput">
+                  <core:Item key="Existing License" text="Existing License" />
+                  <core:Item key="Cash Payment" text="Cash Payment" />
+                  <core:Item key="New License" text="New License" />
+                  <core:Item key="Other" text="Other" />
+                </Select>
+              </HBox>
             </HBox>
           </VBox>
         </WizardStep>
@@ -1509,16 +1533,21 @@
                   </VBox>
 
                   <VBox class="sapUiTinyMarginBottom">
-                    <Label text="Single Shipment" class="sapUiTinyMarginBottom textMutedBold" />
-                    <HBox alignItems="Center">
-                      <Switch
-                        state="{appState>/delivery/singleShipment}"
-                        customTextOn="Yes"
-                        customTextOff="No"
-                        change=".onSingleShipmentChange"
-                        class="sapUiSmallMarginEnd" />
-                      <Text text="{= ${appState>/delivery/singleShipment} ? 'Yes (Deliver in one shipment)' : 'No (Partial allowed)' }" class="sapUiThemeColor-dim" />
-                    </HBox>
+                    <Label text="TV License Type" class="sapUiTinyMarginBottom textMutedBold" />
+                   
+                      <Select
+                        id="selReviewTvLicenseType"
+                        selectedKey="{appState>/orderHeader/tvLicenseType}"
+                        change=".onTvLicenseTypeChange"
+                        editable="false"
+                        width="100%">
+                        <core:Item key="Existing License" text="Existing License" />
+                        <core:Item key="Cash Payment" text="Cash Payment" />
+                        <core:Item key="New License" text="New License" />
+                        <core:Item key="Other" text="Other" />
+                      </Select>
+                   
+                   
                   </VBox>
 
                   <VBox class="sapUiTinyMarginBottom">
@@ -1533,6 +1562,10 @@
                       <Text text="{= ${appState>/delivery/sameAsBilling} ? 'Yes (Billing address reused)' : 'No (Separate address)' }" class="sapUiThemeColor-dim" />
                     </HBox>
                   </VBox>
+                   <HBox alignItems="Center" class="sapUiTinyMarginTop">
+                      <Text text="Order Type: " class="sapUiThemeColor-dim sapUiTinyMarginEnd" />
+                      <Text text="{= (${appState>/orderHeader/orderType} || 'ZOR') + ' · ' + (${appState>/orderHeader/orderTypeName} || 'Standard Store Order') }" class="boldText" />
+                    </HBox>
                 </l:Grid>
 
                 <!-- Dual Column Layout for Ship To & Bill To -->
@@ -1696,7 +1729,7 @@
                     <Panel id="attachmentsPanel" expandable="false" class="attachmentsReviewPanel sapUiSmallMarginBeginEnd sapUiTinyMarginTop">
                       <headerToolbar>
                         <OverflowToolbar class="attachmentsOverflowToolbar">
-                          <Title text="{i18n>ATTACHMENTS_LIST_TITLE} ({=${appState>/delivery/attachments}.length || 0})" level="H5" />
+                          <Title text="{= (${i18n>ATTACHMENTS_LIST_TITLE} || 'Attachments') + ' (' + ((${appState>/delivery/attachments} || []).length) + ')' }" level="H5" />
                           <ToolbarSpacer />
                           <Text text="Attachments will be saved to UploadSet with the generated SO number" class="attachmentsUploadSetHint sapUiSmallMarginEnd" />
                         </OverflowToolbar>
@@ -1797,8 +1830,8 @@
                       <Text text="{= ${appState>/delivery/requestedDeliveryDate} || ${appState>/review/shippingDetails/requestedDeliveryDate} || 'Sep 28, 2026' }" class="summaryHeaderValue" />
                     </HBox>
                     <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
-                      <Text text="Single Shipment" class="priceRowLabel" />
-                      <Text text="{= ${appState>/delivery/singleShipment} ? 'Yes' : 'No' }" class="summaryHeaderValue" />
+                      <Text text="TV License Type" class="priceRowLabel" />
+                      <Text text="{= ${appState>/orderHeader/tvLicenseType} || 'Existing License' }" class="summaryHeaderValue" />
                     </HBox>
                     <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
                       <Text text="Carrier" class="priceRowLabel" />

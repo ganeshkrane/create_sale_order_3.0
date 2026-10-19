@@ -788,6 +788,14 @@ sap.ui.define([
       }
     },
 
+    onTvLicenseTypeChange: function (oEvent) {
+      var sKey = oEvent.getParameter("selectedItem").getKey();
+      var oAppState = this.getModel("appState");
+      oAppState.setProperty("/orderHeader/tvLicenseType", sKey);
+      oAppState.setProperty("/review/shippingDetails/tvLicenseType", sKey);
+      MessageToast.show("TV License Type: " + sKey);
+    },
+
     onSelectOrderTypeZOR: function () {
       var oAppState = this.getModel("appState");
       oAppState.setProperty("/orderHeader/orderType", "ZOR");
@@ -3070,6 +3078,118 @@ sap.ui.define([
       oAppState.setProperty("/orderFinal/shipmentPriorityText", sPriorityText);
       oAppState.setProperty("/orderFinal/isSaved", true);
 
+      // Assemble complete sales order record for list report & object detail page
+      var oCustomer = oAppState.getProperty("/customer") || {};
+      var oOrderHeader = oAppState.getProperty("/orderHeader") || {};
+      var oDelivery = oAppState.getProperty("/delivery") || {};
+      var oPricing = oAppState.getProperty("/pricing") || { netValue: 0, discounts: 0, vat: 0, total: 0 };
+      var aCart = oAppState.getProperty("/cart") || [];
+      var oReview = oAppState.getProperty("/review") || {};
+
+      var sCustomerName = oCustomer.name || (oCustomer.firstName ? (oCustomer.firstName + " " + (oCustomer.lastName || "")) : (oCustomer.companyName || "Thabo Mokoena"));
+      var sCustomerBp = oCustomer.bpNumber || sShipToBp || "1000234588";
+      var sOrderIdNumber = oCustomer.idPassport || (oCustomer.regNo || "8804125089085");
+      var sCustomerPhone = oCustomer.telephone || (oDelivery.shipToAddress && oDelivery.shipToAddress.phone) || "+27 82 555 0192";
+      var sCustomerEmail = oCustomer.email || "customer@example.com";
+
+      var sDeliveryAddress = "";
+      if (oDelivery.methodKey === "CND") {
+        sDeliveryAddress = (oDelivery.address && oDelivery.address.formatted) || (oCustomer.address && oCustomer.address.formatted) || "12 Rivonia Road, Sandton, 2196, Gauteng";
+      } else if (oDelivery.methodKey === "CNC") {
+        sDeliveryAddress = (oDelivery.collectionStore && (oDelivery.collectionStore.storeName + ", " + oDelivery.collectionStore.address)) || "Centurion Lifestyle Centre, Shop 18, Lenchen Ave, Centurion";
+      } else {
+        sDeliveryAddress = (oDelivery.bopisAddress && oDelivery.bopisAddress.address) || "Sandton City Store, Shop L38, Sandton";
+      }
+
+      var dNow = new Date();
+      var aMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      var sToday = dNow.getDate() + " " + aMonths[dNow.getMonth()] + " " + dNow.getFullYear();
+
+      var aOrderItems = aCart.map(function (c, idx) {
+        var nItemPrice = Number(c.netPrice || c.price || 0);
+        var nItemQty = Number(c.qty || 1);
+        return {
+          item: String((idx + 1) * 10),
+          articleId: c.articleId || c.id || ("ART-00" + (idx + 1)),
+          name: c.name || c.description || ("Line Item " + (idx + 1)),
+          description: c.description || c.name || ("Line Item " + (idx + 1)),
+          category: c.category || "General Merchandise",
+          qty: nItemQty,
+          netPrice: nItemPrice,
+          netValue: Number(c.netValue || (nItemQty * nItemPrice)),
+          routingTarget: c.routingTarget || c.sourcingStatusText || "Standard DC Route",
+          sourcingStatusText: c.sourcingStatusText || "Stock Allocated"
+        };
+      });
+
+      if (aOrderItems.length === 0) {
+        aOrderItems.push({
+          item: "10",
+          articleId: "ART-CND-01",
+          name: "Standard Merchandise Article",
+          description: "Standard Store Item",
+          category: "General",
+          qty: 1,
+          netPrice: Number(oPricing.netValue || 1499.00),
+          netValue: Number(oPricing.netValue || 1499.00),
+          routingTarget: "Base DC Route",
+          sourcingStatusText: "Allocated"
+        });
+      }
+
+      var oNewOrderRecord = {
+        salesOrderNo: sSalesOrderNo,
+        orderDate: sToday,
+        status: "Created",
+        statusState: "Success",
+        customerName: sCustomerName,
+        customerBp: sCustomerBp,
+        customerIdNumber: sOrderIdNumber,
+        customerMobile: sCustomerPhone,
+        customerEmail: sCustomerEmail,
+        soldToParty: sCustomerBp + " - " + sCustomerName,
+        shipToParty: sCustomerBp + " - " + sCustomerName,
+        orderType: oOrderHeader.orderType || "ZOR",
+        orderTypeName: oOrderHeader.orderTypeName || "Standard Store Order",
+        orderTypeDesc: (oOrderHeader.orderType || "ZOR") + " · " + (oOrderHeader.orderTypeName || "Standard Store Order"),
+        tvLicenseType: oOrderHeader.tvLicenseType || "Existing License",
+        poNumber: "PO-" + sSalesOrderNo,
+        salesOrg: (oCustomer.salesOrg || "1000") + " - Retail South Africa",
+        paymentTerms: oOrderHeader.paymentTerms || "Immediate",
+        deliveryMethod: oDelivery.methodKey || "CND",
+        deliveryMethodTitle: oDelivery.methodTitle || "Click & Deliver (CND)",
+        deliveryType: oDelivery.methodKey === "CND" ? "Delivery" : "Pick",
+        deliveryAddress: sDeliveryAddress,
+        supplyingSite: oDelivery.methodKey === "CND" ? "DC M001 (Centurion DC)" : ((oDelivery.collectionStore && oDelivery.collectionStore.storeName) || "Centurion Store S101"),
+        shippingPoint: oDelivery.methodKey === "CND" ? "SP-01" : "SP-STORE",
+        carrier: (oDelivery.carrier || (oReview.shippingDetails && oReview.shippingDetails.carrier)) || "DHL Express",
+        incoterms: (oDelivery.incoterms || (oReview.shippingDetails && oReview.shippingDetails.incoterms)) || "FOB - Free on Board",
+        requestedDeliveryDate: oDelivery.requestedDeliveryDate || (oReview.shippingDetails && oReview.shippingDetails.requestedDeliveryDate) || "28 Oct 2026",
+        shipmentPriority: sPriority,
+        shipmentPriorityText: sPriorityText,
+        currency: "ZAR",
+        pricing: {
+          netValue: Number(oPricing.netValue || 0),
+          discounts: Number(oPricing.discounts || 0),
+          vat: Number(oPricing.vat || 0),
+          total: Number(oPricing.total || 0)
+        },
+        totalAmount: Number(oPricing.total || 0),
+        items: aOrderItems
+      };
+
+      // Persist to salesOrders model and localStorage
+      var oSalesOrdersModel = this.getOwnerComponent().getModel("salesOrders");
+      if (oSalesOrdersModel) {
+        var aExistingOrders = oSalesOrdersModel.getProperty("/orders") || [];
+        aExistingOrders.unshift(oNewOrderRecord);
+        oSalesOrdersModel.setProperty("/orders", aExistingOrders);
+        oSalesOrdersModel.setProperty("/filteredOrders", aExistingOrders);
+        try {
+          localStorage.setItem("sap_sales_orders_store", JSON.stringify(aExistingOrders));
+        } catch (e) {}
+      }
+
       var that = this;
       MessageBox.success("Sales Order " + sSalesOrderNo + " created successfully.", {
         title: "Sales Order Created",
@@ -3077,8 +3197,13 @@ sap.ui.define([
         emphasizedAction: MessageBox.Action.OK,
         onClose: function () {
           that.onCreateNewOrderReset();
+          that.getRouter().navTo("salesOrderList");
         }
       });
+    },
+
+    onNavToSalesOrderList: function () {
+      this.getRouter().navTo("salesOrderList");
     },
 
     onCreateNewOrderReset: function () {

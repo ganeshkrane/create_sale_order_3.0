@@ -1,0 +1,302 @@
+<mvc:View
+  controllerName="sap.ui.salesorder.store.controller.SalesOrderDetail"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:l="sap.ui.layout">
+  <Page
+    id="salesOrderDetailPage"
+    title="Sales Order Details"
+    showNavButton="true"
+    navButtonPress=".onNavBack"
+    class="sapUiResponsiveContentPadding">
+    <headerContent>
+      <Button
+        id="btnBackToList"
+        text="Back to Orders List"
+        icon="sap-icon://nav-back"
+        press=".onNavBack"
+        class="cursorPointer sapUiTinyMarginEnd" />
+      <Button
+        id="btnCreateNewOrderFromDetail"
+        text="New Sales Order"
+        icon="sap-icon://add"
+        type="Emphasized"
+        press=".onCreateNewOrder"
+        class="cursorPointer" />
+    </headerContent>
+    <content>
+      <VBox class="sapUiSmallMargin">
+        <!-- Object Header (Read-Only Display) -->
+        <ObjectHeader
+          id="salesOrderObjectHeader"
+          title="{= 'Sales Order ' + ${selectedOrder>/salesOrderNo} }"
+          intro="{selectedOrder>/orderTypeDesc}"
+          number="{path: 'selectedOrder>/totalAmount', formatter: '.formatter.formatCurrency'}"
+          numberUnit="{selectedOrder>/currency}"
+          class="sapUiSmallMarginBottom">
+          <statuses>
+            <ObjectStatus
+              text="{selectedOrder>/status}"
+              state="{= ${selectedOrder>/statusState} || 'Success' }"
+              icon="{= ${selectedOrder>/status} === 'Created' ? 'sap-icon://sys-enter-2' : 'sap-icon://in-progress' }"
+              class="boldText" />
+            <ObjectStatus
+              text="{selectedOrder>/deliveryMethodTitle}"
+              state="Information"
+              icon="{= ${selectedOrder>/deliveryMethod} === 'CND' ? 'sap-icon://shipping-status' : (${selectedOrder>/deliveryMethod} === 'CNC' ? 'sap-icon://retail-store' : 'sap-icon://map-pin-point') }" />
+          </statuses>
+          <attributes>
+            <ObjectAttribute
+              title="Customer"
+              text="{selectedOrder>/customerName} (BP: {selectedOrder>/customerBp})" />
+            <ObjectAttribute
+              title="TV License Type"
+              text="{selectedOrder>/tvLicenseType}" />
+            <ObjectAttribute
+              title="Order Date"
+              text="{selectedOrder>/orderDate}" />
+            <ObjectAttribute
+              title="Shipment Priority"
+              text="{selectedOrder>/shipmentPriorityText}" />
+          </attributes>
+        </ObjectHeader>
+
+        <!-- IconTabBar with Read-Only Display Sections -->
+        <IconTabBar
+          id="orderDetailTabs"
+          expanded="true"
+          headerMode="Inline"
+          tooltip="Sales Order Details Navigation Tabs"
+          class="orderDetailIconTabBar sapUiResponsiveContentPadding">
+          <items>
+            <!-- Tab 1: General Header Information -->
+            <IconTabFilter
+              id="tabGeneralInfo"
+              text="General Information"
+              icon="sap-icon://hint"
+              tooltip="General Information &amp; Header Data">
+              <Panel headerText="Order Header Configuration" class="fioriStandardBorderPanel sapUiSmallMarginBottom">
+                <content>
+                  <l:Grid defaultSpan="XL3 L3 M6 S12" class="sapUiSmallMargin">
+                    <VBox class="customerSearchFieldGroup">
+                      <Label text="Sales Order Number:" class="customerSearchFieldLabel textMutedBold" />
+                      <Text text="{selectedOrder>/salesOrderNo}" class="boldText" />
+                    </VBox>
+
+                    <VBox class="customerSearchFieldGroup">
+                      <Label text="Order Date:" class="customerSearchFieldLabel textMutedBold" />
+                      <Text text="{selectedOrder>/orderDate}" class="boldText" />
+                    </VBox>
+
+                    <VBox class="customerSearchFieldGroup">
+                      <Label text="Sales Order Type:" class="customerSearchFieldLabel textMutedBold" />
+                      <Text text="{selectedOrder>/orderTypeDesc}" class="boldText" />
+                    </VBox>
+
+                    <VBox class="customerSearchFieldGroup">
+                      <Label text="TV License Type:" class="customerSearchFieldLabel textMutedBold" />
+                      <ObjectStatus text="{selectedOrder>/tvLicenseType}" state="Information" class="boldText" />
+                    </VBox>
+
+                    <VBox class="customerSearchFieldGroup">
+                      <Label text="PO / Application Number:" class="customerSearchFieldLabel textMutedBold" />
+                      <Text text="{selectedOrder>/poNumber}" class="boldText" />
+                    </VBox>
+
+                    <VBox class="customerSearchFieldGroup">
+                      <Label text="Sales Organization:" class="customerSearchFieldLabel textMutedBold" />
+                      <Text text="{selectedOrder>/salesOrg}" class="boldText" />
+                    </VBox>
+
+                    <VBox class="customerSearchFieldGroup">
+                      <Label text="Payment Terms:" class="customerSearchFieldLabel textMutedBold" />
+                      <Text text="{selectedOrder>/paymentTerms}" class="boldText" />
+                    </VBox>
+
+                    <VBox class="customerSearchFieldGroup">
+                      <Label text="Incoterms:" class="customerSearchFieldLabel textMutedBold" />
+                      <Text text="{selectedOrder>/incoterms}" class="boldText" />
+                    </VBox>
+                  </l:Grid>
+                </content>
+              </Panel>
+            </IconTabFilter>
+
+            <!-- Tab 2: Customer & Delivery Details -->
+            <IconTabFilter
+              id="tabCustomerShipping"
+              text="Customer &amp; Shipping"
+              icon="sap-icon://shipping-status"
+              tooltip="Customer Details and Shipping Information">
+              <l:Grid defaultSpan="XL6 L6 M12 S12" class="sapUiSmallMarginBottom">
+                <!-- Customer Details -->
+                <Panel headerText="Customer Details (Sold-To Party)" class="fioriStandardBorderPanel">
+                  <content>
+                    <VBox class="sapUiSmallMargin">
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="Customer Name:" class="priceRowLabel" />
+                        <Text text="{selectedOrder>/customerName}" class="boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="Business Partner (BP):" class="priceRowLabel" />
+                        <Text text="{selectedOrder>/customerBp}" class="boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="ID / Passport Number:" class="priceRowLabel" />
+                        <Text text="{selectedOrder>/customerIdNumber}" class="boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="Contact Number:" class="priceRowLabel" />
+                        <Text text="{selectedOrder>/customerMobile}" class="boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="Email Address:" class="priceRowLabel" />
+                        <Text text="{selectedOrder>/customerEmail}" class="boldText" />
+                      </HBox>
+                    </VBox>
+                  </content>
+                </Panel>
+
+                <!-- Shipping & Destination -->
+                <Panel headerText="Shipping &amp; Fulfillment" class="fioriStandardBorderPanel">
+                  <content>
+                    <VBox class="sapUiSmallMargin">
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="Delivery Method:" class="priceRowLabel" />
+                        <Text text="{selectedOrder>/deliveryMethodTitle}" class="boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="Delivery Type:" class="priceRowLabel" />
+                        <Text text="{selectedOrder>/deliveryType}" class="boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="Supplying Site / DC:" class="priceRowLabel" />
+                        <Text text="{selectedOrder>/supplyingSite}" class="boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="Shipping Point:" class="priceRowLabel" />
+                        <Text text="{selectedOrder>/shippingPoint}" class="boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="Carrier:" class="priceRowLabel" />
+                        <Text text="{selectedOrder>/carrier}" class="boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="Requested Delivery Date:" class="priceRowLabel" />
+                        <Text text="{selectedOrder>/requestedDeliveryDate}" class="boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="Shipment Priority:" class="priceRowLabel" />
+                        <Text text="{selectedOrder>/shipmentPriorityText}" class="boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" class="priceRow">
+                        <Text text="Destination Address:" class="priceRowLabel" />
+                        <Text text="{selectedOrder>/deliveryAddress}" class="boldText" />
+                      </HBox>
+                    </VBox>
+                  </content>
+                </Panel>
+              </l:Grid>
+            </IconTabFilter>
+
+            <!-- Tab 3: Cart Summary (Items + Totals) -->
+            <IconTabFilter
+              id="tabCartSummary"
+              text="Cart Summary"
+              icon="sap-icon://cart"
+              tooltip="Cart Summary, Line Items and Pricing Totals">
+              <VBox>
+                <!-- Line Items Table -->
+                <Panel class="fioriStandardBorderPanel sapUiSmallMarginBottom">
+                  <headerToolbar>
+                    <Toolbar>
+                      <core:Icon src="sap-icon://product" color="#0070f2" class="sapUiTinyMarginEnd" />
+                      <Title
+                        text="{= 'Ordered Products &amp; Services (' + ((${selectedOrder>/items} || []).length) + ')' }"
+                        titleStyle="H5"
+                        class="boldText" />
+                    </Toolbar>
+                  </headerToolbar>
+                  <content>
+                    <Table
+                      id="orderDetailItemsTable"
+                      items="{selectedOrder>/items}"
+                      noDataText="No line items in this order."
+                      class="fioriResponsiveTable">
+                      <columns>
+                        <Column width="60px" hAlign="Center">
+                          <Text text="Item" class="boldText" />
+                        </Column>
+                        <Column minScreenWidth="Tablet" demandPopin="true">
+                          <Text text="Article / Description" class="boldText" />
+                        </Column>
+                        <Column width="140px" minScreenWidth="Desktop" demandPopin="true">
+                          <Text text="Category" class="boldText" />
+                        </Column>
+                        <Column width="80px" hAlign="Center">
+                          <Text text="Qty" class="boldText" />
+                        </Column>
+                        <Column width="120px" hAlign="End">
+                          <Text text="Price/Unit (ZAR)" class="boldText" />
+                        </Column>
+                        <Column width="130px" hAlign="End">
+                          <Text text="Net Value (ZAR)" class="boldText" />
+                        </Column>
+                        <Column width="200px" minScreenWidth="Tablet" demandPopin="true">
+                          <Text text="Sourcing Strategy" class="boldText" />
+                        </Column>
+                      </columns>
+                      <items>
+                        <ColumnListItem>
+                          <cells>
+                            <Text text="{selectedOrder>item}" class="boldText" />
+                            <VBox>
+                              <Text text="{= ${selectedOrder>name} || ${selectedOrder>description} }" class="boldText" />
+                              <Text text="{= 'Art: ' + (${selectedOrder>articleId} || '') }" class="sapUiThemeColor-dim" />
+                            </VBox>
+                            <Text text="{selectedOrder>category}" />
+                            <Text text="{selectedOrder>qty}" class="boldText" />
+                            <Text text="{path: 'selectedOrder>netPrice', formatter: '.formatter.formatCurrency'}" />
+                            <Text text="{path: 'selectedOrder>netValue', formatter: '.formatter.formatCurrency'}" class="boldText priceTextBold" />
+                            <ObjectStatus
+                              text="{= ${selectedOrder>routingTarget} || ${selectedOrder>sourcingStatusText} || 'Standard DC Route' }"
+                              state="Information" />
+                          </cells>
+                        </ColumnListItem>
+                      </items>
+                    </Table>
+                  </content>
+                </Panel>
+
+                <!-- Cart Totals & Financial Breakdown (Displayed directly with Cart Items) -->
+                <Panel headerText="Cart Totals &amp; Financial Summary" class="fioriStandardBorderPanel sapUiSmallMarginBottom">
+                  <content>
+                    <VBox class="sapUiSmallMargin" width="380px">
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="Net Amount:" class="priceRowLabel" />
+                        <Text text="{path: 'selectedOrder>/pricing/netValue', formatter: '.formatter.formatCurrency'} ZAR" class="boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="Total Discounts:" class="priceRowLabel" />
+                        <Text text="{path: 'selectedOrder>/pricing/discounts', formatter: '.formatter.formatCurrency'} ZAR" class="boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginBottom">
+                        <Text text="VAT (15%):" class="priceRowLabel" />
+                        <Text text="{path: 'selectedOrder>/pricing/vat', formatter: '.formatter.formatCurrency'} ZAR" class="boldText" />
+                      </HBox>
+                      <HBox justifyContent="SpaceBetween" class="priceRow sapUiSmallMarginTop">
+                        <Text text="Grand Total:" class="priceRowLabel boldText" />
+                        <Text text="{path: 'selectedOrder>/pricing/total', formatter: '.formatter.formatCurrency'} ZAR" class="priceRowValueBold" />
+                      </HBox>
+                    </VBox>
+                  </content>
+                </Panel>
+              </VBox>
+            </IconTabFilter>
+          </items>
+        </IconTabBar>
+      </VBox>
+    </content>
+  </Page>
+</mvc:View>
