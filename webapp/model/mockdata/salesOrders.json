@@ -31,6 +31,7 @@
     "shipmentPriorityText": "01 – Immediate",
     "posTransaction": "POS-TRX-5000025469",
     "deliveryBlock": "01",
+    "deliveryBlockText": "Delivery Blocked",
     "currency": "ZAR",
     "pricing": {
       "netValue": 30697.00,
@@ -125,6 +126,8 @@
     "requestedDeliveryDate": "22 Oct 2026",
     "shipmentPriority": "01",
     "shipmentPriorityText": "01 – Immediate",
+    "deliveryBlock": "NONE",
+    "deliveryBlockText": "Delivery Not Blocked",
     "currency": "ZAR",
     "pricing": {
       "netValue": 8999.00,
@@ -177,6 +180,8 @@
     "requestedDeliveryDate": "19 Oct 2026",
     "shipmentPriority": "03",
     "shipmentPriorityText": "03 – Standard",
+    "deliveryBlock": "NONE",
+    "deliveryBlockText": "Delivery Not Blocked",
     "currency": "ZAR",
     "pricing": {
       "netValue": 2499.00,

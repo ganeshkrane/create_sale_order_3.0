@@ -17,6 +17,7 @@ sap.ui.define([
     onInit: function () {
       this.getView().setModel(new JSONModel({
         isEditMode: false,
+        isPosBlank: false,
         productSearchQuery: ""
       }), "ui");
 
@@ -93,22 +94,36 @@ sap.ui.define([
           }
         }
 
+        // Ensure line item fields match cartTable requirements
+        (oOrder.items || []).forEach(function (it, idx) {
+          if (!it.um) it.um = "EA";
+          if (!it.salesPersonId) it.salesPersonId = "SP-1042";
+          if (!it.site) it.site = oOrder.supplyingSite ? (oOrder.supplyingSite.indexOf("M001") >= 0 ? "M001" : "S101") : "S101";
+          if (!it.itemCat) it.itemCat = it.isSubItem ? "TAPA" : "TAN";
+          if (!it.extendedGuarantee) it.extendedGuarantee = it.isSubItem ? "ZEGP-24" : "-";
+          if (!it.rejReason) it.rejReason = "-";
+        });
+
         // Ensure POS Transaction and Delivery Block
-        if (!oOrder.posTransaction) {
-          oOrder.posTransaction = "POS-TRX-" + (oOrder.salesOrderNo || "2026-94821");
+        if (oOrder.posTransaction === undefined || oOrder.posTransaction === null) {
+          oOrder.posTransaction = "";
         }
-        if (!oOrder.deliveryBlock) {
-          oOrder.deliveryBlock = "NONE";
+        var bPosBlank = !oOrder.posTransaction || String(oOrder.posTransaction).trim() === "";
+        var oUiModel = this.getView().getModel("ui");
+        if (oUiModel) {
+          oUiModel.setProperty("/isPosBlank", bPosBlank);
         }
-        var mDeliveryBlocks = {
-          "01": "01 – Credit Limit Exceeded",
-          "02": "02 – Political / Legal Reason",
-          "03": "03 – Price Incomplete",
-          "04": "04 – Manual Delivery Hold",
-          "05": "05 – Payment Pending",
-          "NONE": "None"
-        };
-        oOrder.deliveryBlockText = mDeliveryBlocks[oOrder.deliveryBlock] || oOrder.deliveryBlock || "None";
+
+        var bIsDeliveryBlocked = oOrder.deliveryBlock === "01" || 
+                                 oOrder.deliveryBlock === "BLOCKED" || 
+                                 oOrder.deliveryBlock === "YES" || 
+                                 oOrder.deliveryBlock === true || 
+                                 oOrder.deliveryBlock === "Delivery Blocked" ||
+                                 oOrder.deliveryBlockText === "Delivery Blocked" ||
+                                 oOrder.deliveryBlockText === "Delievery Blocked";
+
+        oOrder.deliveryBlock = bIsDeliveryBlocked ? "BLOCKED" : "NONE";
+        oOrder.deliveryBlockText = bIsDeliveryBlocked ? "Delivery Blocked" : "Delivery Not Blocked";
 
         if (!oOrder.shipmentPriority) {
           oOrder.shipmentPriority = "01";
@@ -143,10 +158,16 @@ sap.ui.define([
       if (!oModel) {
         return;
       }
+      var oOrder = oModel.getData();
+      var bPosBlank = !oOrder.posTransaction || String(oOrder.posTransaction).trim() === "";
+      var oUiModel = this.getView().getModel("ui");
+      if (oUiModel) {
+        oUiModel.setProperty("/isPosBlank", bPosBlank);
+        oUiModel.setProperty("/isEditMode", true);
+      }
       // Make a deep clone backup of the sales order
-      this._oOrderBackup = JSON.parse(JSON.stringify(oModel.getData()));
-      this.getView().getModel("ui").setProperty("/isEditMode", true);
-      MessageToast.show("Edit mode enabled. You can now modify fields across all tabs.");
+      this._oOrderBackup = JSON.parse(JSON.stringify(oOrder));
+      MessageToast.show("Edit mode enabled.");
     },
 
     onCancelEdit: function () {
@@ -155,7 +176,13 @@ sap.ui.define([
         oModel.setData(this._oOrderBackup);
         this._oOrderBackup = null;
       }
-      this.getView().getModel("ui").setProperty("/isEditMode", false);
+      var oOrder = this.getView().getModel("selectedOrder") ? this.getView().getModel("selectedOrder").getData() : null;
+      var bPosBlank = !oOrder || !oOrder.posTransaction || String(oOrder.posTransaction).trim() === "";
+      var oUiModel = this.getView().getModel("ui");
+      if (oUiModel) {
+        oUiModel.setProperty("/isPosBlank", bPosBlank);
+        oUiModel.setProperty("/isEditMode", false);
+      }
       MessageToast.show("Editing cancelled. Changes discarded.");
     },
 
@@ -194,23 +221,46 @@ sap.ui.define([
         oOrder.shipmentPriorityText = "03 - Standard Routing";
       }
 
-      var mDeliveryBlocks = {
-        "01": "01 – Credit Limit Exceeded",
-        "02": "02 – Political / Legal Reason",
-        "03": "03 – Price Incomplete",
-        "04": "04 – Manual Delivery Hold",
-        "05": "05 – Payment Pending",
-        "NONE": "None"
-      };
-      oOrder.deliveryBlockText = mDeliveryBlocks[oOrder.deliveryBlock] || oOrder.deliveryBlock || "None";
+      var bIsDeliveryBlocked = oOrder.deliveryBlock === "01" || 
+                               oOrder.deliveryBlock === "BLOCKED" || 
+                               oOrder.deliveryBlock === "YES" || 
+                               oOrder.deliveryBlock === true || 
+                               oOrder.deliveryBlock === "Delivery Blocked" ||
+                               oOrder.deliveryBlockText === "Delivery Blocked" ||
+                               oOrder.deliveryBlockText === "Delievery Blocked";
+
+      oOrder.deliveryBlock = bIsDeliveryBlocked ? "BLOCKED" : "NONE";
+      oOrder.deliveryBlockText = bIsDeliveryBlocked ? "Delivery Blocked" : "Delivery Not Blocked";
 
       // Persist changes
       this._updateOrderInPersistence(oOrder);
       oModel.refresh(true);
 
+      var bPosBlank = !oOrder.posTransaction || String(oOrder.posTransaction).trim() === "";
+      var oUiModel = this.getView().getModel("ui");
+      if (oUiModel) {
+        oUiModel.setProperty("/isPosBlank", bPosBlank);
+        oUiModel.setProperty("/isEditMode", false);
+      }
+
       this._oOrderBackup = null;
-      this.getView().getModel("ui").setProperty("/isEditMode", false);
       MessageToast.show("Sales Order " + oOrder.salesOrderNo + " updated successfully.");
+    },
+
+    onRejectionReasonChange: function (oEvent) {
+      var oContext = oEvent.getSource().getBindingContext("selectedOrder");
+      if (!oContext) {
+        return;
+      }
+      var oItem = oContext.getObject();
+      var sKey = oEvent.getParameter("selectedItem") ? oEvent.getParameter("selectedItem").getKey() : "";
+      var sText = oEvent.getParameter("selectedItem") ? oEvent.getParameter("selectedItem").getText() : "";
+      oItem.rejReason = sKey;
+      if (sKey && sKey !== "-") {
+        MessageToast.show("Rejection reason set: " + sText + " for Item " + oItem.item);
+      } else {
+        MessageToast.show("Rejection reason cleared for Item " + oItem.item);
+      }
     },
 
     /* =========================================================== */

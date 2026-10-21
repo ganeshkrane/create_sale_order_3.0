@@ -96,43 +96,28 @@
                 <Text text="{selectedOrder>/shipmentPriorityText}" class="orderDetailAttrValue" />
               </HBox>
 
-              <!-- POS Transaction (Editable in edit mode, read-only Text in view mode) -->
+              <!-- POS Transaction: editable ONLY if in edit mode AND posTransaction is blank -->
               <HBox alignItems="Center" class="orderDetailAttrRow sapUiTinyMarginTop">
                 <Label text="POS Transaction:" class="orderDetailAttrLabel sapUiTinyMarginEnd" />
                 <Text
-                  text="{= ${selectedOrder>/posTransaction} || ('POS-TRX-' + ${selectedOrder>/salesOrderNo}) }"
-                  visible="{= !${ui>/isEditMode} }"
+                  text="{= ${selectedOrder>/posTransaction} || '-' }"
+                  visible="{= !${ui>/isEditMode} || !${ui>/isPosBlank} }"
                   class="orderDetailAttrValue" />
                 <Input
                   id="inputPosTransaction"
                   value="{selectedOrder>/posTransaction}"
+                  placeholder="Enter POS Transaction ID"
                   change=".onPosTransactionChange"
-                  visible="{ui>/isEditMode}"
+                  visible="{= ${ui>/isEditMode} &amp;&amp; ${ui>/isPosBlank} }"
                   width="220px" />
               </HBox>
 
-              <!-- Delivery Block (Editable in edit mode, read-only Text in view mode) -->
+              <!-- Delivery Block (Always non-editable) -->
               <HBox alignItems="Center" class="orderDetailAttrRow sapUiTinyMarginTop">
                 <Label text="Delivery Block:" class="orderDetailAttrLabel sapUiTinyMarginEnd" />
                 <Text
-                  text="{= ${selectedOrder>/deliveryBlockText} || (${selectedOrder>/deliveryBlock} === '01' ? '01 – Credit Limit Exceeded' : (${selectedOrder>/deliveryBlock} === '02' ? '02 – Political / Legal Reason' : (${selectedOrder>/deliveryBlock} === '03' ? '03 – Price Incomplete' : (${selectedOrder>/deliveryBlock} === '04' ? '04 – Manual Delivery Hold' : (${selectedOrder>/deliveryBlock} === '05' ? '05 – Payment Pending' : 'None'))))) }"
-                  visible="{= !${ui>/isEditMode} }"
+                  text="{= ${selectedOrder>/deliveryBlockText} || (${selectedOrder>/deliveryBlock} === '01' || ${selectedOrder>/deliveryBlock} === 'BLOCKED' || ${selectedOrder>/deliveryBlock} === 'Delivery Blocked' ? 'Delivery Blocked' : 'Delivery Not Blocked') }"
                   class="orderDetailAttrValue" />
-                <Select
-                  id="selectDeliveryBlock"
-                  selectedKey="{= ${selectedOrder>/deliveryBlock} || 'NONE' }"
-                  change=".onDeliveryBlockChange"
-                  visible="{ui>/isEditMode}"
-                  width="220px">
-                  <items>
-                    <core:Item key="01" text="01 – Credit Limit Exceeded" />
-                    <core:Item key="02" text="02 – Political / Legal Reason" />
-                    <core:Item key="03" text="03 – Price Incomplete" />
-                    <core:Item key="04" text="04 – Manual Delivery Hold" />
-                    <core:Item key="05" text="05 – Payment Pending" />
-                    <core:Item key="NONE" text="None" />
-                  </items>
-                </Select>
               </HBox>
             </VBox>
           </VBox>
@@ -222,68 +207,37 @@
 
                     <VBox class="customerSearchFieldGroup">
                       <Label text="Order Date:" class="customerSearchFieldLabel textMutedBold" />
-                      <Text text="{selectedOrder>/orderDate}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                      <DatePicker value="{selectedOrder>/orderDate}" visible="{ui>/isEditMode}" width="100%" />
+                      <Text text="{selectedOrder>/orderDate}" class="boldText" />
                     </VBox>
 
                     <VBox class="customerSearchFieldGroup">
                       <Label text="Sales Order Type:" class="customerSearchFieldLabel textMutedBold" />
-                      <Text text="{selectedOrder>/orderTypeDesc}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                      <Select selectedKey="{selectedOrder>/orderType}" change=".onOrderTypeChange" visible="{ui>/isEditMode}" width="100%">
-                        <core:Item key="ZOR" text="ZOR - Standard Store Order" />
-                        <core:Item key="ZDL" text="ZDL - Delivery Order" />
-                        <core:Item key="ZSP" text="ZSP - Special / Supply Order" />
-                      </Select>
+                      <Text text="{selectedOrder>/orderTypeDesc}" class="boldText" />
                     </VBox>
 
                     <VBox class="customerSearchFieldGroup">
                       <Label text="TV License Type:" class="customerSearchFieldLabel textMutedBold" />
-                      <ObjectStatus text="{selectedOrder>/tvLicenseType}" state="Information" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                      <Select selectedKey="{selectedOrder>/tvLicenseType}" visible="{ui>/isEditMode}" width="100%">
-                        <core:Item key="Existing License" text="Existing License" />
-                        <core:Item key="Cash Payment" text="Cash Payment" />
-                        <core:Item key="New License" text="New License" />
-                        <core:Item key="Other" text="Other" />
-                      </Select>
+                      <ObjectStatus text="{selectedOrder>/tvLicenseType}" state="Information" class="boldText" />
                     </VBox>
 
                     <VBox class="customerSearchFieldGroup">
                       <Label text="PO / Application Number:" class="customerSearchFieldLabel textMutedBold" />
-                      <Text text="{selectedOrder>/poNumber}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                      <Input value="{selectedOrder>/poNumber}" visible="{ui>/isEditMode}" width="100%" />
+                      <Text text="{selectedOrder>/poNumber}" class="boldText" />
                     </VBox>
 
                     <VBox class="customerSearchFieldGroup">
                       <Label text="Sales Organization:" class="customerSearchFieldLabel textMutedBold" />
-                      <Text text="{selectedOrder>/salesOrg}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                      <Select selectedKey="{selectedOrder>/salesOrg}" visible="{ui>/isEditMode}" width="100%">
-                        <core:Item key="1000 - Retail Store Sales" text="1000 - Retail Store Sales" />
-                        <core:Item key="1000" text="1000 - Retail Store Sales" />
-                        <core:Item key="2000 - Wholesale &amp; Commercial" text="2000 - Wholesale &amp; Commercial" />
-                        <core:Item key="3000 - Digital &amp; Omnichannel" text="3000 - Digital &amp; Omnichannel" />
-                      </Select>
+                      <Text text="{selectedOrder>/salesOrg}" class="boldText" />
                     </VBox>
 
                     <VBox class="customerSearchFieldGroup">
                       <Label text="Payment Terms:" class="customerSearchFieldLabel textMutedBold" />
-                      <Text text="{selectedOrder>/paymentTerms}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                      <Select selectedKey="{selectedOrder>/paymentTerms}" visible="{ui>/isEditMode}" width="100%">
-                        <core:Item key="PT01 – Immediate / Cash" text="PT01 – Immediate / Cash" />
-                        <core:Item key="PT02 – Net 30 Days" text="PT02 – Net 30 Days" />
-                        <core:Item key="PT03 – Lay-by / Downpayment" text="PT03 – Lay-by / Downpayment" />
-                        <core:Item key="PT04 – Credit Account" text="PT04 – Credit Account" />
-                      </Select>
+                      <Text text="{selectedOrder>/paymentTerms}" class="boldText" />
                     </VBox>
 
                     <VBox class="customerSearchFieldGroup">
                       <Label text="Incoterms:" class="customerSearchFieldLabel textMutedBold" />
-                      <Text text="{selectedOrder>/incoterms}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                      <Select selectedKey="{selectedOrder>/incoterms}" visible="{ui>/isEditMode}" width="100%">
-                        <core:Item key="FOB - Free on Board" text="FOB - Free on Board" />
-                        <core:Item key="CIF - Cost, Insurance and Freight" text="CIF - Cost, Insurance and Freight" />
-                        <core:Item key="DDP - Delivered Duty Paid" text="DDP - Delivered Duty Paid" />
-                        <core:Item key="EXW - Ex Works" text="EXW - Ex Works" />
-                      </Select>
+                      <Text text="{selectedOrder>/incoterms}" class="boldText" />
                     </VBox>
                   </l:Grid>
                 </content>
@@ -297,34 +251,29 @@
               icon="sap-icon://shipping-status"
               tooltip="Customer Details and Shipping Information">
               <l:Grid defaultSpan="XL6 L6 M12 S12" class="sapUiSmallMarginBottom">
-                <!-- Customer Details -->
+                <!-- Customer Details (Non-editable) -->
                 <Panel headerText="Customer Details (Sold-To Party)" class="fioriStandardBorderPanel">
                   <content>
                     <VBox class="sapUiSmallMargin">
                       <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
                         <Text text="Customer Name:" class="priceRowLabel" />
-                        <Text text="{selectedOrder>/customerName}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                        <Input value="{selectedOrder>/customerName}" visible="{ui>/isEditMode}" width="220px" />
+                        <Text text="{selectedOrder>/customerName}" class="boldText" />
                       </HBox>
                       <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
                         <Text text="Business Partner (BP):" class="priceRowLabel" />
-                        <Text text="{selectedOrder>/customerBp}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                        <Input value="{selectedOrder>/customerBp}" visible="{ui>/isEditMode}" width="220px" />
+                        <Text text="{selectedOrder>/customerBp}" class="boldText" />
                       </HBox>
                       <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
                         <Text text="ID / Passport Number:" class="priceRowLabel" />
-                        <Text text="{selectedOrder>/customerIdNumber}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                        <Input value="{selectedOrder>/customerIdNumber}" visible="{ui>/isEditMode}" width="220px" />
+                        <Text text="{selectedOrder>/customerIdNumber}" class="boldText" />
                       </HBox>
                       <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
                         <Text text="Contact Number:" class="priceRowLabel" />
-                        <Text text="{selectedOrder>/customerMobile}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                        <Input value="{selectedOrder>/customerMobile}" visible="{ui>/isEditMode}" width="220px" />
+                        <Text text="{selectedOrder>/customerMobile}" class="boldText" />
                       </HBox>
                       <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
                         <Text text="Email Address:" class="priceRowLabel" />
-                        <Text text="{selectedOrder>/customerEmail}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                        <Input value="{selectedOrder>/customerEmail}" visible="{ui>/isEditMode}" width="220px" />
+                        <Text text="{selectedOrder>/customerEmail}" class="boldText" />
                       </HBox>
                     </VBox>
                   </content>
@@ -334,6 +283,7 @@
                 <Panel headerText="Shipping &amp; Fulfillment" class="fioriStandardBorderPanel">
                   <content>
                     <VBox class="sapUiSmallMargin">
+                      <!-- Delivery Method: Editable in edit mode -->
                       <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
                         <Text text="Delivery Method:" class="priceRowLabel" />
                         <Text text="{selectedOrder>/deliveryMethodTitle}" class="boldText" visible="{= !${ui>/isEditMode} }" />
@@ -343,55 +293,42 @@
                           <core:Item key="CNP" text="BOPIS (CNP)" />
                         </Select>
                       </HBox>
+
                       <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
                         <Text text="Delivery Type:" class="priceRowLabel" />
-                        <Text text="{selectedOrder>/deliveryType}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                        <Select selectedKey="{selectedOrder>/deliveryType}" visible="{ui>/isEditMode}" width="220px">
-                          <core:Item key="Pick" text="Pick (In-Store Collection)" />
-                          <core:Item key="Delivery" text="Delivery to Customer" />
-                          <core:Item key="Express" text="Express Courier Delivery" />
-                          <core:Item key="Warehouse" text="Warehouse Pickup" />
-                        </Select>
+                        <Text text="{selectedOrder>/deliveryType}" class="boldText" />
                       </HBox>
+
+                      <!-- Supplying Site / DC: Editable in edit mode -->
                       <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
                         <Text text="Supplying Site / DC:" class="priceRowLabel" />
                         <Text text="{selectedOrder>/supplyingSite}" class="boldText" visible="{= !${ui>/isEditMode} }" />
                         <Input value="{selectedOrder>/supplyingSite}" visible="{ui>/isEditMode}" width="220px" />
                       </HBox>
+
                       <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
                         <Text text="Shipping Point:" class="priceRowLabel" />
-                        <Text text="{selectedOrder>/shippingPoint}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                        <Input value="{selectedOrder>/shippingPoint}" visible="{ui>/isEditMode}" width="220px" />
+                        <Text text="{selectedOrder>/shippingPoint}" class="boldText" />
                       </HBox>
+
                       <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
                         <Text text="Carrier:" class="priceRowLabel" />
-                        <Text text="{selectedOrder>/carrier}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                        <Select selectedKey="{selectedOrder>/carrier}" visible="{ui>/isEditMode}" width="220px">
-                          <core:Item key="DHL Express" text="DHL Express" />
-                          <core:Item key="FedEx" text="FedEx" />
-                          <core:Item key="The Courier Guy" text="The Courier Guy" />
-                          <core:Item key="RAM Hand-to-Hand" text="RAM Hand-to-Hand" />
-                          <core:Item key="In-house Fleet" text="In-house Fleet" />
-                        </Select>
+                        <Text text="{selectedOrder>/carrier}" class="boldText" />
                       </HBox>
+
                       <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
                         <Text text="Requested Delivery Date:" class="priceRowLabel" />
-                        <Text text="{selectedOrder>/requestedDeliveryDate}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                        <DatePicker value="{selectedOrder>/requestedDeliveryDate}" visible="{ui>/isEditMode}" width="220px" />
+                        <Text text="{selectedOrder>/requestedDeliveryDate}" class="boldText" />
                       </HBox>
+
                       <HBox justifyContent="SpaceBetween" alignItems="Center" class="priceRow sapUiSmallMarginBottom">
                         <Text text="Shipment Priority:" class="priceRowLabel" />
-                        <Text text="{selectedOrder>/shipmentPriorityText}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                        <Select selectedKey="{selectedOrder>/shipmentPriority}" change=".onShipmentPriorityChange" visible="{ui>/isEditMode}" width="220px">
-                          <core:Item key="01" text="01 - Immediate" />
-                          <core:Item key="02" text="02 - High Priority" />
-                          <core:Item key="03" text="03 - Standard Routing" />
-                        </Select>
+                        <Text text="{selectedOrder>/shipmentPriorityText}" class="boldText" />
                       </HBox>
+
                       <HBox justifyContent="SpaceBetween" alignItems="Start" class="priceRow">
                         <Text text="Destination Address:" class="priceRowLabel" />
-                        <Text text="{selectedOrder>/deliveryAddress}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                        <TextArea value="{selectedOrder>/deliveryAddress}" rows="2" visible="{ui>/isEditMode}" width="220px" />
+                        <Text text="{selectedOrder>/deliveryAddress}" class="boldText" />
                       </HBox>
                     </VBox>
                   </content>
@@ -428,113 +365,118 @@
                     </Toolbar>
                   </headerToolbar>
                   <content>
-                    <Table
-                      id="orderDetailItemsTable"
-                      items="{selectedOrder>/items}"
-                      noDataText="No line items in this order."
-                      class="fioriResponsiveTable">
-                      <columns>
-                        <Column width="70px" hAlign="Center">
-                          <Text text="Item" class="boldText" />
-                        </Column>
-                        <Column minScreenWidth="Tablet" demandPopin="true">
-                          <Text text="Article / Description" class="boldText" />
-                        </Column>
-                        <Column width="220px" minScreenWidth="Tablet" demandPopin="true">
-                          <Text text="Sourcing Strategy" class="boldText" />
-                        </Column>
-                        <Column width="150px" minScreenWidth="Desktop" demandPopin="true">
-                          <Text text="Category" class="boldText" />
-                        </Column>
-                        <Column width="110px" hAlign="Center">
-                          <Text text="Qty" class="boldText" />
-                        </Column>
-                        <Column width="110px" hAlign="Center">
-                          <Text text="Value-Add" class="boldText" />
-                        </Column>
-                        <Column width="140px" hAlign="End">
-                          <Text text="Price/Unit (ZAR)" class="boldText" />
-                        </Column>
-                        <Column width="150px" hAlign="End">
-                          <Text text="Net Value (ZAR)" class="boldText" />
-                        </Column>
-                        <Column width="65px" hAlign="Center" visible="{ui>/isEditMode}">
-                          <Text text="Action" class="boldText" />
-                        </Column>
-                      </columns>
-                      <items>
-                        <ColumnListItem>
-                          <cells>
-                            <Text text="{selectedOrder>item}" class="boldText" />
-                            <VBox>
-                              <Text text="{= ${selectedOrder>name} || ${selectedOrder>description} }" class="boldText" />
-                              <Text text="{= 'Art: ' + (${selectedOrder>articleId} || '') }" class="sapUiThemeColor-dim" />
-                            </VBox>
-                            <Text
-                              text="{= ${selectedOrder>routingTarget} || ${selectedOrder>sourcingStatusText} || 'OAA Source (M001) · SP-01' }"
-                              class="sapUiLink itemPriceLink" />
-                            <Text text="{= ${selectedOrder>category} || 'General Merchandise' }" />
-                            
-                            <!-- Qty: Read-only in view mode, increase/decrease in edit mode -->
-                            <HBox alignItems="Center" justifyContent="Center">
-                              <Text text="{selectedOrder>qty}" class="boldText" visible="{= !${ui>/isEditMode} }" />
-                              <HBox alignItems="Center" justifyContent="Center" visible="{ui>/isEditMode}">
+                    <ScrollContainer
+                      horizontal="true"
+                      vertical="false"
+                      width="100%">
+                      <Table
+                        id="orderDetailItemsTable"
+                        items="{selectedOrder>/items}"
+                        noDataText="No articles added yet. Click 'Add Article' to select products from the popup.">
+                        <columns>
+                          <Column width="65px" hAlign="Center">
+                            <Text text="Item" />
+                          </Column>
+                          <Column width="110px">
+                            <Text text="Article" />
+                          </Column>
+                          <Column width="100px" hAlign="Center">
+                            <Text text="Target Qty" />
+                          </Column>
+                          <Column width="65px" hAlign="Center">
+                            <Text text="UM" />
+                          </Column>
+                          <Column width="220px">
+                            <Text text="Description" />
+                          </Column>
+                          <Column width="110px">
+                            <Text text="" />
+                          </Column>
+                          <Column width="115px" hAlign="End">
+                            <Text text="Price/Unit" />
+                          </Column>
+                          <Column width="115px" hAlign="End">
+                            <Text text="Item Price" />
+                          </Column>
+                          <Column width="125px" hAlign="Center">
+                            <Text text="Sales Person ID" />
+                          </Column>
+                          <Column width="80px" hAlign="Center">
+                            <Text text="Site" />
+                          </Column>
+                          <Column width="115px" hAlign="Center">
+                            <Text text="Item Category" />
+                          </Column>
+                          <Column width="150px">
+                            <Text text="Extended Guarantee Product" />
+                          </Column>
+                          <Column width="180px">
+                            <Text text="Rej. Reason" />
+                          </Column>
+                          <Column width="65px" hAlign="Center" visible="{ui>/isEditMode}">
+                            <Text text="Action" />
+                          </Column>
+                        </columns>
+                        <items>
+                          <ColumnListItem class="{= ${selectedOrder>isSubItem} ? 'subItemRow' : 'mainItemRow' }">
+                            <cells>
+                              <Text text="{selectedOrder>item}" />
+                              <Text text="{selectedOrder>articleId}" />
+                              <HBox alignItems="Center" justifyContent="Center">
                                 <Button
                                   icon="sap-icon://less"
                                   type="Transparent"
                                   press=".onDecreaseItemQty"
-                                  enabled="{= ${selectedOrder>qty} > 1 }" />
-                                <Text text="{selectedOrder>qty}" class="boldText sapUiTinyMarginBeginEnd" />
+                                  enabled="{= ${selectedOrder>qty} > 1 }"
+                                  visible="{ui>/isEditMode}" />
+                                <Text text="{selectedOrder>qty}" class="{= ${ui>/isEditMode} ? 'sapUiTinyMarginBeginEnd' : '' }" />
                                 <Button
                                   icon="sap-icon://add"
                                   type="Transparent"
-                                  press=".onIncreaseItemQty" />
+                                  press=".onIncreaseItemQty"
+                                  visible="{ui>/isEditMode}" />
                               </HBox>
-                            </HBox>
-
-                            <!-- Value-Add column cell -->
-                            <HBox alignItems="Center" justifyContent="Center">
+                              <Text text="{= ${selectedOrder>um} || 'EA' }" />
+                              <Text text="{= ${selectedOrder>description} || ${selectedOrder>name} }" class="productTableTitle boldText" />
                               <Link
                                 text="value-add"
                                 press=".onOpenValueAddPopup"
-                                class="sapUiLink itemPriceLink boldText"
-                                visible="{= !${selectedOrder>isSubItem} &amp;&amp; !${selectedOrder>isValueAdd} }"
-                                tooltip="Click to add Value-Add services or warranties" />
-                              <Text
-                                text="{= ${selectedOrder>isSubItem} || ${selectedOrder>isValueAdd} ? 'Sub-Item' : '-' }"
-                                class="sapUiThemeColor-dim"
-                                visible="{= !!(${selectedOrder>isSubItem} || ${selectedOrder>isValueAdd}) }" />
-                            </HBox>
-
-                            <!-- Price / Unit: Clickable to override price -->
-                            <HBox alignItems="Center" justifyContent="End">
-                              <Link
-                                text="{path: 'selectedOrder>netPrice', formatter: '.formatter.formatCurrency'}"
-                                press=".onOpenPriceOverrideDialog"
-                                class="boldText itemPriceLink"
-                                tooltip="Click to override price" />
-                            </HBox>
-
-                            <!-- Net Value: Clickable to override price -->
-                            <HBox alignItems="Center" justifyContent="End">
-                              <Link
-                                text="{path: 'selectedOrder>netValue', formatter: '.formatter.formatCurrency'}"
-                                press=".onOpenPriceOverrideDialog"
-                                class="boldText priceTextBold itemPriceLink"
-                                tooltip="Click to override price" />
-                            </HBox>
-
-                            <!-- Action: Delete item in edit mode -->
-                            <Button
-                              icon="sap-icon://delete"
-                              type="Transparent"
-                              tooltip="Delete Line Item"
-                              press=".onRemoveItem"
-                              visible="{ui>/isEditMode}" />
-                          </cells>
-                        </ColumnListItem>
-                      </items>
-                    </Table>
+                                visible="{= !${selectedOrder>isSubItem} &amp;&amp; !${selectedOrder>isValueAdd} }" />
+                              <Text text="{path: 'selectedOrder>netPrice', formatter: '.formatter.formatPriceOnly'}" />
+                              <Text text="{path: 'selectedOrder>netValue', formatter: '.formatter.formatPriceOnly'}" class="priceTextBold boldText" />
+                              <Text text="{= ${selectedOrder>salesPersonId} || 'SP-1042' }" />
+                              <Text text="{= ${selectedOrder>site} || ${selectedOrder>/supplyingSite} || 'S101' }" />
+                              <Text text="{= ${selectedOrder>itemCat} || (${selectedOrder>isSubItem} ? 'TAPA' : 'TAN') }" />
+                              <Text text="{= ${selectedOrder>extendedGuarantee} || (${selectedOrder>isSubItem} ? 'ZEGP-24' : '-') }" />
+                              <VBox>
+                                <Text
+                                  text="{= ${selectedOrder>rejReason} === '01' ? '01 - Out of Stock' : (${selectedOrder>rejReason} === '02' ? '02 - Customer Cancellation' : (${selectedOrder>rejReason} === '03' ? '03 - Price Dispute' : (${selectedOrder>rejReason} === '04' ? '04 - Damaged Goods' : (${selectedOrder>rejReason} === '05' ? '05 - Late Delivery' : (${selectedOrder>rejReason} === '06' ? '06 - Alternative Item' : '- None -'))))) }"
+                                  visible="{= !${ui>/isEditMode} }" />
+                                <Select
+                                  selectedKey="{selectedOrder>rejReason}"
+                                  width="100%"
+                                  visible="{ui>/isEditMode}"
+                                  change=".onRejectionReasonChange">
+                                  <core:Item key="-" text="- None -" />
+                                  <core:Item key="01" text="01 - Out of Stock" />
+                                  <core:Item key="02" text="02 - Customer Cancellation" />
+                                  <core:Item key="03" text="03 - Price Dispute" />
+                                  <core:Item key="04" text="04 - Damaged Goods" />
+                                  <core:Item key="05" text="05 - Late Delivery" />
+                                  <core:Item key="06" text="06 - Alternative Item" />
+                                </Select>
+                              </VBox>
+                              <Button
+                                icon="sap-icon://delete"
+                                type="Transparent"
+                                tooltip="Delete Line Item"
+                                press=".onRemoveItem"
+                                visible="{ui>/isEditMode}" />
+                            </cells>
+                          </ColumnListItem>
+                        </items>
+                      </Table>
+                    </ScrollContainer>
 
                     <!-- Order Pricing Totals Bar (matching screenshot) -->
                     <HBox justifyContent="End" class="sapUiSmallMarginTop">
@@ -583,21 +525,6 @@
                   </headerToolbar>
                   <content>
                     <VBox class="sapUiSmallMargin">
-                      <!-- FileUploader visible in edit mode -->
-                      <VBox visible="{ui>/isEditMode}" class="sapUiSmallMarginBottom">
-                        <Label text="Upload New Attachment:" class="textMutedBold sapUiTinyMarginBottom" />
-                        <u:FileUploader
-                          id="detailFileUploader"
-                          width="100%"
-                          placeholder="Choose file to attach (PDF, document, image)..."
-                          buttonText="Browse..."
-                          icon="sap-icon://attachment"
-                          maximumFileSize="2"
-                          fileSizeExceed=".onFileSizeExceed"
-                          change=".onFileSelected"
-                          sameFilenameAllowed="false" />
-                      </VBox>
-
                       <List
                         id="orderDetailAttachmentsList"
                         items="{selectedOrder>/attachments}"
@@ -642,13 +569,6 @@
                                 press=".onAttachmentPress"
                                 tooltip="View or Download Attachment"
                                 class="cursorPointer" />
-                              <Button
-                                icon="sap-icon://delete"
-                                type="Transparent"
-                                press=".onDeleteAttachment"
-                                tooltip="Delete Attachment"
-                                visible="{ui>/isEditMode}"
-                                class="sapUiTinyMarginBegin cursorPointer" />
                             </HBox>
                           </HBox>
                         </CustomListItem>

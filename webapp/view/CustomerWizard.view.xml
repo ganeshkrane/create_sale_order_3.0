@@ -841,9 +841,6 @@
                         <Text text="Description" />
                       </Column>
                       <Column width="110px">
-                        <Text text="Product No." />
-                      </Column>
-                      <Column width="110px">
                         <Text text="" />
                       </Column>
                       <Column width="115px" hAlign="End">
@@ -890,7 +887,6 @@
                           </HBox>
                           <Text text="{= ${appState>um} || 'EA' }" />
                           <Text text="{= ${appState>description} || ${appState>name} }" class="productTableTitle" />
-                          <Text text="{= ${appState>productNo} || 'PRD-' + ${appState>articleId} }" />
                           <Link
                             text="value-add"
                             press=".onOpenValueAddPopup"

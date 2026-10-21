@@ -3179,6 +3179,7 @@ sap.ui.define([
         attachments: JSON.parse(JSON.stringify((oDelivery && oDelivery.attachments && oDelivery.attachments.length > 0) ? oDelivery.attachments : (oAppState.getProperty("/delivery/attachments") || []))),
         posTransaction: "POS-TRX-" + sSalesOrderNo,
         deliveryBlock: "NONE",
+        deliveryBlockText: "Delivery Not Blocked",
         financial: {
           totalPriceInclTax: Number(oPricing.total || 0),
           requestedDownpayment: Number(oPricing.total || 0),
