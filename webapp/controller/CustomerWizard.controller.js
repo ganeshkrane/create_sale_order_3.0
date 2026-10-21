@@ -3175,7 +3175,15 @@ sap.ui.define([
           total: Number(oPricing.total || 0)
         },
         totalAmount: Number(oPricing.total || 0),
-        items: aOrderItems
+        items: aOrderItems,
+        attachments: JSON.parse(JSON.stringify((oDelivery && oDelivery.attachments && oDelivery.attachments.length > 0) ? oDelivery.attachments : (oAppState.getProperty("/delivery/attachments") || []))),
+        posTransaction: "POS-TRX-" + sSalesOrderNo,
+        deliveryBlock: "NONE",
+        financial: {
+          totalPriceInclTax: Number(oPricing.total || 0),
+          requestedDownpayment: Number(oPricing.total || 0),
+          receivedDownpayment: Number(oPricing.total || 0)
+        }
       };
 
       // Persist to salesOrders model and localStorage

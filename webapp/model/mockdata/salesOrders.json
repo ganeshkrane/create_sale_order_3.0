@@ -1,7 +1,7 @@
 [
   {
     "salesOrderNo": "5000084720",
-    "orderDate": "18 Oct 2026",
+    "orderDate": "20 Oct 2026",
     "status": "Created",
     "statusState": "Success",
     "customerName": "Thabo Mokoena",
@@ -27,27 +27,71 @@
     "carrier": "DHL Express",
     "incoterms": "FOB - Free on Board",
     "requestedDeliveryDate": "28 Oct 2026",
-    "shipmentPriority": "02",
-    "shipmentPriorityText": "02 – High Priority",
+    "shipmentPriority": "01",
+    "shipmentPriorityText": "01 – Immediate",
+    "posTransaction": "POS-TRX-5000025469",
+    "deliveryBlock": "01",
     "currency": "ZAR",
     "pricing": {
-      "netValue": 14999.00,
+      "netValue": 30697.00,
       "discounts": 0.00,
-      "vat": 2249.85,
-      "total": 17248.85
+      "vat": 4604.55,
+      "total": 35301.55
     },
-    "totalAmount": 17248.85,
+    "financial": {
+      "totalPriceInclTax": 35301.55,
+      "requestedDownpayment": 35301.55,
+      "receivedDownpayment": 35301.55
+    },
+    "totalAmount": 35301.55,
     "items": [
       {
         "item": "10",
         "articleId": "ART-CND-01",
         "name": "Samsung 65\" QLED 4K Smart TV",
-        "category": "Electronics",
-        "qty": 1,
+        "category": "General Merchandise",
+        "qty": 2,
         "netPrice": 14999.00,
-        "netValue": 14999.00,
-        "routingTarget": "OAA DC M001 · SP-01",
+        "netValue": 29998.00,
+        "routingTarget": "OAA Source (M001) · SP-01",
         "sourcingStatusText": "Full Stock Available"
+      },
+      {
+        "item": "20",
+        "articleId": "ZEGP-24",
+        "name": "Extended 2-Year Warranty Plan",
+        "category": "General Merchandise",
+        "qty": 1,
+        "netPrice": 699.00,
+        "netValue": 699.00,
+        "routingTarget": "Fulfilled with parent item",
+        "sourcingStatusText": "Fulfilled with parent item"
+      }
+    ],
+    "attachments": [
+      {
+        "AttaId": "delivery_instructions_84720.pdf",
+        "Descr": "Delivery_Instructions_M001.pdf",
+        "fileName": "Delivery_Instructions_M001.pdf",
+        "name": "Delivery_Instructions_M001.pdf",
+        "fileSize": "142.5 KB",
+        "size": "142.5 KB",
+        "fileType": "application/pdf",
+        "uploadDate": "20 Oct 2026",
+        "isPdf": true,
+        "url": "data:application/pdf;base64,JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovQ29udGVudHMgNCAwIFIKL1Jlc291cmNlcyA8PAovRm9udCA8PAovRjEgNSAwIFIKPj4KPj4KPj4KZW5kb2JqCjQgMCBvYmoKPDwKL0xlbmd0aCA3Mwo+PgpzdHJlYW0KQlQKL0YxIDI0IFRmCjEwMCA3MDAgVGROCihTYWxlcyBPcmRlciBQRC1Db25maXJtYXRpb24gQXR0YWNobWVudCkgVGoKRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9UeXBlIC9Gb250Ci9TdWJ0eXBlIC9UeXBlMQovQmFzZUZvbnQgL0hlbHZldGljYQo+PgplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDE5IDAwMDAwIG4gCjAwMDAwMDAwNjggMDAwMDAgbiAKMDAwMDAwMDEyNSAwMDAwMCBuIAowMDAwMDAwMjQ5IDAwMDAwIG4gCjAwMDAwMDAzNzIgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA2Ci9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgoxNDU2CiUlRU9G"
+      },
+      {
+        "AttaId": "signed_order_confirmation.pdf",
+        "Descr": "Signed_Order_Confirmation.pdf",
+        "fileName": "Signed_Order_Confirmation.pdf",
+        "name": "Signed_Order_Confirmation.pdf",
+        "fileSize": "95.8 KB",
+        "size": "95.8 KB",
+        "fileType": "application/pdf",
+        "uploadDate": "20 Oct 2026",
+        "isPdf": true,
+        "url": "data:application/pdf;base64,JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPj4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovQ29udGVudHMgNCAwIFIKL1Jlc291cmNlcyA8PAovRm9udCA8PAovRjEgNSAwIFIKPj4KPj4KPj4KZW5kb2JqCjQgMCBvYmoKPDwKL0xlbmd0aCA3Mwo+PgpzdHJlYW0KQlQKL0YxIDI0IFRmCjEwMCA3MDAgVGROCihTYWxlcyBPcmRlciBQRC1Db25maXJtYXRpb24gQXR0YWNobWVudCkgVGoKRVQKZW5kc3RyZWFtCmVuZG9iago1IDAgb2JqCjw8Ci9UeXBlIC9Gb250Ci9TdWJ0eXBlIC9UeXBlMQovQmFzZUZvbnQgL0hlbHZldGljYQo+PgplbmRvYmoKeHJlZgowIDYKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDE5IDAwMDAwIG4gCjAwMDAwMDAwNjggMDAwMDAgbiAKMDAwMDAwMDEyNSAwMDAwMCBuIAowMDAwMDAwMjQ5IDAwMDAwIG4gCjAwMDAwMDAzNzIgMDAwMDAgbiAKdHJhaWxlcgo8PAovU2l6ZSA2Ci9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgoxNDU2CiUlRU9G"
       }
     ]
   },
@@ -156,3 +200,4 @@
     ]
   }
 ]
+  
