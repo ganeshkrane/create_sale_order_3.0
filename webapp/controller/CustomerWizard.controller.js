@@ -595,23 +595,43 @@ sap.ui.define([
       var that = this;
       var oAppState = this.getModel("appState");
 
-      this.openAddressValidationDialog("Default (Billing)", function (oSelectedAddress) {
+      this.openAddressValidationDialog("Default (Billing)", function (oSelectedAddress, response) {
         if (oSelectedAddress) {
           var oAddrObj = {
             street: oSelectedAddress.street || "",
+            streetNumber: oSelectedAddress.streetNumber || "",
+            streetName: oSelectedAddress.streetName || "",
+            suburb: oSelectedAddress.suburb || "",
             city: oSelectedAddress.city || "",
             postalCode: oSelectedAddress.postalCode || "",
-            region: oSelectedAddress.region || "",
+            region: oSelectedAddress.region || oSelectedAddress.province || "",
+            province: oSelectedAddress.province || oSelectedAddress.region || "",
+            country: oSelectedAddress.country || "ZA",
             formatted: oSelectedAddress.formatted || "",
             type: "Default / Billing",
             status: oSelectedAddress.status || "EXISTING",
-            statusState: that.formatter.addressStatusState(oSelectedAddress.status)
+            statusState: that.formatter.addressStatusState(oSelectedAddress.status),
+            dwellingType: oSelectedAddress.dwellingType || "HOUSE",
+            latitude: oSelectedAddress.latitude || "",
+            longitude: oSelectedAddress.longitude || "",
+            deliveryPartner: oSelectedAddress.deliveryPartner || null,
+            score: oSelectedAddress.score || null,
+            scoreString: oSelectedAddress.scoreString || ""
           };
           oAppState.setProperty("/customer/address", oAddrObj);
           oAppState.setProperty("/delivery/address", oAddrObj);
+          oAppState.setProperty("/delivery/billToAddress", {
+            street: oSelectedAddress.street || "",
+            city: oSelectedAddress.city || "",
+            state: oSelectedAddress.region || oSelectedAddress.province || "",
+            postalCode: oSelectedAddress.postalCode || "",
+            country: oSelectedAddress.country || "South Africa",
+            phone: oAppState.getProperty("/customer/telephone") || ""
+          });
+          oAppState.setProperty("/addressCaptureResponse", response);
           that.getView().getModel("wizardModel").setProperty("/addressValidated", true);
           that._updatePendingActionText();
-          MessageToast.show("Address validated: " + (oAddrObj.formatted || oAddrObj.status));
+          MessageToast.show("Address captured (" + oAddrObj.status + "): " + (oAddrObj.formatted || oAddrObj.status));
         }
       });
     },
@@ -1524,33 +1544,61 @@ sap.ui.define([
       var that = this;
       var oAppState = this.getModel("appState");
 
-      this.openAddressValidationDialog("Delivery Address", function (oSelectedAddress) {
+      this.openAddressValidationDialog("Delivery Address", function (oSelectedAddress, response) {
         if (oSelectedAddress) {
           var sFormatted = oSelectedAddress.formatted || (oSelectedAddress.street + ", " + oSelectedAddress.city + ", " + (oSelectedAddress.region || "") + " " + (oSelectedAddress.postalCode || ""));
           
           var oAddrObj = {
             street: oSelectedAddress.street || "",
+            streetNumber: oSelectedAddress.streetNumber || "",
+            streetName: oSelectedAddress.streetName || "",
+            suburb: oSelectedAddress.suburb || "",
             city: oSelectedAddress.city || "",
             postalCode: oSelectedAddress.postalCode || "",
-            region: oSelectedAddress.region || "",
+            region: oSelectedAddress.region || oSelectedAddress.province || "",
+            province: oSelectedAddress.province || oSelectedAddress.region || "",
             country: oSelectedAddress.country || "South Africa",
             formatted: sFormatted,
             status: oSelectedAddress.status || "VALIDATED",
             statusState: that.formatter && that.formatter.addressStatusState ? that.formatter.addressStatusState(oSelectedAddress.status || "VALIDATED") : "Success",
+            dwellingType: oSelectedAddress.dwellingType || "HOUSE",
+            latitude: oSelectedAddress.latitude || "",
+            longitude: oSelectedAddress.longitude || "",
+            deliveryPartner: oSelectedAddress.deliveryPartner || null,
+            score: oSelectedAddress.score || null,
+            scoreString: oSelectedAddress.scoreString || "",
+            order: oSelectedAddress.order || null,
             validated: true
           };
 
           oAppState.setProperty("/delivery/deliveryAddress", oAddrObj);
+          if (oSelectedAddress.deliveryPartner) {
+            oAppState.setProperty("/delivery/shipTo", oSelectedAddress.deliveryPartner);
+            oAppState.setProperty("/delivery/deliveryPartner", oSelectedAddress.deliveryPartner);
+            oAppState.setProperty("/orderHeader/shipToParty", oSelectedAddress.deliveryPartner);
+          }
+          if (oSelectedAddress.order) {
+            if (oSelectedAddress.order.deliveryInstruction) {
+              oAppState.setProperty("/delivery/deliveryInstruction", oSelectedAddress.order.deliveryInstruction);
+              oAppState.setProperty("/review/shippingDetails/deliveryInstruction", oSelectedAddress.order.deliveryInstruction);
+            }
+            if (typeof oSelectedAddress.order.weekendDelivery === "boolean") {
+              oAppState.setProperty("/delivery/weekendDelivery", oSelectedAddress.order.weekendDelivery);
+            }
+          }
+          oAppState.setProperty("/deliveryCaptureResponse", response);
           
           // Also sync to shipToAddress for downstream review steps
           oAppState.setProperty("/delivery/shipToAddress/street", oSelectedAddress.street || "");
           oAppState.setProperty("/delivery/shipToAddress/city", oSelectedAddress.city || "");
           oAppState.setProperty("/delivery/shipToAddress/postalCode", oSelectedAddress.postalCode || "");
-          oAppState.setProperty("/delivery/shipToAddress/state", oSelectedAddress.region || "");
+          oAppState.setProperty("/delivery/shipToAddress/state", oSelectedAddress.region || oSelectedAddress.province || "");
+          oAppState.setProperty("/delivery/shipToAddress/country", oSelectedAddress.country || "South Africa");
           oAppState.setProperty("/delivery/shipToAddress/formatted", sFormatted);
           oAppState.setProperty("/review/shippingDetails/address", sFormatted);
 
           that.updateCartSourcingEvaluation();
+          that._updatePendingActionText();
           MessageToast.show("Delivery Address validated: " + sFormatted);
         }
       });
@@ -2986,19 +3034,32 @@ sap.ui.define([
       var that = this;
       var oAppState = this.getModel("appState");
 
-      this.openAddressValidationDialog("Ship-To", function (oSelectedAddress) {
+      this.openAddressValidationDialog("Ship-To", function (oSelectedAddress, response) {
         if (oSelectedAddress) {
           var oDiff = {
             street: oSelectedAddress.street,
+            streetNumber: oSelectedAddress.streetNumber || "",
+            streetName: oSelectedAddress.streetName || "",
+            suburb: oSelectedAddress.suburb || "",
             city: oSelectedAddress.city,
             postalCode: oSelectedAddress.postalCode,
-            region: oSelectedAddress.region,
+            region: oSelectedAddress.region || oSelectedAddress.province,
+            country: oSelectedAddress.country || "South Africa",
             formatted: oSelectedAddress.formatted,
             status: oSelectedAddress.status || "MODIFIED",
             statusState: that.formatter.addressStatusState(oSelectedAddress.status),
-            note: oSelectedAddress.note || "Selected for ship-to delivery"
+            note: oSelectedAddress.note || ("Selected for ship-to delivery (" + oSelectedAddress.status + ")"),
+            deliveryPartner: oSelectedAddress.deliveryPartner || null,
+            score: oSelectedAddress.score || null,
+            scoreString: oSelectedAddress.scoreString || "",
+            dwellingType: oSelectedAddress.dwellingType || "HOUSE"
           };
           oAppState.setProperty("/delivery/differentAddress", oDiff);
+          if (oSelectedAddress.deliveryPartner) {
+            oAppState.setProperty("/delivery/shipTo", oSelectedAddress.deliveryPartner);
+            oAppState.setProperty("/orderHeader/shipToParty", oSelectedAddress.deliveryPartner);
+          }
+          oAppState.setProperty("/shipToCaptureResponse", response);
           that._updatePendingActionText();
           MessageToast.show("Ship-to address updated (" + oDiff.status + ")");
         }

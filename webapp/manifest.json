@@ -111,6 +111,14 @@
       "css": [
         {
           "uri": "css/style.css"
+        },
+        {
+          "uri": "css/address-capture.css"
+        }
+      ],
+      "js": [
+        {
+          "uri": "utils/address-capture.mock.iife.js"
         }
       ]
     },

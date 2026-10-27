@@ -1,0 +1,1826 @@
+/*
+ * Stylesheet build entry for @pepkor-lifestyle/address-capture.
+ *
+ * postcss-import inlines every @import here, so `npm run build:css` emits a
+ * single dist/address-capture.css with no runtime @import requests.
+ *
+ * tokens.css is the token layer, icons.css holds the Figma icons as data URIs,
+ * components.css the .plac- primitives and screens.css the shell, search and
+ * map screens.
+ *//*
+ * Design tokens for @pepkor-lifestyle/address-capture.
+ *
+ * Source: spec/tokens.json, the Pepkor Lifestyle Figma library (light mode).
+ * Names map directly from Figma: colour "text/text-primary" becomes
+ * --plac-color-text-primary, "radius-md" becomes --plac-radius-md, and
+ * "font-size/text-md" becomes --plac-font-size-text-md. Underscores in Figma
+ * names are kept, so every token can be traced back without a lookup table.
+ * test/tokens.test.ts fails if any value here stops matching tokens.json.
+ *
+ * This is the ONLY file in the package permitted to contain a hex colour
+ * literal. Every other stylesheet and every source file must reference a
+ * --plac- custom property.
+ *
+ * Selector note: :where(:root, :host) is forgiving and carries zero
+ * specificity, so the same file works whether the stylesheet is attached to
+ * the document (light DOM) or adopted into a shadow root, and a host page can
+ * override any token with a single plain :root rule.
+ *
+ * Unit note: spacing and radius are in px, as stored in Figma. Font sizes and
+ * line heights are converted to rem (px divided by 16), because SAP Fiori
+ * themes change the root font size and text should follow it.
+ */
+
+:where(:root, :host) {
+  /* ---------------------------------------------------------------------
+   * Brand scale (Pepkor Lifestyle)
+   * Steps 50 to 300 and 500 to 900 are confirmed by the Figma aliases in
+   * tokens.json. 400 and 950 are not referenced by any Figma token.
+   * ------------------------------------------------------------------ */
+  --plac-color-brand-50: #eefcff;
+  --plac-color-brand-100: #d7f7fe;
+  --plac-color-brand-200: #b6eefc;
+  --plac-color-brand-300: #8cdef3;
+  --plac-color-brand-400: #64c7e1;
+  --plac-color-brand-500: #008da9;
+  --plac-color-brand-600: #007d98;
+  --plac-color-brand-700: #00677f;
+  --plac-color-brand-800: #015367;
+  --plac-color-brand-900: #084353;
+  --plac-color-brand-950: #032b38;
+
+  /* ---------------------------------------------------------------------
+   * Colour
+   * Brand-aliased tokens reference the brand scale above, so overriding a
+   * brand step re-themes everything built on it. Every other value is the
+   * literal from tokens.json, with its Figma primitive alongside.
+   * ------------------------------------------------------------------ */
+
+  /* text */
+  --plac-color-text-primary: #171717; /* Colors/Neutral/900 */
+  --plac-color-text-primary_on-brand: #ffffff; /* Colors/Base/white */
+  --plac-color-text-secondary: #404040; /* Colors/Neutral/700 */
+  --plac-color-text-secondary_hover: #262626; /* Colors/Neutral/800 */
+  --plac-color-text-secondary_on-brand: var(--plac-color-brand-200);
+  --plac-color-text-tertiary: #525252; /* Colors/Neutral/600 */
+  --plac-color-text-tertiary_hover: #404040; /* Colors/Neutral/700 */
+  --plac-color-text-tertiary_on-brand: var(--plac-color-brand-200);
+  --plac-color-text-quaternary: #737373; /* Colors/Neutral/500 */
+  --plac-color-text-quaternary_on-brand: var(--plac-color-brand-300);
+  --plac-color-text-white: #ffffff; /* Colors/Base/white */
+  --plac-color-text-placeholder: #737373; /* Colors/Neutral/500 */
+  --plac-color-text-brand-primary: var(--plac-color-brand-900);
+  --plac-color-text-brand-secondary: var(--plac-color-brand-700);
+  --plac-color-text-brand-secondary_hover: var(--plac-color-brand-800);
+  --plac-color-text-brand-tertiary: var(--plac-color-brand-600);
+  --plac-color-text-brand-tertiary_alt: var(--plac-color-brand-600);
+  --plac-color-text-error-primary: #dc2626; /* Colors/Red/600 */
+  --plac-color-text-error-primary_hover: #b91c1c; /* Colors/Red/700 */
+  --plac-color-text-warning-primary: #ca8a04; /* Colors/Yellow/600 */
+  --plac-color-text-success-primary: #16a34a; /* Colors/Green/600 */
+
+  /* border */
+  --plac-color-border-primary: #d4d4d4; /* Colors/Neutral/300 */
+  --plac-color-border-secondary: #e5e5e5; /* Colors/Neutral/200 */
+  --plac-color-border-secondary_alt: #0000001a;
+  --plac-color-border-tertiary: #f5f5f5; /* Colors/Neutral/100 */
+  --plac-color-border-brand: var(--plac-color-brand-500);
+  --plac-color-border-brand_alt: var(--plac-color-brand-600);
+  --plac-color-border-error: #ef4444; /* Colors/Red/500 */
+  --plac-color-border-error_subtle: #fca5a5; /* Colors/Red/300 */
+
+  /* foreground */
+  --plac-color-fg-primary: #171717; /* Colors/Neutral/900 */
+  --plac-color-fg-secondary: #404040; /* Colors/Neutral/700 */
+  --plac-color-fg-secondary_hover: #262626; /* Colors/Neutral/800 */
+  --plac-color-fg-tertiary: #525252; /* Colors/Neutral/600 */
+  --plac-color-fg-tertiary_hover: #404040; /* Colors/Neutral/700 */
+  --plac-color-fg-quaternary: #a3a3a3; /* Colors/Neutral/400 */
+  --plac-color-fg-quaternary_hover: #737373; /* Colors/Neutral/500 */
+  --plac-color-fg-white: #ffffff; /* Colors/Base/white */
+  --plac-color-fg-brand-primary: var(--plac-color-brand-600);
+  --plac-color-fg-brand-primary_alt: var(--plac-color-brand-600);
+  --plac-color-fg-brand-secondary: var(--plac-color-brand-500);
+  --plac-color-fg-brand-secondary_alt: var(--plac-color-brand-500);
+  --plac-color-fg-brand-secondary_hover: var(--plac-color-brand-600);
+  --plac-color-fg-error-primary: #dc2626; /* Colors/Red/600 */
+  --plac-color-fg-error-secondary: #ef4444; /* Colors/Red/500 */
+  --plac-color-fg-warning-primary: #ca8a04; /* Colors/Yellow/600 */
+  --plac-color-fg-warning-secondary: #eab308; /* Colors/Yellow/500 */
+  --plac-color-fg-success-primary: #16a34a; /* Colors/Green/600 */
+  --plac-color-fg-success-secondary: #22c55e; /* Colors/Green/500 */
+
+  /* background */
+  --plac-color-bg-primary: #ffffff; /* Colors/Base/white */
+  --plac-color-bg-primary_alt: #ffffff; /* Colors/Base/white */
+  --plac-color-bg-primary_hover: #fafafa; /* Colors/Neutral/50 */
+  --plac-color-bg-primary-solid: #0a0a0a; /* Colors/Neutral/950 */
+  --plac-color-bg-secondary: #fafafa; /* Colors/Neutral/50 */
+  --plac-color-bg-secondary_alt: #fafafa; /* Colors/Neutral/50 */
+  --plac-color-bg-secondary_hover: #f5f5f5; /* Colors/Neutral/100 */
+  --plac-color-bg-secondary-solid: #525252; /* Colors/Neutral/600 */
+  --plac-color-bg-tertiary: #f5f5f5; /* Colors/Neutral/100 */
+  --plac-color-bg-quaternary: #e5e5e5; /* Colors/Neutral/200 */
+  --plac-color-bg-overlay: #0a0a0a; /* Colors/Neutral/950 */
+  --plac-color-bg-brand-primary: var(--plac-color-brand-50);
+  --plac-color-bg-brand-primary_alt: var(--plac-color-brand-50);
+  --plac-color-bg-brand-secondary: var(--plac-color-brand-100);
+  --plac-color-bg-brand-solid: var(--plac-color-brand-600);
+  --plac-color-bg-brand-solid_hover: var(--plac-color-brand-700);
+  --plac-color-bg-brand-section: var(--plac-color-brand-800);
+  --plac-color-bg-brand-section_subtle: var(--plac-color-brand-700);
+  --plac-color-bg-error-primary: #fef2f2; /* Colors/Red/50 */
+  --plac-color-bg-error-secondary: #fee2e2; /* Colors/Red/100 */
+  --plac-color-bg-error-solid: #dc2626; /* Colors/Red/600 */
+  --plac-color-bg-error-solid_hover: #b91c1c; /* Colors/Red/700 */
+  --plac-color-bg-warning-primary: #fefce8; /* Colors/Yellow/50 */
+  --plac-color-bg-warning-secondary: #fef9c3; /* Colors/Yellow/100 */
+  --plac-color-bg-warning-solid: #ca8a04; /* Colors/Yellow/600 */
+  --plac-color-bg-success-primary: #f0fdf4; /* Colors/Green/50 */
+  --plac-color-bg-success-secondary: #dcfce7; /* Colors/Green/100 */
+  --plac-color-bg-success-solid: #16a34a; /* Colors/Green/600 */
+
+  /* Focus indicator. Brand-500 per API-CONTRACT.md section 10. */
+  --plac-color-focus-ring: var(--plac-color-brand-500);
+
+  /* ---------------------------------------------------------------------
+   * Radius (px)
+   * ------------------------------------------------------------------ */
+  --plac-radius-none: 0;
+  --plac-radius-xxs: 2px;
+  --plac-radius-xs: 4px;
+  --plac-radius-sm: 6px;
+  --plac-radius-md: 8px;
+  --plac-radius-lg: 10px;
+  --plac-radius-xl: 12px;
+  --plac-radius-2xl: 16px;
+  --plac-radius-3xl: 20px;
+  --plac-radius-4xl: 24px;
+  --plac-radius-full: 9999px;
+
+  /* ---------------------------------------------------------------------
+   * Spacing (px)
+   * ------------------------------------------------------------------ */
+  --plac-spacing-none: 0;
+  --plac-spacing-xxs: 2px;
+  --plac-spacing-xs: 4px;
+  --plac-spacing-sm: 6px;
+  --plac-spacing-md: 8px;
+  --plac-spacing-lg: 12px;
+  --plac-spacing-xl: 16px;
+  --plac-spacing-2xl: 20px;
+  --plac-spacing-3xl: 24px;
+  --plac-spacing-4xl: 32px;
+  --plac-spacing-5xl: 40px;
+  --plac-spacing-6xl: 48px;
+  --plac-spacing-7xl: 64px;
+  --plac-spacing-8xl: 80px;
+  --plac-spacing-9xl: 96px;
+  --plac-spacing-10xl: 128px;
+  --plac-spacing-11xl: 160px;
+
+  /* ---------------------------------------------------------------------
+   * Typography
+   * Figma specifies Inter only. The fallback stack is used wherever the
+   * host has not loaded Inter: the library does not load web fonts.
+   * ------------------------------------------------------------------ */
+  --plac-font-family-display:
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --plac-font-family-body:
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --plac-font-weight-regular: 400;
+  --plac-font-weight-medium: 500;
+  --plac-font-weight-semibold: 600;
+  --plac-font-weight-bold: 700;
+  --plac-font-size-text-xs: 0.75rem; /* 12px */
+  --plac-font-size-text-sm: 0.875rem; /* 14px */
+  --plac-font-size-text-md: 1rem; /* 16px */
+  --plac-font-size-text-lg: 1.125rem; /* 18px */
+  --plac-font-size-text-xl: 1.25rem; /* 20px */
+  --plac-font-size-display-xs: 1.5rem; /* 24px */
+  --plac-font-size-display-sm: 1.875rem; /* 30px */
+  --plac-font-size-display-md: 2.25rem; /* 36px */
+  --plac-font-size-display-lg: 3rem; /* 48px */
+  --plac-font-size-display-xl: 3.75rem; /* 60px */
+  --plac-font-size-display-2xl: 4.5rem; /* 72px */
+  --plac-line-height-text-xs: 1.125rem; /* 18px */
+  --plac-line-height-text-sm: 1.25rem; /* 20px */
+  --plac-line-height-text-md: 1.5rem; /* 24px */
+  --plac-line-height-text-lg: 1.75rem; /* 28px */
+  --plac-line-height-text-xl: 1.875rem; /* 30px */
+  --plac-line-height-display-xs: 2rem; /* 32px */
+  --plac-line-height-display-sm: 2.375rem; /* 38px */
+  --plac-line-height-display-md: 2.75rem; /* 44px */
+  --plac-line-height-display-lg: 3.75rem; /* 60px */
+  --plac-line-height-display-xl: 4.5rem; /* 72px */
+  --plac-line-height-display-2xl: 5.625rem; /* 90px */
+
+  /* Names used in API-CONTRACT.md section 10, as aliases of the Figma tokens. */
+  --plac-font-family: var(--plac-font-family-body);
+  --plac-font-size-base: var(--plac-font-size-text-md);
+
+  /* ---------------------------------------------------------------------
+   * Structure
+   * Not in the Figma library, but a component library needs these to stay
+   * themable rather than hardcoded at the call site.
+   * ------------------------------------------------------------------ */
+  --plac-border-width: 1px;
+  --plac-border-width-strong: 2px;
+  --plac-focus-ring-width: 2px;
+  --plac-focus-ring-offset: 2px;
+
+  --plac-control-height-sm: 32px;
+  --plac-control-height-md: 40px;
+  --plac-control-height-lg: 48px;
+  --plac-control-padding-x: var(--plac-spacing-lg);
+  --plac-control-min-target: 24px; /* WCAG 2.2 SC 2.5.8 minimum target size */
+
+  --plac-z-base: 0;
+  --plac-z-dropdown: 1000;
+  --plac-z-overlay: 1100;
+
+  --plac-duration-fast: 120ms;
+  --plac-duration-base: 200ms;
+  --plac-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Effects, read off the Library components (Input field, Button, Toggle).
+   * tokens.json omits the Effects collection, so these are transcribed from
+   * the component definitions rather than from a token export. */
+  --plac-shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --plac-shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --plac-shadow-skeuomorphic: inset 0 0 0 1px rgb(0 0 0 / 0.18), inset 0 -2px 0 0 rgb(0 0 0 / 0.05);
+  /* Shadows/shadow-lg and shadow-xl and Backdrop blurs/backdrop-blur-md, read
+   * from the Library's Dropdown menu (11553:545522) and Modal (4057:415359)
+   * effect definitions. Figma's 16 blur radius is the 8px CSS blur it exports. */
+  --plac-shadow-lg:
+    0 12px 16px -4px rgb(0 0 0 / 0.08), 0 4px 6px -2px rgb(0 0 0 / 0.03),
+    0 2px 2px -1px rgb(0 0 0 / 0.04);
+  --plac-shadow-xl:
+    0 20px 24px -4px rgb(0 0 0 / 0.08), 0 8px 8px -4px rgb(0 0 0 / 0.03),
+    0 3px 3px -1.5px rgb(0 0 0 / 0.04);
+  --plac-backdrop-blur-md: 8px;
+  /* The primary button's stroke: white, 12% at the top fading to 0 at the
+   * bottom. Measured from the Library render of Button Primary 3287:427299. */
+  --plac-border-on-brand-gradient: linear-gradient(rgb(255 255 255 / 0.12), rgb(255 255 255 / 0));
+  /* A fully opaque mask layer. Only its alpha is read, never its colour. */
+  --plac-mask-solid: linear-gradient(#000 0 0);
+  --plac-border-secondary-alpha: rgb(0 0 0 / 0.1);
+  --plac-opacity-disabled: 0.5;
+}
+
+/*
+ * GENERATED by scripts/build-icons.mjs. Do not edit by hand.
+ *
+ * One custom property per SVG in src/styles/icons/, holding the file as a
+ * data URI. The SVGs are verbatim exports from the Pepkor Lifestyle Figma
+ * library; regenerate this file with `npm run build:icons` after changing one.
+ */
+
+:where(:root, :host) {
+  --plac-icon-alert-circle: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22alert-circle%22%20clip-path%3D%22url%28%23clip0_0_12%29%22%3E%0A%3Cpath%20id%3D%22Icon%22%20d%3D%22M8%205.33333V8M8%2010.6667H8.00667M14.6667%208C14.6667%2011.6819%2011.6819%2014.6667%208%2014.6667C4.3181%2014.6667%201.33333%2011.6819%201.33333%208C1.33333%204.3181%204.3181%201.33333%208%201.33333C11.6819%201.33333%2014.6667%204.3181%2014.6667%208Z%22%20stroke%3D%22%23EF4444%22%20stroke-width%3D%221.33333%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%3C%2Fg%3E%0A%3Cdefs%3E%0A%3CclipPath%20id%3D%22clip0_0_12%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22white%22%2F%3E%0A%3C%2FclipPath%3E%0A%3C%2Fdefs%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-building-05: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22building-05%22%3E%0A%3Cpath%20id%3D%22Icon%22%20d%3D%22M13%2011H17.8C18.9201%2011%2019.4802%2011%2019.908%2011.218C20.2843%2011.4097%2020.5903%2011.7157%2020.782%2012.092C21%2012.5198%2021%2013.0799%2021%2014.2V21M13%2011V6.2C13%205.0799%2013%204.51984%2012.782%204.09202C12.5903%203.71569%2012.2843%203.40973%2011.908%203.21799C11.4802%203%2010.9201%203%209.8%203H6.2C5.0799%203%204.51984%203%204.09202%203.21799C3.71569%203.40973%203.40973%203.71569%203.21799%204.09202C3%204.51984%203%205.0799%203%206.2V21M13%2011V21M21%2021H22M21%2021H13M13%2021H3M3%2021H2M6.5%207H9.5M6.5%2011H9.5M6.5%2015H9.5%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke%3D%22black%22%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-building-06: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22building-06%22%3E%0A%3Cpath%20id%3D%22Icon%22%20d%3D%22M11%2011H6.2C5.07989%2011%204.51984%2011%204.09202%2011.218C3.71569%2011.4097%203.40973%2011.7157%203.21799%2012.092C3%2012.5198%203%2013.0799%203%2014.2V21M11%2011V21M11%2011V6.2C11%205.0799%2011%204.51984%2011.218%204.09202C11.4097%203.71569%2011.7157%203.40973%2012.092%203.21799C12.5198%203%2013.0799%203%2014.2%203H17.8C18.9201%203%2019.4802%203%2019.908%203.21799C20.2843%203.40973%2020.5903%203.71569%2020.782%204.09202C21%204.51984%2021%205.0799%2021%206.2V21M3%2021H11M3%2021H2M21%2021H22M21%2021H11M14.5%207H17.5M14.5%2011H17.5M14.5%2015H17.5%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke%3D%22black%22%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-building-07: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22building-07%22%3E%0A%3Cpath%20id%3D%22Icon%22%20d%3D%22M7.5%2011H4.6C4.03995%2011%203.75992%2011%203.54601%2011.109C3.35785%2011.2049%203.20487%2011.3578%203.10899%2011.546C3%2011.7599%203%2012.0399%203%2012.6V21M7.5%2011V21M7.5%2011V6.2C7.5%205.0799%207.5%204.51984%207.71799%204.09202C7.90973%203.71569%208.21569%203.40973%208.59202%203.21799C9.01984%203%209.5799%203%2010.7%203H13.3C14.4201%203%2014.9802%203%2015.408%203.21799C15.7843%203.40973%2016.0903%203.71569%2016.282%204.09202C16.5%204.51984%2016.5%205.0799%2016.5%206.2V11M3%2021H7.5M3%2021H2M16.5%2011H19.4C19.9601%2011%2020.2401%2011%2020.454%2011.109C20.6422%2011.2049%2020.7951%2011.3578%2020.891%2011.546C21%2011.7599%2021%2012.0399%2021%2012.6V21M16.5%2011V21M21%2021H22M21%2021H16.5M16.5%2021H7.5M11%207H13M11%2011H13M11%2015H13%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke%3D%22black%22%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-check-circle: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22check-circle%22%20clip-path%3D%22url%28%23clip0_0_97%29%22%3E%0A%3Cpath%20id%3D%22Icon%22%20d%3D%22M6.25%2010L8.75%2012.5L13.75%207.5M18.3333%2010C18.3333%2014.6024%2014.6024%2018.3333%2010%2018.3333C5.39763%2018.3333%201.66667%2014.6024%201.66667%2010C1.66667%205.39763%205.39763%201.66667%2010%201.66667C14.6024%201.66667%2018.3333%205.39763%2018.3333%2010Z%22%20stroke%3D%22%2316A34A%22%20stroke-width%3D%221.66667%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%3C%2Fg%3E%0A%3Cdefs%3E%0A%3CclipPath%20id%3D%22clip0_0_97%22%3E%0A%3Crect%20width%3D%2220%22%20height%3D%2220%22%20fill%3D%22white%22%2F%3E%0A%3C%2FclipPath%3E%0A%3C%2Fdefs%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-check: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2214%22%20height%3D%2214%22%20viewBox%3D%220%200%2014%2014%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22check%22%3E%0A%3Cpath%20id%3D%22Icon%22%20d%3D%22M11.6667%203.5L5.25%209.91667L2.33333%207%22%20stroke%3D%22white%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-chevron-down: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22chevron-down%22%3E%0A%3Cpath%20id%3D%22Icon%22%20d%3D%22M4%206L8%2010L12%206%22%20stroke%3D%22%23A3A3A3%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-copy-05: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22copy-05%22%3E%0A%3Cpath%20id%3D%22Icon%22%20d%3D%22M8%2016V18.8C8%2019.9201%208%2020.4802%208.21799%2020.908C8.40973%2021.2843%208.71569%2021.5903%209.09202%2021.782C9.51984%2022%2010.0799%2022%2011.2%2022H18.8C19.9201%2022%2020.4802%2022%2020.908%2021.782C21.2843%2021.5903%2021.5903%2021.2843%2021.782%2020.908C22%2020.4802%2022%2019.9201%2022%2018.8V11.2C22%2010.0799%2022%209.51984%2021.782%209.09202C21.5903%208.71569%2021.2843%208.40973%2020.908%208.21799C20.4802%208%2019.9201%208%2018.8%208H16M5.2%2016H12.8C13.9201%2016%2014.4802%2016%2014.908%2015.782C15.2843%2015.5903%2015.5903%2015.2843%2015.782%2014.908C16%2014.4802%2016%2013.9201%2016%2012.8V5.2C16%204.0799%2016%203.51984%2015.782%203.09202C15.5903%202.71569%2015.2843%202.40973%2014.908%202.21799C14.4802%202%2013.9201%202%2012.8%202H5.2C4.0799%202%203.51984%202%203.09202%202.21799C2.71569%202.40973%202.40973%202.71569%202.21799%203.09202C2%203.51984%202%204.07989%202%205.2V12.8C2%2013.9201%202%2014.4802%202.21799%2014.908C2.40973%2015.2843%202.71569%2015.5903%203.09202%2015.782C3.51984%2016%204.07989%2016%205.2%2016Z%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke%3D%22black%22%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-home-line: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22home-line%22%3E%0A%3Cpath%20id%3D%22Icon%22%20d%3D%22M8%2017H16M11.0177%202.76401L4.23539%208.03914C3.78202%208.39176%203.55534%208.56807%203.39203%208.78887C3.24737%208.98446%203.1396%209.2048%203.07403%209.43907C3%209.70353%203%209.99071%203%2010.5651V17.8C3%2018.9201%203%2019.4802%203.21799%2019.908C3.40973%2020.2843%203.71569%2020.5903%204.09202%2020.782C4.51984%2021%205.07989%2021%206.2%2021H17.8C18.9201%2021%2019.4802%2021%2019.908%2020.782C20.2843%2020.5903%2020.5903%2020.2843%2020.782%2019.908C21%2019.4802%2021%2018.9201%2021%2017.8V10.5651C21%209.99071%2021%209.70353%2020.926%209.43907C20.8604%209.2048%2020.7526%208.98446%2020.608%208.78887C20.4447%208.56807%2020.218%208.39176%2019.7646%208.03914L12.9823%202.76402C12.631%202.49076%2012.4553%202.35414%2012.2613%202.30162C12.0902%202.25528%2011.9098%202.25528%2011.7387%202.30162C11.5447%202.35414%2011.369%202.49076%2011.0177%202.76401Z%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke%3D%22black%22%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-loading-circle-simple: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2248%22%20height%3D%2248%22%20viewBox%3D%220%200%2048%2048%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22Loading%20circle%22%3E%0A%3Cpath%20id%3D%22Background%22%20d%3D%22M45%2024C45%2026.7578%2044.4568%2029.4885%2043.4015%2032.0364C42.3461%2034.5842%2040.7993%2036.8992%2038.8492%2038.8492C36.8992%2040.7993%2034.5842%2042.3461%2032.0364%2043.4015C29.4885%2044.4568%2026.7578%2045%2024%2045C21.2422%2045%2018.5115%2044.4568%2015.9636%2043.4015C13.4158%2042.3461%2011.1008%2040.7993%209.15075%2038.8492C7.20072%2036.8992%205.65388%2034.5842%204.59853%2032.0363C3.54318%2029.4885%203%2026.7578%203%2024C3%2021.2422%203.54318%2018.5115%204.59853%2015.9636C5.65388%2013.4158%207.20073%2011.1008%209.15076%209.15075C11.1008%207.20072%2013.4158%205.65387%2015.9637%204.59853C18.5115%203.54318%2021.2423%203%2024%203C26.7578%203%2029.4885%203.54318%2032.0364%204.59853C34.5842%205.65388%2036.8992%207.20073%2038.8493%209.15077C40.7993%2011.1008%2042.3461%2013.4158%2043.4015%2015.9637C44.4568%2018.5115%2045%2021.2423%2045%2024L45%2024Z%22%20stroke-width%3D%226%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke%3D%22%23F5F5F5%22%2F%3E%0A%3Cpath%20id%3D%22Line%22%20d%3D%22M24%203C26.7578%203%2029.4885%203.54318%2032.0364%204.59853C34.5842%205.65388%2036.8992%207.20073%2038.8492%209.15076C40.7993%2011.1008%2042.3461%2013.4158%2043.4015%2015.9637C44.4568%2018.5115%2045%2021.2422%2045%2024%22%20stroke-width%3D%226%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke%3D%22%23007D98%22%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-loading-circle: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2232%22%20height%3D%2232%22%20viewBox%3D%220%200%2032%2032%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22Loading%20circle%22%3E%0A%3Cpath%20id%3D%22Background%22%20d%3D%22M30%2016C30%2017.8385%2029.6379%2019.659%2028.9343%2021.3576C28.2308%2023.0561%2027.1995%2024.5995%2025.8995%2025.8995C24.5995%2027.1995%2023.0561%2028.2308%2021.3576%2028.9343C19.659%2029.6379%2017.8385%2030%2016%2030C14.1615%2030%2012.341%2029.6379%2010.6424%2028.9343C8.94387%2028.2307%207.40052%2027.1995%206.1005%2025.8995C4.80048%2024.5995%203.76925%2023.0561%203.06569%2021.3576C2.36212%2019.659%202%2017.8385%202%2016C2%2014.1615%202.36212%2012.341%203.06569%2010.6424C3.76926%208.94387%204.80049%207.40052%206.10051%206.1005C7.40053%204.80048%208.94388%203.76925%2010.6424%203.06569C12.341%202.36212%2014.1615%202%2016%202C17.8385%202%2019.659%202.36212%2021.3576%203.06569C23.0561%203.76926%2024.5995%204.80049%2025.8995%206.10051C27.1995%207.40053%2028.2308%208.94388%2028.9343%2010.6424C29.6379%2012.341%2030%2014.1615%2030%2016L30%2016Z%22%20stroke%3D%22white%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%3Cpath%20id%3D%22Line%22%20d%3D%22M6.10051%206.10051C7.66275%204.53826%209.57255%203.36793%2011.6738%202.68521C13.775%202.00248%2016.0079%201.82675%2018.1901%202.17237C20.3722%202.51798%2022.4416%203.37514%2024.229%204.67377C26.0164%205.97239%2027.4711%207.6756%2028.4741%209.64414C29.4771%2011.6127%2030%2013.7907%2030%2016C30%2018.2094%2029.4771%2020.3873%2028.4741%2022.3559C27.4711%2024.3244%2026.0164%2026.0276%2024.229%2027.3262C22.4416%2028.6249%2020.3722%2029.482%2018.1901%2029.8276%22%20stroke%3D%22%23007D98%22%20stroke-width%3D%224%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-marker-pin-01: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22marker-pin-01%22%3E%0A%3Cpath%20id%3D%22Icon%22%20d%3D%22M15%2010C15%2011.6569%2013.6569%2013%2012%2013C10.3431%2013%209%2011.6569%209%2010C9%208.34315%2010.3431%207%2012%207C13.6569%207%2015%208.34315%2015%2010ZM20%2010C20%2014.4183%2016%2018%2012%2022C8%2018%204%2014.4183%204%2010C4%205.58172%207.58172%202%2012%202C16.4183%202%2020%205.58172%2020%2010Z%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke%3D%22black%22%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-navigation-pointer-01: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22navigation-pointer-01%22%3E%0A%3Cpath%20id%3D%22Icon%22%20d%3D%22M8.85592%2011.5235L11.046%2017.1552C11.2389%2017.6513%2011.3354%2017.8994%2011.4744%2017.9718C11.5949%2018.0346%2011.7385%2018.0347%2011.859%2017.972C11.9981%2017.8998%2012.0949%2017.6518%2012.2884%2017.1559L17.7803%203.08281C17.955%202.63516%2018.0424%202.41133%2017.9946%202.26831C17.9531%202.1441%2017.8556%202.04663%2017.7314%202.00514C17.5884%201.95736%2017.3646%202.0447%2016.9169%202.21939L2.84381%207.71134C2.34792%207.90486%202.09997%208.00163%202.02771%208.14071C1.96507%208.26129%201.96516%208.40483%202.02794%208.52533C2.10036%208.66433%202.34842%208.7608%202.84454%208.95373L8.47621%2011.1438C8.57692%2011.183%208.62727%2011.2026%208.66968%2011.2328C8.70726%2011.2596%208.74012%2011.2925%208.76693%2011.3301C8.79717%2011.3725%208.81675%2011.4228%208.85592%2011.5235Z%22%20stroke-width%3D%221.66667%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke%3D%22%23008DA9%22%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-search-lg: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22search-lg%22%3E%0A%3Cpath%20id%3D%22Icon%22%20d%3D%22M21%2021L17.5001%2017.5M20%2011.5C20%2016.1944%2016.1944%2020%2011.5%2020C6.80558%2020%203%2016.1944%203%2011.5C3%206.80558%206.80558%203%2011.5%203C16.1944%203%2020%206.80558%2020%2011.5Z%22%20stroke%3D%22%23404040%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-search-md: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22search-md%22%3E%0A%3Cpath%20id%3D%22Icon%22%20d%3D%22M17.5%2017.5L13.875%2013.875M15.8333%209.16667C15.8333%2012.8486%2012.8486%2015.8333%209.16667%2015.8333C5.48477%2015.8333%202.5%2012.8486%202.5%209.16667C2.5%205.48477%205.48477%202.5%209.16667%202.5C12.8486%202.5%2015.8333%205.48477%2015.8333%209.16667Z%22%20stroke-width%3D%221.66667%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke%3D%22%23A3A3A3%22%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  --plac-icon-x-close: url("data:image/svg+xml,%3Csvg%20preserveAspectRatio%3D%22none%22%20overflow%3D%22visible%22%20style%3D%22display%3A%20block%3B%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Cg%20id%3D%22x-close%22%3E%0A%3Cpath%20id%3D%22Icon%22%20d%3D%22M18%206L12%2012M12%2012L6%2018M12%2012L6%206M12%2012L18%2018%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke%3D%22black%22%2F%3E%0A%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+}
+
+/*
+ * Component primitives, transcribed from the Pepkor Lifestyle Figma library.
+ *
+ * Only the variants the library's screens and the harness use are here, in
+ * the md size. Each block names the Figma node it was read from, so a value
+ * can be checked against the source without a lookup. Every colour, spacing,
+ * radius, type and effect value is a --plac- token; there are no literals.
+ *
+ * Classes are prefixed .plac- and apply inside .plac-root or the custom
+ * element, so a host page's own .button or .card rules cannot collide.
+ */
+
+/* -----------------------------------------------------------------------
+ * Card
+ * Address Validation S1, "Content column" 32:707 and "Address option" 32:711
+ * -------------------------------------------------------------------- */
+.plac-card {
+  background: var(--plac-color-bg-primary);
+  border: var(--plac-border-width) solid var(--plac-color-border-secondary);
+  border-radius: var(--plac-radius-xl);
+  padding: var(--plac-spacing-4xl);
+}
+
+.plac-card--compact {
+  padding: var(--plac-spacing-xl);
+}
+
+/* -----------------------------------------------------------------------
+ * Page header
+ * Library "Page header", Style=Simple, Desktop 1239:122641, as used at 32:708
+ * -------------------------------------------------------------------- */
+.plac-page-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-xl);
+  margin: 0 0 var(--plac-spacing-4xl);
+}
+
+.plac-page-header__title {
+  display: flex;
+  gap: var(--plac-spacing-md);
+  align-items: center;
+  margin: 0;
+  color: var(--plac-color-text-primary);
+  font-size: var(--plac-font-size-text-xl);
+  font-weight: var(--plac-font-weight-semibold);
+  line-height: var(--plac-line-height-text-xl);
+}
+
+.plac-page-header__text {
+  margin: var(--plac-spacing-xxs) 0 0;
+  color: var(--plac-color-text-tertiary);
+  font-size: var(--plac-font-size-text-md);
+  font-weight: var(--plac-font-weight-regular);
+  line-height: var(--plac-line-height-text-md);
+}
+
+.plac-divider {
+  height: var(--plac-border-width);
+  margin: 0;
+  border: 0;
+  background: var(--plac-color-border-secondary);
+}
+
+/* -----------------------------------------------------------------------
+ * Section title
+ * S1 "Or add a new address" 117:579: text-md semibold above a top rule
+ * -------------------------------------------------------------------- */
+.plac-section-title {
+  margin: 0;
+  padding-top: var(--plac-spacing-2xl);
+  border-top: var(--plac-border-width) solid var(--plac-color-border-secondary);
+  color: var(--plac-color-text-primary);
+  font-size: var(--plac-font-size-text-md);
+  font-weight: var(--plac-font-weight-semibold);
+  line-height: var(--plac-line-height-text-md);
+}
+
+/* -----------------------------------------------------------------------
+ * Field: label, control, hint
+ * Library "Input field" Size=md 3531:402962 (Focused 3531:403052,
+ * Destructive 3531:402980), "Textarea" 1238:362, "Select" 7953:158002
+ * -------------------------------------------------------------------- */
+.plac-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-sm);
+}
+
+.plac-label {
+  display: flex;
+  gap: var(--plac-spacing-xxs);
+  color: var(--plac-color-text-secondary);
+  font-size: var(--plac-font-size-text-sm);
+  font-weight: var(--plac-font-weight-medium);
+  line-height: var(--plac-line-height-text-sm);
+}
+
+.plac-label__required {
+  color: var(--plac-color-text-brand-tertiary);
+}
+
+.plac-hint {
+  margin: 0;
+  color: var(--plac-color-text-tertiary);
+  font-size: var(--plac-font-size-text-sm);
+  font-weight: var(--plac-font-weight-regular);
+  line-height: var(--plac-line-height-text-sm);
+}
+
+.plac-input,
+.plac-textarea,
+.plac-select {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  background: var(--plac-color-bg-primary);
+  border: var(--plac-border-width) solid var(--plac-color-border-primary);
+  border-radius: var(--plac-radius-md);
+  box-shadow: var(--plac-shadow-xs);
+  color: var(--plac-color-text-primary);
+  font-family: inherit;
+  font-size: var(--plac-font-size-text-md);
+  font-weight: var(--plac-font-weight-regular);
+  line-height: var(--plac-line-height-text-md);
+}
+
+/* 8px vertical padding in Figma sits inside the 1px border, so the control
+ * lands on exactly 40px tall. */
+.plac-input,
+.plac-select {
+  min-height: var(--plac-control-height-md);
+  padding: calc(var(--plac-spacing-md) - var(--plac-border-width)) var(--plac-spacing-lg);
+}
+
+.plac-textarea {
+  min-height: calc(var(--plac-control-height-md) * 3);
+  padding: calc(var(--plac-spacing-lg) - var(--plac-border-width)) 14px;
+  resize: vertical;
+}
+
+.plac-input::placeholder,
+.plac-textarea::placeholder {
+  color: var(--plac-color-text-placeholder);
+  opacity: 1;
+}
+
+.plac-select {
+  appearance: none;
+  padding-right: calc(var(--plac-spacing-lg) + 16px + var(--plac-spacing-md));
+  background-image: var(--plac-icon-chevron-down);
+  background-repeat: no-repeat;
+  background-position: right var(--plac-spacing-lg) center;
+  background-size: 16px 16px;
+  cursor: pointer;
+}
+
+/* Focused: a 2px brand border. Drawn as a ring so the box does not grow. */
+.plac-input:focus-visible,
+.plac-textarea:focus-visible,
+.plac-select:focus-visible {
+  outline: none;
+  border-color: var(--plac-color-border-brand);
+  box-shadow:
+    0 0 0 var(--plac-border-width) var(--plac-color-border-brand),
+    var(--plac-shadow-xs);
+}
+
+/* Destructive: subtle red border, alert icon, red hint and asterisk. */
+.plac-field[data-invalid] .plac-input,
+.plac-field[data-invalid] .plac-textarea,
+.plac-field[data-invalid] .plac-select {
+  border-color: var(--plac-color-border-error_subtle);
+}
+
+.plac-field[data-invalid] .plac-input {
+  padding-right: calc(var(--plac-spacing-lg) + 16px + var(--plac-spacing-md));
+  background-image: var(--plac-icon-alert-circle);
+  background-repeat: no-repeat;
+  background-position: right var(--plac-spacing-lg) center;
+  background-size: 16px 16px;
+}
+
+/* Destructive + Focused (3531:403070): the 2px ring turns red, not brand. */
+.plac-field[data-invalid] .plac-input:focus-visible,
+.plac-field[data-invalid] .plac-textarea:focus-visible,
+.plac-field[data-invalid] .plac-select:focus-visible {
+  border-color: var(--plac-color-border-error);
+  box-shadow:
+    0 0 0 var(--plac-border-width) var(--plac-color-border-error),
+    var(--plac-shadow-xs);
+}
+
+.plac-field[data-invalid] .plac-hint,
+.plac-field[data-invalid] .plac-label__required {
+  color: var(--plac-color-text-error-primary);
+}
+
+.plac-input:disabled,
+.plac-textarea:disabled,
+.plac-select:disabled {
+  background: var(--plac-color-bg-secondary);
+  color: var(--plac-color-text-placeholder);
+  cursor: not-allowed;
+}
+
+/* -----------------------------------------------------------------------
+ * Checkbox
+ * Library "Checkbox" Size=md, Text=True, 1100:328 (unchecked), 1100:357 (checked)
+ * -------------------------------------------------------------------- */
+.plac-choice {
+  display: flex;
+  gap: var(--plac-spacing-lg);
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.plac-choice__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-xxs);
+  color: var(--plac-color-text-secondary);
+  font-size: var(--plac-font-size-text-md);
+  font-weight: var(--plac-font-weight-medium);
+  line-height: var(--plac-line-height-text-md);
+}
+
+.plac-choice__hint {
+  color: var(--plac-color-text-tertiary);
+  font-weight: var(--plac-font-weight-regular);
+}
+
+.plac-checkbox {
+  appearance: none;
+  flex: none;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  margin: var(--plac-spacing-xxs) 0 0;
+  background: var(--plac-color-bg-primary);
+  border: var(--plac-border-width) solid var(--plac-color-border-primary);
+  border-radius: var(--plac-spacing-sm);
+  cursor: pointer;
+}
+
+.plac-checkbox:checked {
+  background: var(--plac-color-bg-brand-solid) var(--plac-icon-check) center / 70% no-repeat;
+  border-color: var(--plac-color-bg-brand-solid);
+}
+
+/* -----------------------------------------------------------------------
+ * Toggle
+ * Library "Toggle" Type=Default, Size=md, Text=True, 1102:4391 / 1102:4406
+ * -------------------------------------------------------------------- */
+.plac-toggle {
+  appearance: none;
+  flex: none;
+  box-sizing: border-box;
+  width: 44px;
+  height: 24px;
+  margin: 0;
+  padding: var(--plac-spacing-xxs);
+  background: var(--plac-color-bg-tertiary);
+  border: 0.5px solid var(--plac-color-border-secondary);
+  border-radius: var(--plac-radius-full);
+  cursor: pointer;
+  transition: background-color var(--plac-duration-fast) var(--plac-easing-standard);
+}
+
+.plac-toggle::before {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin-top: -0.5px;
+  margin-left: -0.5px;
+  background: var(--plac-color-fg-white);
+  border-radius: var(--plac-radius-full);
+  box-shadow: var(--plac-shadow-sm);
+  transition: transform var(--plac-duration-fast) var(--plac-easing-standard);
+}
+
+.plac-toggle:checked {
+  background: var(--plac-color-bg-brand-solid);
+  border-color: var(--plac-color-bg-brand-solid);
+}
+
+.plac-toggle:checked::before {
+  transform: translateX(20px);
+}
+
+/* -----------------------------------------------------------------------
+ * Button
+ * Library "Buttons/Button" Size=md: Primary 3287:427299, Secondary 3287:427323,
+ * Link color 3287:427307. Hover colours from tokens.json.
+ *
+ * Figma paints an inside stroke ON TOP of the inner shadows. CSS paints
+ * inset shadows inside the border instead, so a real border plus the
+ * skeuomorphic shadow showed both: a second dark ring and a 2px bottom band.
+ * The stroke is therefore drawn above the shadows: as the first (topmost)
+ * inset shadow on Secondary, and as a gradient ring in ::before on Primary.
+ * Checked pixel for pixel against the Library renders.
+ * -------------------------------------------------------------------- */
+.plac-button {
+  display: inline-flex;
+  gap: var(--plac-spacing-xs);
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  position: relative;
+  min-height: var(--plac-control-height-md);
+  margin: 0;
+  /* The stroke is drawn over the padding (see above), so Figma's 10px by
+   * 14px padding lands on exactly 40px tall with no border to subtract. */
+  padding: 10px 14px;
+  border: 0;
+  border-radius: var(--plac-radius-md);
+  font-family: inherit;
+  font-size: var(--plac-font-size-text-sm);
+  font-weight: var(--plac-font-weight-semibold);
+  line-height: var(--plac-line-height-text-sm);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--plac-duration-fast) var(--plac-easing-standard);
+}
+
+.plac-button--primary {
+  background: var(--plac-color-bg-brand-solid);
+  box-shadow: var(--plac-shadow-skeuomorphic), var(--plac-shadow-xs);
+  color: var(--plac-color-text-white);
+}
+
+/* The 2px gradient stroke, as a ring above the inner shadows. */
+.plac-button--primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: var(--plac-border-width-strong);
+  border-radius: inherit;
+  background: var(--plac-border-on-brand-gradient);
+  mask:
+    var(--plac-mask-solid) content-box exclude,
+    var(--plac-mask-solid);
+  pointer-events: none;
+}
+
+.plac-button--primary:hover {
+  background: var(--plac-color-bg-brand-solid_hover);
+}
+
+.plac-button--secondary {
+  background: var(--plac-color-bg-primary);
+  /* Stroke first, so it paints above the skeuomorphic ring it hides. */
+  box-shadow:
+    inset 0 0 0 var(--plac-border-width) var(--plac-color-border-primary),
+    var(--plac-shadow-skeuomorphic),
+    var(--plac-shadow-xs);
+  color: var(--plac-color-text-secondary);
+}
+
+.plac-button--secondary:hover {
+  background: var(--plac-color-bg-primary_hover);
+}
+
+.plac-button--link {
+  min-height: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--plac-color-text-brand-secondary);
+}
+
+.plac-button--link:hover {
+  color: var(--plac-color-text-brand-secondary_hover);
+}
+
+.plac-button:disabled {
+  opacity: var(--plac-opacity-disabled);
+  cursor: not-allowed;
+}
+
+.plac-button__icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+/* -----------------------------------------------------------------------
+ * Button utility
+ * Library "Buttons/Button utility" Size=sm, Hierarchy=Secondary:
+ * Default 8003:526541, Hover 8003:526545, Focused 8003:526543.
+ * An icon-only 32px square: 6px padding round a 20px icon, radius-sm, the
+ * same stroke and shadows as Secondary, icon in fg-quaternary. The focus
+ * ring (4px brand spread over a 2px white gap) is the root focus-visible
+ * rule. The accessible name comes from aria-label; there is no text. The
+ * Figma hover tooltip is not built; the title attribute stands in.
+ * -------------------------------------------------------------------- */
+.plac-button--utility {
+  min-height: var(--plac-control-height-sm);
+  padding: var(--plac-spacing-sm);
+  border-radius: var(--plac-radius-sm);
+  background: var(--plac-color-bg-primary);
+  box-shadow:
+    inset 0 0 0 var(--plac-border-width) var(--plac-color-border-primary),
+    var(--plac-shadow-skeuomorphic),
+    var(--plac-shadow-xs);
+  color: var(--plac-color-fg-quaternary);
+}
+
+.plac-button--utility:hover {
+  background: var(--plac-color-bg-primary_hover);
+  color: var(--plac-color-fg-quaternary_hover);
+}
+
+/* Library icons are exported with a black stroke and must not be edited, so
+ * an icon that has to take the button's text colour is drawn as a mask over
+ * currentColor rather than as a background image. */
+.plac-button__icon--copy,
+.plac-button__icon--check,
+.plac-button__icon--alert {
+  background: currentColor;
+  mask: var(--plac-icon-copy-05) center / 20px 20px no-repeat;
+}
+
+.plac-button__icon--check {
+  mask-image: var(--plac-icon-check);
+}
+
+.plac-button__icon--alert {
+  mask-image: var(--plac-icon-alert-circle);
+}
+
+/* A copy button reports its result through the icon: a check for copied, an
+ * alert for failed or empty. The hidden status line carries the words. */
+.plac-button[data-copy-state="copied"] .plac-button__icon--copy {
+  mask-image: var(--plac-icon-check);
+}
+
+.plac-button[data-copy-state="failed"] .plac-button__icon--copy,
+.plac-button[data-copy-state="empty"] .plac-button__icon--copy {
+  mask-image: var(--plac-icon-alert-circle);
+}
+
+/* -----------------------------------------------------------------------
+ * Badge
+ * Library "Badge" Size=sm, Type=Pill color, Color=Brand 1046:3818
+ * -------------------------------------------------------------------- */
+.plac-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--plac-spacing-xxs) var(--plac-spacing-md);
+  background: var(--plac-color-bg-brand-primary);
+  border: var(--plac-border-width) solid var(--plac-color-brand-200);
+  border-radius: var(--plac-radius-full);
+  color: var(--plac-color-text-brand-secondary);
+  font-size: var(--plac-font-size-text-xs);
+  font-weight: var(--plac-font-weight-medium);
+  line-height: var(--plac-line-height-text-xs);
+  white-space: nowrap;
+}
+
+.plac-badge--success {
+  background: var(--plac-color-bg-success-primary);
+  border-color: var(--plac-color-bg-success-secondary);
+  color: var(--plac-color-text-success-primary);
+}
+
+.plac-badge--error {
+  background: var(--plac-color-bg-error-primary);
+  border-color: var(--plac-color-bg-error-secondary);
+  color: var(--plac-color-text-error-primary);
+}
+
+/* -----------------------------------------------------------------------
+ * Button size lg (S3 Verify, 32:781): text-md, 10px by 16px padding, 44px.
+ * -------------------------------------------------------------------- */
+.plac-button--lg {
+  min-height: 0;
+  padding: 10px var(--plac-spacing-xl);
+  font-size: var(--plac-font-size-text-md);
+  line-height: var(--plac-line-height-text-md);
+}
+
+/* -----------------------------------------------------------------------
+ * Button size sm (Empty state actions, 3293:434814): 8px by 12px padding,
+ * 36px tall. Only the padding differs from md.
+ * -------------------------------------------------------------------- */
+.plac-button--sm {
+  min-height: 0;
+  padding: var(--plac-spacing-md) var(--plac-spacing-lg);
+}
+
+/* -----------------------------------------------------------------------
+ * Buttons/Button close X (Modal header 4055:413592, Alert 1130:82881):
+ * 36px square, 8px padding, radius-md, a 20px x-close in fg-quaternary.
+ * -------------------------------------------------------------------- */
+.plac-button--close {
+  min-height: 0;
+  width: 36px;
+  height: 36px;
+  padding: var(--plac-spacing-md);
+  border-radius: var(--plac-radius-md);
+  background: transparent;
+  color: var(--plac-color-fg-quaternary);
+}
+
+.plac-button--close:hover {
+  background: var(--plac-color-bg-primary_hover);
+  color: var(--plac-color-fg-quaternary_hover);
+}
+
+/* -----------------------------------------------------------------------
+ * Modal (Library "Modal", Type=Stacked left aligned 4057:415359; header
+ * 4055:413619; actions 4057:414363)
+ * Overlay bg-overlay at 70% with backdrop-blur-md. Panel bg-primary,
+ * radius-2xl, shadow-xl. Header 24px in from the top and sides, title
+ * text-md semibold. Close X 16px from the top right. Actions 32px below the
+ * content, 24px padding, 12px gap. The panel width is the content's: the
+ * capture screens use the DESIGN section 2 column, max 960.
+ * -------------------------------------------------------------------- */
+.plac-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--plac-z-overlay);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: auto;
+  padding: var(--plac-spacing-4xl);
+}
+
+.plac-modal__overlay {
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(var(--plac-backdrop-blur-md));
+}
+
+.plac-modal__overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--plac-color-bg-overlay);
+  opacity: 0.7;
+}
+
+.plac-modal__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 960px;
+  margin: auto 0;
+  background: var(--plac-color-bg-primary);
+  border-radius: var(--plac-radius-2xl);
+  box-shadow: var(--plac-shadow-xl);
+}
+
+.plac-modal__panel:focus {
+  outline: none;
+}
+
+.plac-modal__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-xxs);
+  /* Room on the right for the close button. */
+  padding: var(--plac-spacing-3xl) calc(var(--plac-spacing-xl) + 36px + var(--plac-spacing-md)) 0
+    var(--plac-spacing-3xl);
+}
+
+.plac-modal__title {
+  margin: 0;
+  color: var(--plac-color-text-primary);
+  font-size: var(--plac-font-size-text-md);
+  font-weight: var(--plac-font-weight-semibold);
+  line-height: var(--plac-line-height-text-md);
+}
+
+.plac-modal__supporting {
+  margin: 0;
+  color: var(--plac-color-text-tertiary);
+  font-size: var(--plac-font-size-text-md);
+  font-weight: var(--plac-font-weight-regular);
+  line-height: var(--plac-line-height-text-md);
+}
+
+.plac-modal__close {
+  position: absolute;
+  top: var(--plac-spacing-xl);
+  right: var(--plac-spacing-xl);
+}
+
+.plac-modal__body {
+  padding: var(--plac-spacing-3xl) var(--plac-spacing-3xl) 0;
+}
+
+.plac-modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--plac-spacing-lg);
+  justify-content: flex-end;
+  margin-top: var(--plac-spacing-4xl);
+  padding: var(--plac-spacing-3xl);
+  border-top: var(--plac-border-width) solid var(--plac-color-border-secondary);
+}
+
+@media (max-width: 767px) {
+  .plac-modal {
+    padding: var(--plac-spacing-xl);
+  }
+
+  .plac-modal__header,
+  .plac-modal__body {
+    padding-left: var(--plac-spacing-xl);
+  }
+
+  .plac-modal__body {
+    padding-right: var(--plac-spacing-xl);
+  }
+
+  .plac-modal__actions {
+    padding: var(--plac-spacing-xl);
+  }
+
+  /* Mobile modal actions fill the width (4057:414647). */
+  .plac-modal__actions > .plac-button {
+    flex: 1;
+  }
+}
+
+/* Inline: the same layout as a bordered card in the host's container. */
+.plac-modal--inline {
+  position: static;
+  display: block;
+  padding: 0;
+  overflow: visible;
+}
+
+.plac-modal--inline .plac-modal__panel {
+  max-width: none;
+  border: var(--plac-border-width) solid var(--plac-color-border-secondary);
+  border-radius: var(--plac-radius-xl);
+  box-shadow: none;
+}
+
+.plac-modal--inline .plac-modal__header {
+  padding-right: var(--plac-spacing-3xl);
+}
+
+/* -----------------------------------------------------------------------
+ * Alert (Library "Alert", Color=Error, Size=Floating 1130:82871)
+ * bg-primary_alt, border-primary, shadow-xs, radius-xl, 16px padding and
+ * gap. A 20px alert-circle in fg-error-primary with two outline rings.
+ * Title text-sm semibold text-secondary; supporting text-sm tertiary;
+ * actions are link buttons 12px apart.
+ * -------------------------------------------------------------------- */
+.plac-alert {
+  display: flex;
+  gap: var(--plac-spacing-xl);
+  align-items: flex-start;
+  padding: var(--plac-spacing-xl);
+  background: var(--plac-color-bg-primary_alt);
+  border: var(--plac-border-width) solid var(--plac-color-border-primary);
+  border-radius: var(--plac-radius-xl);
+  box-shadow: var(--plac-shadow-xs);
+}
+
+.plac-alert__icon {
+  position: relative;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--plac-color-fg-error-primary);
+}
+
+.plac-alert__icon::before,
+.plac-alert__icon::after {
+  content: "";
+  position: absolute;
+  border: 2px solid currentColor;
+  border-radius: var(--plac-radius-full);
+}
+
+.plac-alert__icon::before {
+  inset: -20%;
+  opacity: 0.3;
+}
+
+.plac-alert__icon::after {
+  inset: -45%;
+  opacity: 0.1;
+}
+
+.plac-alert__glyph {
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  mask: var(--plac-icon-alert-circle) center / 20px 20px no-repeat;
+}
+
+/* Warning (1130:82860) and Success (1130:82910): fg-warning-primary and
+ * fg-success-primary, with the variants' thinner rings (1.667px at 16.67% and
+ * 37.5%); Success uses check-circle. */
+.plac-alert[data-tone="warning"] .plac-alert__icon {
+  color: var(--plac-color-fg-warning-primary);
+}
+
+.plac-alert[data-tone="success"] .plac-alert__icon {
+  color: var(--plac-color-fg-success-primary);
+}
+
+.plac-alert[data-tone="warning"] .plac-alert__icon::before,
+.plac-alert[data-tone="warning"] .plac-alert__icon::after,
+.plac-alert[data-tone="success"] .plac-alert__icon::before,
+.plac-alert[data-tone="success"] .plac-alert__icon::after {
+  border-width: 1.667px;
+}
+
+.plac-alert[data-tone="warning"] .plac-alert__icon::before,
+.plac-alert[data-tone="success"] .plac-alert__icon::before {
+  inset: -16.67%;
+}
+
+.plac-alert[data-tone="warning"] .plac-alert__icon::after,
+.plac-alert[data-tone="success"] .plac-alert__icon::after {
+  inset: -37.5%;
+}
+
+.plac-alert[data-tone="success"] .plac-alert__glyph {
+  mask-image: var(--plac-icon-check-circle);
+}
+
+.plac-alert__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-xs);
+  margin: 0;
+  padding-left: var(--plac-spacing-xl);
+}
+
+.plac-alert__content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--plac-spacing-lg);
+  min-width: 0;
+}
+
+.plac-alert__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-xs);
+  font-size: var(--plac-font-size-text-sm);
+  line-height: var(--plac-line-height-text-sm);
+}
+
+.plac-alert__title {
+  color: var(--plac-color-text-secondary);
+  font-weight: var(--plac-font-weight-semibold);
+}
+
+.plac-alert__supporting {
+  color: var(--plac-color-text-tertiary);
+}
+
+.plac-alert__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--plac-spacing-lg);
+}
+
+/* -----------------------------------------------------------------------
+ * Empty state (Library "Empty state", Icon=Featured icon, Size=sm 1182:178)
+ * Centred. A 48px featured icon (border-primary, radius-lg, skeuomorphic
+ * shadow) with a 24px search-lg, 16px above the text; title text-md
+ * semibold, supporting text-sm tertiary, max 352px; actions 24px below.
+ * -------------------------------------------------------------------- */
+.plac-empty {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-3xl);
+  align-items: center;
+  text-align: center;
+}
+
+.plac-empty__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-xl);
+  align-items: center;
+}
+
+.plac-empty__icon {
+  width: 48px;
+  height: 48px;
+  background: var(--plac-color-bg-primary) var(--plac-icon-search-lg) center / 24px 24px no-repeat;
+  border-radius: var(--plac-radius-lg);
+  box-shadow:
+    inset 0 0 0 var(--plac-border-width) var(--plac-color-border-primary),
+    var(--plac-shadow-skeuomorphic),
+    var(--plac-shadow-xs);
+}
+
+.plac-empty__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-xs);
+  max-width: 352px;
+}
+
+.plac-empty__title {
+  margin: 0;
+  color: var(--plac-color-text-primary);
+  font-size: var(--plac-font-size-text-md);
+  font-weight: var(--plac-font-weight-semibold);
+  line-height: var(--plac-line-height-text-md);
+}
+
+.plac-empty__supporting {
+  margin: 0;
+  color: var(--plac-color-text-tertiary);
+  font-size: var(--plac-font-size-text-sm);
+  line-height: var(--plac-line-height-text-sm);
+}
+
+.plac-empty__actions {
+  display: flex;
+  gap: var(--plac-spacing-lg);
+}
+
+/* -----------------------------------------------------------------------
+ * Loading indicator (Library "Loading indicator", Style=Line spinner
+ * 1198:99438): the Loading circle, exported verbatim, turning. Shown at
+ * 20px inside an input, as DESIGN section 4 asks for a spinner in the field.
+ * -------------------------------------------------------------------- */
+.plac-spinner {
+  display: inline-block;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  background: var(--plac-icon-loading-circle) center / contain no-repeat;
+  animation: plac-spinner 1s linear infinite;
+}
+
+@keyframes plac-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Style=Line simple, Size=md (frame 202:1386): 48px, the Loading circle
+ * from that frame verbatim, its text 16px under it in text-sm medium. */
+.plac-spinner--simple-md {
+  width: 48px;
+  height: 48px;
+  background-image: var(--plac-icon-loading-circle-simple);
+}
+
+.plac-loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-xl);
+  align-items: center;
+}
+
+.plac-loading__text {
+  color: var(--plac-color-text-secondary);
+  font-size: var(--plac-font-size-text-sm);
+  font-weight: var(--plac-font-weight-medium);
+  line-height: var(--plac-line-height-text-sm);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plac-spinner {
+    animation-duration: 3s;
+  }
+}
+
+/* -----------------------------------------------------------------------
+ * Dropdown menu (Library "Dropdown menu", Type=Search simple, Open=True
+ * 11553:545522; list item 11546:537618 and Hover/active 11546:537613)
+ * Menu: bg-primary, border-secondary_alt, radius-md, shadow-lg, 4px top and
+ * bottom. Item: 6px side inset; content 8px by 10px/6px, radius-sm, 8px
+ * icon gap, text-sm semibold text-secondary, one line with an ellipsis.
+ * Hover and the keyboard-active item: bg-primary_hover, text-secondary_hover.
+ * -------------------------------------------------------------------- */
+.plac-menu {
+  margin: 0;
+  padding: var(--plac-spacing-xs) 0;
+  list-style: none;
+  background: var(--plac-color-bg-primary);
+  border: var(--plac-border-width) solid var(--plac-border-secondary-alpha);
+  border-radius: var(--plac-radius-md);
+  box-shadow: var(--plac-shadow-lg);
+}
+
+.plac-menu__item {
+  padding: 1px var(--plac-spacing-sm);
+  cursor: pointer;
+}
+
+.plac-menu__content {
+  display: flex;
+  gap: var(--plac-spacing-md);
+  align-items: center;
+  padding: var(--plac-spacing-md) var(--plac-spacing-sm) var(--plac-spacing-md) 10px;
+  border-radius: var(--plac-radius-sm);
+  color: var(--plac-color-text-secondary);
+  font-size: var(--plac-font-size-text-sm);
+  font-weight: var(--plac-font-weight-semibold);
+  line-height: var(--plac-line-height-text-sm);
+}
+
+.plac-menu__item:hover .plac-menu__content,
+.plac-menu__item[aria-selected="true"] .plac-menu__content {
+  background: var(--plac-color-bg-primary_hover);
+  color: var(--plac-color-text-secondary_hover);
+}
+
+.plac-menu__icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background: var(--plac-color-fg-quaternary);
+  mask: var(--plac-icon-marker-pin-01) center / 16px 16px no-repeat;
+}
+
+.plac-menu__text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * Screen-level styles: the capture layout, S2 address search, the address
+ * type blocks and the map panel. The Library primitives they use (Modal,
+ * Alert, Empty state, Loading indicator, Dropdown menu) are in
+ * components.css. Every value is a --plac- token. Node references name the
+ * Figma source.
+ */
+
+/* S2 (x8yEkhhpaYng8rK80lyJfU 113:432): 32px between the blocks. */
+.plac-capture {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-4xl);
+}
+
+/* -----------------------------------------------------------------------
+ * Icons as masks over currentColor (Library exports carry a black stroke
+ * and are never edited). 20px, the size the Input field and Button use.
+ * -------------------------------------------------------------------- */
+.plac-icon {
+  display: inline-block;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  mask: center / 20px 20px no-repeat;
+}
+
+.plac-icon--search-md {
+  mask-image: var(--plac-icon-search-md);
+}
+
+.plac-icon--navigation-pointer-01 {
+  mask-image: var(--plac-icon-navigation-pointer-01);
+}
+
+.plac-icon--x-close {
+  mask-image: var(--plac-icon-x-close);
+}
+
+/* -----------------------------------------------------------------------
+ * S2 address search (113:433)
+ * Input field with a leading search-md icon; gap 8 between icon and text,
+ * padding 12. The suggestions are the Library Dropdown menu.
+ * -------------------------------------------------------------------- */
+.plac-search {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-lg);
+}
+
+.plac-search__field {
+  position: relative;
+}
+
+.plac-search__input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.plac-search__leading {
+  position: absolute;
+  top: 50%;
+  left: var(--plac-spacing-lg);
+  transform: translateY(-50%);
+  color: var(--plac-color-fg-quaternary);
+  pointer-events: none;
+}
+
+/* The spinner turns on its own transform, so it is centred with margins. */
+.plac-search__spinner {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: var(--plac-spacing-lg);
+  margin: auto 0;
+  pointer-events: none;
+}
+
+.plac-search__input {
+  padding-left: calc(var(--plac-spacing-lg) + 20px + var(--plac-spacing-md));
+  padding-right: calc(var(--plac-spacing-lg) + 36px);
+  text-overflow: ellipsis;
+}
+
+.plac-search__clear {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: var(--plac-spacing-xxs);
+  margin: auto 0;
+}
+
+.plac-search[data-state="loading"] .plac-search__clear {
+  display: none;
+}
+
+/* The menu opens 8px below the field (the Library menu sits 8px below its
+ * 36px trigger) and spans it. */
+.plac-search__list {
+  position: absolute;
+  z-index: var(--plac-z-dropdown);
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 20rem;
+  overflow: auto;
+  margin-top: var(--plac-spacing-md);
+}
+
+/* The part of a suggestion that matched the query keeps the item's
+ * semibold; the rest is regular, in tertiary (DESIGN section 4). */
+.plac-search__rest {
+  color: var(--plac-color-text-tertiary);
+  font-weight: var(--plac-font-weight-regular);
+}
+
+.plac-search__location {
+  align-self: flex-start;
+}
+
+.plac-search__field > .plac-empty,
+.plac-search__field > .plac-alert {
+  margin-top: var(--plac-spacing-xl);
+}
+
+.plac-search__field > .plac-empty {
+  padding: var(--plac-spacing-xl) 0;
+}
+
+/* -----------------------------------------------------------------------
+ * Address type blocks (113:436 "Address type")
+ * Heading text-sm medium text-primary, 12px above the options. Options
+ * 104px tall, 12px apart, 16px by 12px padding, radius 8, 24px icon 8px
+ * above a text-sm medium label. Unselected: 1px border-secondary.
+ * Selected: bg-brand-primary with a 2px border-brand. Five in a row; two by
+ * two below 768 (DESIGN section 4).
+ * -------------------------------------------------------------------- */
+.plac-types {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-lg);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.plac-types__legend {
+  padding: 0;
+  margin-bottom: var(--plac-spacing-lg);
+  color: var(--plac-color-text-primary);
+  font-size: var(--plac-font-size-text-sm);
+  font-weight: var(--plac-font-weight-medium);
+  line-height: var(--plac-line-height-text-sm);
+}
+
+.plac-types__options {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: var(--plac-spacing-lg);
+}
+
+@media (max-width: 767px) {
+  .plac-types__options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: row;
+  }
+}
+
+.plac-type {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-md);
+  align-items: center;
+  justify-content: center;
+  min-height: 104px;
+  padding: var(--plac-spacing-xl) var(--plac-spacing-lg);
+  border-radius: var(--plac-radius-md);
+  box-shadow: inset 0 0 0 var(--plac-border-width) var(--plac-color-border-secondary);
+  color: var(--plac-color-text-primary);
+  font-size: var(--plac-font-size-text-sm);
+  font-weight: var(--plac-font-weight-medium);
+  line-height: var(--plac-line-height-text-sm);
+  text-align: center;
+  cursor: pointer;
+}
+
+.plac-type:has(input:checked) {
+  background: var(--plac-color-bg-brand-primary);
+  box-shadow: inset 0 0 0 var(--plac-border-width-strong) var(--plac-color-border-brand);
+}
+
+/* The radio is the real control, kept for keyboard and screen readers. */
+.plac-type__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.plac-type:has(.plac-type__input:focus-visible) {
+  outline: var(--plac-focus-ring-width) solid var(--plac-color-focus-ring);
+  outline-offset: var(--plac-focus-ring-offset);
+}
+
+.plac-type__icon {
+  width: 24px;
+  height: 24px;
+  background: currentColor;
+  mask: center / 24px 24px no-repeat;
+}
+
+.plac-type__icon--home-line {
+  mask-image: var(--plac-icon-home-line);
+}
+
+.plac-type__icon--marker-pin-01 {
+  mask-image: var(--plac-icon-marker-pin-01);
+}
+
+.plac-type__icon--building-05 {
+  mask-image: var(--plac-icon-building-05);
+}
+
+.plac-type__icon--building-06 {
+  mask-image: var(--plac-icon-building-06);
+}
+
+.plac-type__icon--building-07 {
+  mask-image: var(--plac-icon-building-07);
+}
+
+/* -----------------------------------------------------------------------
+ * Map panel (32:756, hint 32:757)
+ * bg-secondary, border-secondary, radius 8; 300px tall in the 708px column
+ * (about 2.4:1). On narrow screens 16:9 (DESIGN section 6).
+ * -------------------------------------------------------------------- */
+.plac-map {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-xl);
+}
+
+.plac-map__canvas {
+  position: relative;
+  height: 300px;
+  overflow: hidden;
+  background: var(--plac-color-bg-secondary);
+  border: var(--plac-border-width) solid var(--plac-color-border-secondary);
+  border-radius: var(--plac-radius-md);
+}
+
+@media (max-width: 767px) {
+  .plac-map__canvas {
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+}
+
+/* Failed: our message replaces whatever Google drew, including its own
+ * "can't load Google Maps correctly" dialog after a key rejection. Google
+ * sets inline styles, so only !important can hide them. */
+.plac-map[data-state="failed"] .plac-map__canvas > * {
+  visibility: hidden !important;
+}
+
+.plac-map__overlay {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-md);
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  padding: var(--plac-spacing-xl);
+  color: var(--plac-color-text-tertiary);
+  font-size: var(--plac-font-size-text-sm);
+  line-height: var(--plac-line-height-text-sm);
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .plac-map__overlay {
+    height: auto;
+    bottom: calc(var(--plac-line-height-text-sm) * 2 + var(--plac-spacing-xl));
+  }
+}
+
+.plac-map[data-state="loading"] .plac-map__canvas {
+  background: linear-gradient(
+    90deg,
+    var(--plac-color-bg-secondary) 25%,
+    var(--plac-color-bg-tertiary) 50%,
+    var(--plac-color-bg-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: plac-skeleton 1.4s ease-in-out infinite;
+}
+
+@keyframes plac-skeleton {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plac-map[data-state="loading"] .plac-map__canvas {
+    animation: none;
+  }
+}
+
+.plac-map__hint {
+  margin: 0;
+}
+
+/* -----------------------------------------------------------------------
+ * S3 address form (32:755)
+ * Heading text-md semibold (32:758), intro tertiary (32:759), fields 16px
+ * apart (32:760); a short 200px field shares a row with its neighbour,
+ * 16px gap (32:762, 32:767). The frame's 13px hint and intro are drawn at
+ * text-sm (14px): 13px is not a token.
+ * -------------------------------------------------------------------- */
+.plac-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-xl);
+}
+
+.plac-form__heading {
+  margin: 0;
+  color: var(--plac-color-text-primary);
+  font-size: var(--plac-font-size-text-md);
+  font-weight: var(--plac-font-weight-semibold);
+  line-height: var(--plac-line-height-text-md);
+}
+
+.plac-form__intro {
+  margin: 0;
+  color: var(--plac-color-text-tertiary);
+  font-size: var(--plac-font-size-text-sm);
+  line-height: var(--plac-line-height-text-sm);
+}
+
+.plac-form__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-xl);
+}
+
+.plac-form__row {
+  display: grid;
+  gap: var(--plac-spacing-xl);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+/* The short column keeps its 200px; the other takes the rest. */
+.plac-form__row:has(> [data-width="short"]:first-child) {
+  grid-template-columns: 200px minmax(0, 1fr);
+}
+
+.plac-form__row:has(> [data-width="short"]:last-child) {
+  grid-template-columns: minmax(0, 1fr) 200px;
+}
+
+@media (max-width: 767px) {
+  .plac-form__row,
+  .plac-form__row:has(> [data-width="short"]:first-child),
+  .plac-form__row:has(> [data-width="short"]:last-child) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.plac-form__field .plac-textarea {
+  min-height: 150px;
+}
+
+/* The "· needs you" marker on a label the search left empty: the brand
+ * colour, like the required asterisk (decided 14 Oct, in the frame). */
+.plac-label__needs-you {
+  color: var(--plac-color-text-brand-tertiary);
+}
+
+/* Weekend delivery (32:773): a rule above, 16px, then the toggle up to 344px.
+ * The day checkboxes are hidden until the day choice ships. */
+.plac-weekend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-lg);
+  padding-top: var(--plac-spacing-xl);
+  border-top: var(--plac-border-width) solid var(--plac-color-border-secondary);
+}
+
+.plac-weekend > .plac-choice {
+  max-width: 344px;
+}
+
+/* Verify row (32:779): a rule above, 20px, text left, the button right. */
+.plac-verify {
+  display: flex;
+  gap: var(--plac-spacing-xl);
+  align-items: center;
+  padding-top: var(--plac-spacing-2xl);
+  border-top: var(--plac-border-width) solid var(--plac-color-border-secondary);
+}
+
+.plac-verify__text {
+  flex: 1;
+  margin: 0;
+  color: var(--plac-color-text-tertiary);
+  font-size: var(--plac-font-size-text-sm);
+  line-height: var(--plac-line-height-text-sm);
+}
+
+@media (max-width: 767px) {
+  .plac-verify {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* -----------------------------------------------------------------------
+ * S1 saved addresses (186:2006): "Address option" cards (9:4943) on the
+ * Library Radio group item, a "Last used" Badge on the newest row, then the
+ * "Or add a new address" heading above the search. S1b (186:2734): the
+ * Error Alert where the list would be.
+ * -------------------------------------------------------------------- */
+.plac-saved {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-lg);
+}
+
+/* S1 loading (202:1386, PROPOSED 20 Oct): the indicator where the list goes. */
+.plac-saved__loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px 0;
+}
+
+.plac-saved__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plac-spacing-lg);
+}
+
+.plac-saved__option {
+  overflow: hidden;
+  background: var(--plac-color-bg-primary);
+  border: var(--plac-border-width) solid var(--plac-color-border-secondary);
+  border-radius: var(--plac-radius-xl);
+}
+
+.plac-saved__badge-row {
+  padding: var(--plac-spacing-xl) 0 0 var(--plac-spacing-xl);
+}
+
+.plac-saved__row {
+  display: flex;
+  gap: var(--plac-spacing-lg);
+  align-items: flex-start;
+  padding: var(--plac-spacing-xl);
+  cursor: pointer;
+}
+
+/* Library "Radio" Size=md: 20px ring; checked is brand with a white dot. */
+.plac-radio {
+  appearance: none;
+  flex: none;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  margin: var(--plac-spacing-xxs) 0 0;
+  background: var(--plac-color-bg-primary);
+  border: var(--plac-border-width) solid var(--plac-color-border-primary);
+  border-radius: var(--plac-radius-full);
+  cursor: pointer;
+}
+
+.plac-radio:checked {
+  background: radial-gradient(circle, var(--plac-color-bg-primary) 0 3px, transparent 3.5px)
+    var(--plac-color-bg-brand-solid);
+  border-color: var(--plac-color-bg-brand-solid);
+}
+
+.plac-radio:focus-visible {
+  outline: 2px solid var(--plac-color-border-brand);
+  outline-offset: 2px;
+}
+
+.plac-saved__text {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--plac-spacing-xxs);
+  min-width: 0;
+}
+
+.plac-saved__label {
+  color: var(--plac-color-text-secondary);
+  font-size: var(--plac-font-size-text-md);
+  font-weight: var(--plac-font-weight-medium);
+  line-height: var(--plac-line-height-text-md);
+}
+
+.plac-saved__lines {
+  display: flex;
+  flex-direction: column;
+  color: var(--plac-color-text-tertiary);
+  font-size: var(--plac-font-size-text-md);
+  line-height: var(--plac-line-height-text-md);
+}
+
+/* The frame has 16px between the two address lines. */
+.plac-saved__line + .plac-saved__line {
+  margin-top: var(--plac-spacing-xl);
+}
+
+.plac-saved__new-heading {
+  margin: 0;
+  padding-top: 20px;
+  border-top: var(--plac-border-width) solid var(--plac-color-border-secondary);
+  color: var(--plac-color-text-primary);
+  font-size: var(--plac-font-size-text-md);
+  font-weight: var(--plac-font-weight-semibold);
+  line-height: normal;
+}
+
+/* -----------------------------------------------------------------------
+ * Widget root
+ * Both selectors are listed so the same stylesheet works whether the widget
+ * is mounted as the <pl-address-capture> custom element or programmatically
+ * into a host-supplied element.
+ * -------------------------------------------------------------------- */
+pl-address-capture,
+.plac-root {
+  display: block;
+  box-sizing: border-box;
+  color: var(--plac-color-text-primary);
+  font-family: var(--plac-font-family);
+  font-size: var(--plac-font-size-base);
+  font-weight: var(--plac-font-weight-regular);
+  line-height: var(--plac-line-height-text-md);
+  text-align: start;
+}
+
+pl-address-capture *,
+pl-address-capture *::before,
+pl-address-capture *::after,
+.plac-root *,
+.plac-root *::before,
+.plac-root *::after {
+  box-sizing: inherit;
+}
+
+/* The hidden attribute wins over any display the primitives set, so a
+ * hidden alert, list or spinner never shows as an empty box. */
+pl-address-capture [hidden],
+.plac-root [hidden] {
+  display: none;
+}
+
+/* Visible focus indicator, applied once at the root so every control inherits
+ * it. WCAG 2.2 SC 2.4.11 Focus Not Obscured and SC 1.4.11 Non-text Contrast. */
+/* Form controls are excluded: input, textarea and select draw the Library's
+ * own focused state (a 2px brand or error border) in components.css, and this
+ * outline would stack a second ring outside it. */
+pl-address-capture :focus-visible:not(.plac-input, .plac-textarea, .plac-select),
+.plac-root :focus-visible:not(.plac-input, .plac-textarea, .plac-select) {
+  outline: var(--plac-focus-ring-width) solid var(--plac-color-focus-ring);
+  outline-offset: var(--plac-focus-ring-offset);
+}
+
+/* -----------------------------------------------------------------------
+ * Reduced motion
+ * -------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  :where(:root, :host) {
+    --plac-duration-fast: 1ms;
+    --plac-duration-base: 1ms;
+  }
+}

@@ -82,86 +82,288 @@ sap.ui.define([
     },
 
     /**
-     * Address validation plugin helper dialog
+     * Map internal application address object to the external plugin's address contract
      */
-    openAddressValidationDialog: function (sAddressType, fnCallback) {
-      var oView = this.getView();
-      var that = this;
-
-      if (!this._pAddressDialog) {
-        this._pAddressDialog = Fragment.load({
-          id: oView.getId(),
-          name: "sap.ui.salesorder.store.view.fragments.AddressValidationDialog",
-          controller: this
-        }).then(function (oDialog) {
-          oView.addDependent(oDialog);
-          return oDialog;
-        });
+    _mapToPluginAddress: function (oAddr, sAddressType) {
+      if (!oAddr) {
+        return null;
       }
-
-      this._fnAddressCallback = fnCallback;
-      this._sCurrentAddressType = sAddressType || "Default (Billing)";
-
-      this._pAddressDialog.then(function (oDialog) {
-        var oAppState = that.getModel("appState");
-        var oCustomer = oAppState.getProperty("/customer");
-        oAppState.setProperty("/addressDialogContext", {
-          bpNumber: oCustomer.bpNumber || "1000234571",
-          addressType: that._sCurrentAddressType,
-          searchQuery: ""
-        });
-        oDialog.open();
-      });
-    },
-
-    onSelectAddressItem: function (oEvent) {
-      var oItem = oEvent.getParameter("listItem");
-      if (oItem && oItem.getBindingContext("addresses")) {
-        var sPath = oItem.getBindingContext("addresses").getPath();
-        this.getModel("appState").setProperty("/selectedAddressPath", sPath);
-      }
-    },
-
-    onConfirmAddressDialog: function (oEvent) {
-      var oAppState = this.getModel("appState");
-      var sSelectedPath = oAppState.getProperty("/selectedAddressPath");
-      var oAddressesModel = this.getModel("addresses");
-      var oSelectedAddress = null;
-
-      var oList = this.byId("suggestedAddressList");
-      if (oList && oList.getSelectedItem && oList.getSelectedItem()) {
-        var oCtx = oList.getSelectedItem().getBindingContext("addresses");
-        if (oCtx) {
-          oSelectedAddress = oCtx.getObject();
+      var sStreetNumber = oAddr.streetNumber || "";
+      var sStreetName = oAddr.streetName || "";
+      if (!sStreetNumber && oAddr.street) {
+        var match = (oAddr.street + "").match(/^(\d+[\w-]*)\s+(.*)$/);
+        if (match) {
+          sStreetNumber = match[1];
+          sStreetName = match[2];
+        } else {
+          sStreetName = oAddr.street;
         }
       }
 
-      if (!oSelectedAddress && sSelectedPath && oAddressesModel) {
-        oSelectedAddress = oAddressesModel.getProperty(sSelectedPath);
+      return {
+        addressType: sAddressType,
+        dwellingType: oAddr.dwellingType || "HOUSE",
+        addressLabel: oAddr.addressLabel || "",
+        businessName: oAddr.businessName || "",
+        suiteFloor: oAddr.suiteFloor || "",
+        unitNumber: oAddr.unitNumber || "",
+        building: oAddr.building || "",
+        complexName: oAddr.complexName || "",
+        streetNumber: sStreetNumber || "",
+        streetName: sStreetName || "",
+        suburb: oAddr.suburb || oAddr.city || "",
+        city: oAddr.city || "",
+        province: oAddr.province || oAddr.region || "WC",
+        postalCode: oAddr.postalCode || "",
+        country: oAddr.country || "ZA",
+        latitude: oAddr.latitude || "-33.9253",
+        longitude: oAddr.longitude || "18.4239",
+        alternativeNumber: oAddr.alternativeNumber || ""
+      };
+    },
+
+    /**
+     * Map external plugin response to internal address state format
+     */
+    _mapFromPluginResponse: function (response) {
+      if (!response) {
+        return null;
+      }
+      var oAddr = response.address || {};
+      var aFormattedParts = [];
+      if (oAddr.businessName) {
+        aFormattedParts.push(oAddr.businessName);
+      }
+      var sUnitComplex = [oAddr.unitNumber, oAddr.complexName || oAddr.building].filter(Boolean).join(" ");
+      if (sUnitComplex) {
+        aFormattedParts.push(sUnitComplex);
+      }
+      if (oAddr.suiteFloor) {
+        aFormattedParts.push("Floor " + oAddr.suiteFloor);
+      }
+      var sStreet = [oAddr.streetNumber, oAddr.streetName].filter(Boolean).join(" ");
+      if (sStreet) {
+        aFormattedParts.push(sStreet);
+      }
+      if (oAddr.suburb) {
+        aFormattedParts.push(oAddr.suburb);
+      }
+      var sCityProvZip = [oAddr.city, oAddr.province, oAddr.postalCode].filter(Boolean).join(", ");
+      if (sCityProvZip) {
+        aFormattedParts.push(sCityProvZip);
+      }
+      var sFormatted = aFormattedParts.join(", ") || (sStreet + ", " + (oAddr.city || "") + " " + (oAddr.postalCode || ""));
+
+      var sIndicator = response.indicator || "EXISTING";
+      var sState = "Success";
+      if (sIndicator === "NEW") {
+        sState = "Information";
+      } else if (sIndicator === "MODIFIED") {
+        sState = "Warning";
       }
 
-      if (!oSelectedAddress && oAddressesModel) {
-        var aList = oAddressesModel.getData() || [];
-        oSelectedAddress = aList[0];
+      return {
+        street: sStreet,
+        streetNumber: oAddr.streetNumber || "",
+        streetName: oAddr.streetName || "",
+        businessName: oAddr.businessName || "",
+        unitNumber: oAddr.unitNumber || "",
+        building: oAddr.building || "",
+        complexName: oAddr.complexName || "",
+        suiteFloor: oAddr.suiteFloor || "",
+        suburb: oAddr.suburb || "",
+        city: oAddr.city || "",
+        region: oAddr.province || "",
+        province: oAddr.province || "",
+        postalCode: oAddr.postalCode || "",
+        country: oAddr.country || "ZA",
+        dwellingType: oAddr.dwellingType || "HOUSE",
+        latitude: oAddr.latitude || "",
+        longitude: oAddr.longitude || "",
+        formatted: sFormatted,
+        status: sIndicator,
+        statusText: sIndicator,
+        statusState: sState,
+        deliveryPartner: response.deliveryPartner || null,
+        order: response.order || null,
+        score: response.score || null,
+        scoreString: response.score ? response.score.scoreString : "",
+        capturedAt: response.capturedAt || "",
+        rawCaptureResponse: response
+      };
+    },
+
+    /**
+     * Address validation plugin helper dialog
+     * Integrates external @pepkor-lifestyle/address-capture modal plugin
+     */
+    openAddressValidationDialog: function (sAddressType, fnCallback, oCustomParams) {
+      var that = this;
+      var oAppState = this.getModel("appState");
+      var oCustomer = (oAppState && oAppState.getProperty("/customer")) || {};
+
+      // 1. Determine addressType ("DEFAULT" or "DELIVERY")
+      var sNormType = "DELIVERY";
+      var sLowerType = (sAddressType || "").toLowerCase();
+      if (sLowerType.indexOf("billing") !== -1 || sLowerType.indexOf("default") !== -1) {
+        sNormType = "DEFAULT";
       }
 
-      if (this._pAddressDialog) {
-        this._pAddressDialog.then(function (oDialog) {
-          oDialog.close();
+      // 2. Determine partner
+      var sPartner = oCustomer.bpNumber || null;
+      if (oCustomParams && oCustomParams.partner !== undefined) {
+        sPartner = oCustomParams.partner;
+      }
+
+      // 3. Determine deliveryPartner
+      var sDeliveryPartner = null;
+      if (sNormType === "DELIVERY") {
+        sDeliveryPartner = (oAppState && oAppState.getProperty("/delivery/deliveryPartner")) || null;
+      }
+      if (oCustomParams && oCustomParams.deliveryPartner !== undefined) {
+        sDeliveryPartner = oCustomParams.deliveryPartner;
+      }
+
+      // 4. Determine address passed in
+      var oPassAddress = null;
+      if (oCustomParams && oCustomParams.address !== undefined) {
+        oPassAddress = oCustomParams.address;
+      } else if (sNormType === "DEFAULT") {
+        var oCustAddr = oCustomer.address;
+        if (oCustAddr && (oCustAddr.street || oCustAddr.formatted)) {
+          oPassAddress = oCustAddr;
+        }
+      } else {
+        // Delivery
+        var oDelAddr = oAppState && (oAppState.getProperty("/delivery/differentAddress") || oAppState.getProperty("/delivery/deliveryAddress"));
+        if (oDelAddr && (oDelAddr.street || oDelAddr.formatted)) {
+          oPassAddress = oDelAddr;
+        }
+      }
+
+      var oFormattedAddressPayload = oPassAddress ? this._mapToPluginAddress(oPassAddress, sNormType) : null;
+
+      var oRequest = {
+        partner: sPartner,
+        deliveryPartner: sDeliveryPartner,
+        addressType: sNormType,
+        address: oFormattedAddressPayload,
+        display: "modal"
+      };
+
+      var oConfig = {
+        google: {
+          apiKey: "DEMO_MAPS_KEY",
+          mapId: "79af1c2c1b7539a01cf87bb2",
+          countries: ["ZA"]
+        },
+        afrigis: {
+          baseUrl: "https://afrigis.services"
+        },
+        endpoints: {
+          customerAddresses: "https://api.amperity.pepkor.co.za/addresses"
+        },
+        auth: {
+          afrigis: {
+            getToken: function () {
+              return Promise.resolve({
+                token: "mock-afrigis-token",
+                expiresAt: Date.now() + 3600000,
+                apiKey: "mock-afrigis-api-key"
+              });
+            }
+          }
+        },
+        features: {
+          weekendDelivery: true
+        },
+        request: oRequest
+      };
+
+      var fnMount = function () {
+        if (!window.PLAddressCapture || typeof window.PLAddressCapture.mount !== "function") {
+          console.error("PLAddressCapture library is not loaded on window.");
+          MessageToast.show("Address Capture plugin failed to load");
+          return;
+        }
+
+        // 1. Somewhere to mount. For a modal, an empty element on the page is enough;
+        //    the library draws its own overlay.
+        var host = document.createElement("div");
+        host.className = "plac-container-host";
+        document.body.appendChild(host);
+
+        var instance = null;
+
+        var fnCleanup = function () {
+          if (instance && typeof instance.destroy === "function") {
+            try {
+              instance.destroy();
+            } catch (err) {
+              console.warn("Error destroying PLAddressCapture instance", err);
+            }
+          }
+          if (host && host.parentNode) {
+            host.parentNode.removeChild(host);
+          }
+        };
+
+        // 2. Listen before mounting
+        host.addEventListener("ac:submit", function (e) {
+          var response = e.detail;
+          fnCleanup();
+          var oMapped = that._mapFromPluginResponse(response);
+          if (typeof fnCallback === "function") {
+            fnCallback(oMapped, response);
+          }
         });
-      }
 
-      if (typeof this._fnAddressCallback === "function") {
-        this._fnAddressCallback(oSelectedAddress);
+        host.addEventListener("ac:cancel", function () {
+          fnCleanup();
+          MessageToast.show("Address capture cancelled. Existing address kept.");
+        });
+
+        host.addEventListener("ac:error", function (e) {
+          console.warn("PLAddressCapture error:", e.detail);
+          fnCleanup();
+          MessageToast.show("Address capture error: " + (e.detail && e.detail.message ? e.detail.message : "Validation error"));
+        });
+
+        // 3. Mount with config and the request
+        try {
+          instance = window.PLAddressCapture.mount(host, oConfig);
+        } catch (mErr) {
+          console.error("Failed to mount PLAddressCapture:", mErr);
+          fnCleanup();
+          MessageToast.show("Address capture initialization failed");
+        }
+      };
+
+      if (!window.PLAddressCapture) {
+        var sFallbackUrl = "./utils/address-capture.mock.iife.js";
+        var script = document.createElement("script");
+        script.src = sFallbackUrl;
+        script.onload = fnMount;
+        script.onerror = function () {
+          console.error("Failed to dynamically load address capture mock script");
+          MessageToast.show("Could not load address capture plugin script");
+        };
+        document.head.appendChild(script);
+      } else {
+        fnMount();
       }
     },
 
+    onSelectAddressItem: function (oEvent) {
+      // Legacy stub
+    },
+
+    onConfirmAddressDialog: function (oEvent) {
+      // Legacy stub
+    },
+
     onCancelAddressDialog: function () {
-      if (this._pAddressDialog) {
-        this._pAddressDialog.then(function (oDialog) {
-          oDialog.close();
-        });
-      }
+      // Legacy stub
     },
 
     /**

@@ -18,9 +18,15 @@ export default defineConfig(() => {
           server.middlewares.use((req, res, next) => {
             const url = req.url || '';
             if (url.includes('.properties')) {
-              res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-            } else if (url.includes('/webapp/css/style.css') && !url.includes('?import')) {
-              const filePath = path.resolve(__dirname, 'webapp/css/style.css');
+              const cleanUrl = url.split('?')[0].replace(/^\//, '');
+              const filePath = path.resolve(__dirname, cleanUrl);
+              if (fs.existsSync(filePath)) {
+                res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+                return res.end(fs.readFileSync(filePath, 'utf-8'));
+              }
+            } else if (url.includes('.css') && !url.includes('?import')) {
+              const cleanUrl = url.split('?')[0].replace(/^\//, '');
+              const filePath = path.resolve(__dirname, cleanUrl);
               if (fs.existsSync(filePath)) {
                 res.setHeader('Content-Type', 'text/css; charset=utf-8');
                 return res.end(fs.readFileSync(filePath, 'utf-8'));

@@ -724,6 +724,23 @@
       font-weight: 400 !important;
       margin-left: 0.25rem !important;
     }
+    /* External Address Capture Plugin modal overlay layering */
+    .plac-container-host {
+      position: relative;
+      z-index: 99999 !important;
+    }
+    .plac-mock[data-display="modal"] {
+      z-index: 99999 !important;
+      font-family: var(--plac-font-family-body, system-ui, sans-serif);
+    }
+    .plac-mock__backdrop {
+      z-index: 99998 !important;
+    }
+    .plac-mock__dialog {
+      z-index: 99999 !important;
+      margin-top: 2rem !important;
+      margin-bottom: 2rem !important;
+    }
   </style>
   <script
     id="sap-ui-bootstrap"
@@ -736,7 +753,7 @@
     data-sap-ui-compatVersion="edge"
     data-sap-ui-async="true">
   </script>
-  <link rel="stylesheet" type="text/css" href="./webapp/css/style.css">
+  <link rel="stylesheet" type="text/css" href="./css/style.css">
 </head>
 <body class="sapUiBody sapUiSizeCompact" id="content">
   <script>
