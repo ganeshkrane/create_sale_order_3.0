@@ -201,6 +201,9 @@ sap.ui.define([
       var that = this;
       var oAppState = this.getModel("appState");
       var oCustomer = (oAppState && oAppState.getProperty("/customer")) || {};
+      var oWizardModel = this.getView() && this.getView().getModel("wizardModel");
+      var bIsNewCustomer = (oWizardModel && oWizardModel.getProperty("/isCreatingNewCustomer")) ||
+                           (oCustomParams && oCustomParams.isNewCustomer);
 
       // 1. Determine addressType ("DEFAULT" or "DELIVERY")
       var sNormType = "DELIVERY";
@@ -210,23 +213,33 @@ sap.ui.define([
       }
 
       // 2. Determine partner
-      var sPartner = oCustomer.bpNumber || null;
-      if (oCustomParams && oCustomParams.partner !== undefined) {
+      // As per Fiori Integration Guide Scenario 1a: for new customer, partner is null
+      var sPartner = null;
+      if (bIsNewCustomer) {
+        sPartner = null;
+      } else if (oCustomParams && oCustomParams.partner !== undefined) {
         sPartner = oCustomParams.partner;
+      } else {
+        sPartner = oCustomer.bpNumber || null;
       }
 
       // 3. Determine deliveryPartner
+      // As per Fiori Integration Guide Scenario 1a & 1b: deliveryPartner is null
       var sDeliveryPartner = null;
-      if (sNormType === "DELIVERY") {
-        sDeliveryPartner = (oAppState && oAppState.getProperty("/delivery/deliveryPartner")) || null;
-      }
-      if (oCustomParams && oCustomParams.deliveryPartner !== undefined) {
+      if (bIsNewCustomer || sNormType === "DEFAULT") {
+        sDeliveryPartner = null;
+      } else if (oCustomParams && oCustomParams.deliveryPartner !== undefined) {
         sDeliveryPartner = oCustomParams.deliveryPartner;
+      } else if (sNormType === "DELIVERY") {
+        sDeliveryPartner = (oAppState && oAppState.getProperty("/delivery/deliveryPartner")) || null;
       }
 
       // 4. Determine address passed in
+      // As per Fiori Integration Guide Scenario 1a: for new customer, address is null
       var oPassAddress = null;
-      if (oCustomParams && oCustomParams.address !== undefined) {
+      if (bIsNewCustomer) {
+        oPassAddress = null;
+      } else if (oCustomParams && oCustomParams.address !== undefined) {
         oPassAddress = oCustomParams.address;
       } else if (sNormType === "DEFAULT") {
         var oCustAddr = oCustomer.address;
@@ -340,7 +353,7 @@ sap.ui.define([
       };
 
       if (!window.PLAddressCapture) {
-        var sFallbackUrl = "./utils/address-capture.mock.iife.js";
+        var sFallbackUrl = "./webapp/lib/address-capture.mock.iife.js";
         var script = document.createElement("script");
         script.src = sFallbackUrl;
         script.onload = fnMount;

@@ -75,7 +75,7 @@
           id="stepCustomer"
           title="{i18n>step1Customer}"
           icon="sap-icon://customer"
-          validated="{wizardModel>/customerSelected}">
+          validated="{= ${wizardModel>/customerSelected} &amp;&amp; ${wizardModel>/addressValidated} }">
           <VBox class="sapUiSmallMargin">
             <!-- Customer Search Panel  -->
             <!-- Customer Search Panel -->
@@ -210,6 +210,74 @@
                 </VBox>
               </content>
             </Panel>
+
+            <!-- Address Validation Section for Existing Customer -->
+            <VBox
+              id="existingCustomerAddressSection"
+              visible="{= ${wizardModel>/customerSelected} &amp;&amp; !${wizardModel>/isCreatingNewCustomer} }"
+              class="sapUiSmallMarginTopBottom">
+              <!-- Before Address Validation / Selection -->
+              <VBox visible="{= !${wizardModel>/addressValidated} }">
+                <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                  <core:Icon src="sap-icon://map" color="#0070f2" class="sapUiTinyMarginEnd" />
+                  <Label text="Customer Address:" required="true" class="basicDetailsLabel boldText" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" alignItems="Center" class="addressDisplayBox">
+                  <Text
+                    text="Please validate or select customer address to proceed with customer creation."
+                    class="customerSearchFieldLabel" />
+                  <Button
+                    id="btnExistingCustomerValidateAddress"
+                    text="{i18n>validateSelectAddressBtn}"
+                    icon="sap-icon://map-2"
+                    type="Emphasized"
+                    press=".onOpenAddressPluginModal"
+                    class="sapUiSmallMarginBegin" />
+                </HBox>
+              </VBox>
+
+              <!-- After Address Validation / Selection: Display validated address details and Next button -->
+              <VBox visible="{wizardModel>/addressValidated}">
+                <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                  <core:Icon src="sap-icon://addresses" color="#0070f2" class="sapUiTinyMarginEnd" />
+                  <Label text="Validated Customer Address:" class="basicDetailsLabel boldText" />
+                </HBox>
+                <HBox justifyContent="SpaceBetween" alignItems="Center" class="addressDisplayBox">
+                  <VBox>
+                    <Text text="{appState>/customer/address/formatted}" class="addressDisplayFormatted" />
+                    <HBox alignItems="Center" class="sapUiTinyMarginTop" wrap="Wrap">
+                      <ObjectStatus
+                        text="{appState>/customer/address/status}"
+                        state="{appState>/customer/address/statusState}"
+                        class="statusChip sapUiSmallMarginEnd" />
+                      <Text text="{= 'Type: ' + (${appState>/customer/address/type} || 'Default / Billing')}" class="addressDisplayMeta sapUiSmallMarginEnd" />
+                      <Text
+                        text="{= ${appState>/customer/address/dwellingType} ? ' · Dwelling: ' + ${appState>/customer/address/dwellingType} : ''}"
+                        class="addressDisplayMeta sapUiSmallMarginEnd" />
+                      <Text
+                        text="{= ${appState>/customer/address/latitude} ? ' · Coords: ' + ${appState>/customer/address/latitude} + ', ' + ${appState>/customer/address/longitude} : ''}"
+                        class="addressDisplayMeta" />
+                    </HBox>
+                  </VBox>
+                  <Button
+                    text="Change Address"
+                    icon="sap-icon://edit"
+                    type="Transparent"
+                    press=".onOpenAddressPluginModal" />
+                </HBox>
+
+                <!-- Action Button to proceed to Step 2 -->
+                <HBox justifyContent="End" alignItems="Center" class="sapUiMediumMarginTop">
+                  <Button
+                    id="btnProceedToStep2"
+                    text="Proceed to Step 2: Marketing Consent"
+                    icon="sap-icon://navigation-right-arrow"
+                    type="Emphasized"
+                    press=".onProceedToStep2"
+                    class="sapUiSmallMarginBottom" />
+                </HBox>
+              </VBox>
+            </VBox>
 
             <!-- Basic Details Form (Matching Screenshots 1 & 2) - only displayed when creating new customer -->
             <Panel

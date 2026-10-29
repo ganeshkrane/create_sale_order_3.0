@@ -132,13 +132,15 @@ sap.ui.define([
       var sName = (oCriteria.customerName || "").trim();
       var sMobile = (oCriteria.mobile || "").trim();
       var sEmail = (oCriteria.email || "").trim();
+      var sCustNum = (oCriteria.customerNumber || "").trim();
+      var sIdNum = (oCriteria.idNumber || "").trim();
 
       // No validation required: if no criteria provided, display all customer records
-      this.getModel("appState").setProperty("/searchFilterValue", sName);
-      this._openSearchResultsDialog(sName, sMobile, sEmail);
+      this.getModel("appState").setProperty("/searchFilterValue", sName || sCustNum);
+      this._openSearchResultsDialog(sName, sMobile, sEmail, sCustNum, sIdNum);
     },
 
-    _openSearchResultsDialog: function (sName, sMobile, sEmail) {
+    _openSearchResultsDialog: function (sName, sMobile, sEmail, sCustNum, sIdNum) {
       var oView = this.getView();
       var that = this;
 
@@ -150,39 +152,63 @@ sap.ui.define([
         }).then(function (oDialog) {
           oView.addDependent(oDialog);
           return oDialog;
+        }).catch(function (err) {
+          that._pResultsDialog = null;
+          console.error("Error loading CustomerSearchResultsDialog fragment:", err);
+          MessageToast.show("Failed to load customer search dialog");
+          throw err;
         });
       }
 
       this._pResultsDialog.then(function (oDialog) {
-        var oTable = Fragment.byId(oView.getId(), "customerResultsTable");
-        var oBinding = oTable.getBinding("items");
-        var aFilters = [];
+        var oTable = oView.byId("customerResultsTable") ||
+                     Fragment.byId(oView.getId(), "customerResultsTable") ||
+                     (oDialog.getContent && oDialog.getContent()[0]);
 
-        if (sName) {
-          aFilters.push(new Filter("name", FilterOperator.Contains, sName));
-        }
-        if (sMobile) {
-          aFilters.push(new Filter("telephone", FilterOperator.Contains, sMobile));
-        }
-        if (sEmail) {
-          aFilters.push(new Filter("email", FilterOperator.Contains, sEmail));
+        if (oTable) {
+          var oBinding = oTable.getBinding("items");
+          var aFilters = [];
+
+          if (sName) {
+            aFilters.push(new Filter("name", FilterOperator.Contains, sName));
+          }
+          if (sCustNum) {
+            aFilters.push(new Filter("bpNumber", FilterOperator.Contains, sCustNum));
+          }
+          if (sIdNum) {
+            aFilters.push(new Filter("idPassport", FilterOperator.Contains, sIdNum));
+          }
+          if (sMobile) {
+            aFilters.push(new Filter("telephone", FilterOperator.Contains, sMobile));
+          }
+          if (sEmail) {
+            aFilters.push(new Filter("email", FilterOperator.Contains, sEmail));
+          }
+
+          if (oBinding) {
+            if (aFilters.length > 0) {
+              oBinding.filter(new Filter({ filters: aFilters, and: false }));
+            } else {
+              oBinding.filter([]);
+            }
+          }
+
+          var aItems = oTable.getItems ? oTable.getItems() : [];
+          if (aItems.length > 0) {
+            var oFirst = aItems[0];
+            if (oTable.setSelectedItem) {
+              oTable.setSelectedItem(oFirst);
+            }
+            that._selectedCustomerContext = oFirst.getBindingContext("customers");
+          } else {
+            that._selectedCustomerContext = null;
+          }
         }
 
-        if (aFilters.length > 0) {
-          oBinding.filter(new Filter({ filters: aFilters, and: false }));
-        } else {
-          // If no search criteria provided, display all data
-          oBinding.filter([]);
-        }
-
-        var aItems = oTable.getItems();
-        if (aItems.length > 0) {
-          oTable.setSelectedItem(aItems[0]);
-          that._selectedCustomerContext = aItems[0].getBindingContext("customers");
-        } else {
-          that._selectedCustomerContext = null;
-        }
         oDialog.open();
+      }).catch(function (err) {
+        that._pResultsDialog = null;
+        console.error("Failed to open customer search results dialog:", err);
       });
     },
 
@@ -193,8 +219,16 @@ sap.ui.define([
 
     onLiveSearchDialog: function (oEvent) {
       var sValue = oEvent.getParameter("value");
-      var oTable = Fragment.byId(this.getView().getId(), "customerResultsTable");
+      var oView = this.getView();
+      var oTable = oView.byId("customerResultsTable") ||
+                   Fragment.byId(oView.getId(), "customerResultsTable");
+      if (!oTable) {
+        return;
+      }
       var oBinding = oTable.getBinding("items");
+      if (!oBinding) {
+        return;
+      }
 
       if (sValue) {
         var aFilters = [
@@ -210,11 +244,14 @@ sap.ui.define([
     },
 
     onConfirmCustomerSelection: function () {
-      if (!this._selectedCustomerContext) {
-        var oTable = Fragment.byId(this.getView().getId(), "customerResultsTable");
+      var oView = this.getView();
+      var oTable = oView.byId("customerResultsTable") ||
+                   Fragment.byId(oView.getId(), "customerResultsTable");
+      if (!this._selectedCustomerContext && oTable && oTable.getItems) {
         var aItems = oTable.getItems();
         if (aItems.length > 0) {
-          this._selectedCustomerContext = aItems[0].getBindingContext("customers");
+          var oSelected = (oTable.getSelectedItem && oTable.getSelectedItem()) || aItems[0];
+          this._selectedCustomerContext = oSelected.getBindingContext("customers");
         }
       }
 
@@ -234,16 +271,16 @@ sap.ui.define([
       oWizardModel.setProperty("/isCreatingNewCustomer", false);
       oWizardModel.setProperty("/isNewlyCreatedCustomer", false);
       oWizardModel.setProperty("/customerSelected", true);
-      oWizardModel.setProperty("/addressValidated", true);
+      oWizardModel.setProperty("/addressValidated", false); // Address must be validated/selected first!
       oWizardModel.setProperty("/searchPanelExpanded", false);
 
       var oStepCustomer = this.byId("stepCustomer");
       if (oStepCustomer) {
-        oStepCustomer.setValidated(true);
+        oStepCustomer.setValidated(false); // Step 1 is not validated until address is validated
       }
       var oWizard = this.byId("salesOrderWizard");
       if (oWizard && oStepCustomer) {
-        oWizard.validateStep(oStepCustomer);
+        oWizard.goToStep(oStepCustomer);
       }
     },
 
@@ -585,15 +622,41 @@ sap.ui.define([
     // STEP 2: ADDRESS VALIDATION
     // ========================================================
     onOpenAddressPluginModal: function () {
-      // 1. Validate basic details of individual or company first based on radio button selection
-      var bValid = this._validateBasicDetailsForm(false);
-      if (!bValid) {
-        return; // Validation failed: errors highlighted, popup NOT opened
+      var oWizardModel = this.getView().getModel("wizardModel");
+      var bIsNewCustomer = oWizardModel && oWizardModel.getProperty("/isCreatingNewCustomer");
+
+      // 1. Validate basic details of individual or company first ONLY when creating new customer
+      if (bIsNewCustomer) {
+        var bValid = this._validateBasicDetailsForm(false);
+        if (!bValid) {
+          return; // Validation failed: errors highlighted, popup NOT opened
+        }
       }
 
-      // 2. If all ok, open the address plugin popup!
+      // 2. Open the address plugin popup!
       var that = this;
       var oAppState = this.getModel("appState");
+
+      // Per Fiori Integration Guide:
+      // Scenario 1a (New Customer): partner: null, deliveryPartner: null, addressType: "DEFAULT", address: null
+      // Scenario 1b (Existing Customer): partner: bpNumber, deliveryPartner: null, addressType: "DEFAULT", address: customerAddress
+      var oParams = null;
+      if (bIsNewCustomer) {
+        oParams = {
+          isNewCustomer: true,
+          partner: null,
+          deliveryPartner: null,
+          address: null
+        };
+      } else {
+        var oCust = (oAppState && oAppState.getProperty("/customer")) || {};
+        oParams = {
+          isNewCustomer: false,
+          partner: oCust.bpNumber || null,
+          deliveryPartner: null,
+          address: (oCust.address && (oCust.address.street || oCust.address.formatted)) ? oCust.address : null
+        };
+      }
 
       this.openAddressValidationDialog("Default (Billing)", function (oSelectedAddress, response) {
         if (oSelectedAddress) {
@@ -629,11 +692,37 @@ sap.ui.define([
             phone: oAppState.getProperty("/customer/telephone") || ""
           });
           oAppState.setProperty("/addressCaptureResponse", response);
+
+          // Mark address validated in wizard model
           that.getView().getModel("wizardModel").setProperty("/addressValidated", true);
           that._updatePendingActionText();
+
+          // Validate Step 1 so Step 2 (Marketing Consent) becomes visible and unlocked
+          var oStepCustomer = that.byId("stepCustomer");
+          if (oStepCustomer) {
+            oStepCustomer.setValidated(true);
+          }
+          var oWizard = that.byId("salesOrderWizard");
+          if (oWizard && oStepCustomer) {
+            oWizard.validateStep(oStepCustomer);
+          }
+
           MessageToast.show("Address captured (" + oAddrObj.status + "): " + (oAddrObj.formatted || oAddrObj.status));
         }
-      });
+      }, oParams);
+    },
+
+    onProceedToStep2: function () {
+      var oWizard = this.byId("salesOrderWizard");
+      var oStepConsent = this.byId("stepConsent");
+      var oStepCustomer = this.byId("stepCustomer");
+      if (oStepCustomer) {
+        oStepCustomer.setValidated(true);
+      }
+      if (oWizard && oStepConsent) {
+        oWizard.validateStep(oStepCustomer);
+        oWizard.goToStep(oStepConsent);
+      }
     },
 
     onSelectSuggestedAddress: function (oEvent) {
