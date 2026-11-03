@@ -33,6 +33,36 @@
       "deliveryMethodsMock": {
         "uri": "model/mockdata/deliveryMethods.json",
         "type": "JSON"
+      },
+      "ZECC_ARTICLELIST_SRV_01": {
+        "uri": "/sap/opu/odata/sap/ZECC_ARTICLELIST_SRV_01/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "2.0",
+          "localUri": "localService/ZECC_ARTICLELIST_SRV_01/ARTICLELIST_metadata.xml"
+        }
+      },
+      "articleListMock": {
+        "uri": "model/mockdata/articleList.json",
+        "type": "JSON"
+      },
+      "ZCRM_ORIGINATIONS_SRV": {
+        "uri": "/sap/opu/odata/sap/ZCRM_ORIGINATIONS_SRV/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "localUri": "localService/ZCRM_ORIGINATIONS_SRV/metadata.xml",
+          "odataVersion": "2.0"
+        }
+      },
+      "ZSRA017_SALESORDER_CREATE_SRV": {
+        "uri": "/sap/opu/odata/sap/ZSRA017_SALESORDER_CREATE_SRV/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "localUri": "localService/ZSRA017_SALESORDER_CREATE_SRV/metadata.xml",
+          "odataVersion": "2.0"
+        }
       }
     },
     "sourceTemplate": {
@@ -98,6 +128,18 @@
         "type": "sap.ui.model.json.JSONModel",
         "dataSource": "productsMock"
       },
+      "articleOData": {
+        "type": "sap.ui.model.odata.v2.ODataModel",
+        "dataSource": "ZECC_ARTICLELIST_SRV_01",
+        "settings": {
+          "defaultBindingMode": "TwoWay",
+          "useBatch": false
+        }
+      },
+      "artList": {
+        "type": "sap.ui.model.json.JSONModel",
+        "dataSource": "articleListMock"
+      },
       "consentChannels": {
         "type": "sap.ui.model.json.JSONModel",
         "dataSource": "consentChannelsMock"
@@ -105,6 +147,16 @@
       "deliveryMethods": {
         "type": "sap.ui.model.json.JSONModel",
         "dataSource": "deliveryMethodsMock"
+      },
+      "ZCRM_ORIGINATIONS_SRV": {
+        "dataSource": "ZCRM_ORIGINATIONS_SRV",
+        "preload": true,
+        "settings": {}
+      },
+      "ZSRA017_SALESORDER_CREATE_SRV": {
+        "dataSource": "ZSRA017_SALESORDER_CREATE_SRV",
+        "preload": true,
+        "settings": {}
       }
     },
     "resources": {

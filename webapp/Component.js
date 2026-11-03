@@ -29,6 +29,11 @@ sap.ui.define([
       // Set global message model
       this.setModel(sap.ui.getCore().getMessageManager().getMessageModel(), "messages");
 
+      // Initialize add-ons model for linked value-add products
+      var oAddonsModel = new sap.ui.model.json.JSONModel({});
+      this.setModel(oAddonsModel, "oAddons");
+      sap.ui.getCore().setModel(oAddonsModel, "oAddons");
+
       // Initialize the router
       this.getRouter().initialize();
     },

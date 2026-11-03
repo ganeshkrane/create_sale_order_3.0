@@ -4,16 +4,17 @@
   <Dialog
     id="addArticleDialog"
     title="Select Product"
-    contentWidth="960px"
-    contentHeight="500px"
+    contentWidth="980px"
+    contentHeight="520px"
     resizable="true"
     draggable="true">
     <subHeader>
       <Toolbar>
         <SearchField
           id="searchSelectProduct"
-          value="{wizardModel>/productSearchQuery}"
-          liveChange=".onLiveSearchDialogProducts"
+          placeholder="Search by article number, description, category..."
+          value="{filterModel>/search}"
+          
           search=".onLiveSearchDialogProducts"
           width="100%" />
       </Toolbar>
@@ -21,51 +22,65 @@
     <content>
       <Table
         id="selectProductTable"
-        items="{products>/}"
+        items="{artList>/results}"
         noDataText="No Products Found"
         mode="SingleSelectMaster"
         selectionChange=".onSelectProductFromDialogRow"
         itemPress=".onSelectProductFromDialogRow"
         class="sapUiSmallMargin">
         <columns>
-          <Column width="34%">
-            <Text text="Article" />
+          <Column width="38%">
+            <Text text="Article / Description" />
           </Column>
-          <Column width="12%">
+          <Column width="10%" hAlign="Center">
             <Text text="Site" />
           </Column>
-          <Column width="14%">
+          <Column width="14%" hAlign="Center">
             <Text text="Stock" />
           </Column>
-          <Column width="14%">
+          <Column width="10%" hAlign="Center">
             <Text text="QTY" />
           </Column>
-          <Column width="14%">
-            <Text text="Gross Price" />
+          <Column width="14%" hAlign="End">
+            <Text text="Gross Price (VAT)" />
           </Column>
-          <Column width="12%">
-            <Text text="Item Catagory" />
+          <Column width="14%" hAlign="Center">
+            <Text text="Item Category" />
           </Column>
         </columns>
         <items>
           <ColumnListItem type="Active">
             <cells>
-              <HBox alignItems="Center">
-                <core:Icon
-                  src="sap-icon://flag"
-                  color="{path: 'products>stockState', formatter: '.formatter.sourcingStatusColor'}"
-                  tooltip="{= (${products>sourcingIdentifier} || 'Sourcing Status') + ': ' + (${products>sourcingResponse} || '') }"
-                  class="sapUiTinyMarginEnd statusFlagIcon cursorPointer" />
-                <VBox>
-                  <Text text="{products>articleId}" class="boldText" />
-                  <Text text="{products>name}" class="sapUiTinyMarginTop" />
-                </VBox>
-              </HBox>
-              <Text text="{products>site}" />
-              <Text text="{= ${products>stockText} || ${products>stock} || 'In Stock' }" />
-              <Text text="{path: 'products>qty', formatter: '.formatter.formatQtyDecimal'}" />
-              <Text text="{path: 'products>price', formatter: '.formatter.formatPriceOnly'}" />
-              <Text text="{= ${products>itemCat} || 'TAN' }" />
+              <VBox class="sapUiTinyMarginTopBottom">
+                <HBox alignItems="Center">
+                  <Text text="{= ${artList>articleNumber} || ${artList>articleId} }" class="boldText" />
+                  <ObjectStatus
+                    text="TV Lic Req"
+                    state="Warning"
+                    inverted="true"
+                    class="sapUiTinyMarginBegin"
+                    visible="{= ${artList>tvLicReq} === 'Y' }" />
+                  <ObjectStatus
+                    text="Serialized"
+                    state="Information"
+                    inverted="true"
+                    class="sapUiTinyMarginBegin"
+                    visible="{= ${artList>serNoReq} === 'Y' }" />
+                </HBox>
+                <Text text="{= ${artList>description} || ${artList>name} }" class="sapUiTinyMarginTop" />
+               
+              </VBox>
+              <Text text="{= ${artList>site} || ${artList>articleSite} || 'M001' }" />
+              <VBox alignItems="Center">
+                <ObjectStatus
+                  text="{= (${artList>inStock} !== undefined ? ${artList>inStock} : (${artList>articleAvailQty} || 'In Stock')) + ' EA' }"
+                  state="{= (parseInt(${artList>inStock} || ${artList>articleAvailQty} || 0) > 0) ? 'Success' : 'Error' }" />
+              </VBox>
+              <Text text="{artList>articleAvailQty}" />
+              <Text
+                text="{path: 'artList>priceVat', formatter: '.formatter.formatPriceOnly'}"
+                class="boldText" />
+              <Text text="{= ${artList>ItemCatagory} || ${artList>itemCat} || 'TAN' }" />
             </cells>
           </ColumnListItem>
         </items>
@@ -73,7 +88,7 @@
     </content>
     <buttons>
       <Button
-        text="Cancel"
+        text="Close"
         press=".onCloseAddArticleDialog" />
     </buttons>
   </Dialog>

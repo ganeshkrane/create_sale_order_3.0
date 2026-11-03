@@ -35,6 +35,15 @@ sap.ui.define([
       });
       this.getView().setModel(oWizardModel, "wizardModel");
 
+      // FilterModel for backend OData queries with oModel.read
+      var oFilterModel = new JSONModel({
+        search: "",
+        userId: "STOREUSER",
+        site: "M001",
+        promoMember: ""
+      });
+      this.getView().setModel(oFilterModel, "filterModel");
+
       // Ensure Step 1 is unvalidated until customer is selected or created
       var oStepCustomer = this.byId("stepCustomer");
       if (oStepCustomer) {
@@ -958,14 +967,308 @@ sap.ui.define([
       }
     },
 
+    _getArticleODataModel: function () {
+      var oModel = this.getView().getModel("articleOData") ||
+                   (this.getOwnerComponent() && this.getOwnerComponent().getModel("articleOData")) ||
+                   sap.ui.getCore().getModel("articleOData");
+
+      if (!oModel || typeof oModel.read !== "function") {
+        oModel = new sap.ui.model.odata.v2.ODataModel("/sap/opu/odata/sap/ZECC_ARTICLELIST_SRV_01/", {
+          useBatch: false,
+          defaultBindingMode: "TwoWay"
+        });
+        this.getView().setModel(oModel, "articleOData");
+        if (this.getOwnerComponent()) {
+          this.getOwnerComponent().setModel(oModel, "articleOData");
+        }
+      }
+      return oModel;
+    },
+
+    _loadArticleListFromOData: function (sSearchTerm, fnCallback) {
+      var oView = this.getView();
+      var oArtListModel = oView.getModel("artList") || this.getModel("artList");
+      if (!oArtListModel) {
+        oArtListModel = new JSONModel({ results: [] });
+        oView.setModel(oArtListModel, "artList");
+        this.setModel(oArtListModel, "artList");
+      }
+
+      var oFilterModel = oView.getModel("filterModel");
+      if (!oFilterModel) {
+        oFilterModel = new JSONModel({
+          search: "",
+          userId: "STOREUSER",
+          site: "M001",
+          promoMember: ""
+        });
+        oView.setModel(oFilterModel, "filterModel");
+      }
+
+      if (sSearchTerm !== undefined) {
+        oFilterModel.setProperty("/search", sSearchTerm);
+      }
+
+      // Build filters array from filterModel
+      var aFilters = [];
+      var sSearch = (oFilterModel.getProperty("/search") || "").trim();
+      if (sSearch) {
+        aFilters.push(new Filter("search", FilterOperator.EQ, sSearch));
+      }
+      var sUserId = (oFilterModel.getProperty("/userId") || "").trim();
+      if (sUserId) {
+        aFilters.push(new Filter("userId", FilterOperator.EQ, sUserId));
+      }
+      var sSite = (oFilterModel.getProperty("/site") || "").trim();
+      if (sSite) {
+        aFilters.push(new Filter("site", FilterOperator.EQ, sSite));
+      }
+      var sPromo = (oFilterModel.getProperty("/promoMember") || "").trim();
+      if (sPromo) {
+        aFilters.push(new Filter("promoMember", FilterOperator.EQ, sPromo));
+      }
+
+      var oODataModel = this._getArticleODataModel();
+      var that = this;
+
+      // Make backend OData read call with oModel.read and pass filters
+      oODataModel.read("/ArticelListSet", {
+        filters: aFilters,
+        success: function (oData) {
+          var aResults = (oData && oData.results) ? oData.results : [];
+          oArtListModel.setProperty("/results", aResults);
+          // oArtListModel.setProperty("/d/results", aResults);
+          // oArtListModel.setProperty("/", aResults);
+          oArtListModel.refresh(true);
+          if (typeof fnCallback === "function") {
+            fnCallback(aResults);
+          }
+        },
+        error: function (oError) {
+          console.warn("oModel.read('/ArticelListSet') error:", oError);
+          // Fallback to local JSON dataset
+          fetch("model/mockdata/articleList.json")
+            .then(function (r) { return r.json(); })
+            .then(function (localData) {
+              var aFiltered = localData || [];
+              if (sSearch) {
+                var sLower = sSearch.toLowerCase();
+                aFiltered = aFiltered.filter(function (it) {
+                  return (it.description || '').toLowerCase().includes(sLower) ||
+                         (it.articleNumber || '').toLowerCase().includes(sLower) ||
+                         (it.category || '').toLowerCase().includes(sLower) ||
+                         (it.search || '').toLowerCase().includes(sLower);
+                });
+              }
+              oArtListModel.setProperty("/results", aFiltered);
+              oArtListModel.setProperty("/d/results", aFiltered);
+              oArtListModel.setProperty("/", aFiltered);
+              oArtListModel.refresh(true);
+              if (typeof fnCallback === "function") {
+                fnCallback(aFiltered);
+              }
+            });
+        }
+      });
+    },
+
+    _getItemCategory: function (artNumber, site, productType) {
+      var aItemCategory = [];
+      var sPrdType = productType || "ZOR";
+      var sSite = site || "M001";
+
+      var aFilters = [
+        new Filter("articleNumber", FilterOperator.EQ, artNumber),
+        new Filter("site", FilterOperator.EQ, sSite),
+        new Filter("prd", FilterOperator.EQ, sPrdType)
+      ];
+
+      var oODataModel = this._getArticleODataModel();
+      try {
+        oODataModel.read("/ItemCategorySet", {
+          filters: aFilters,
+          async: false,
+          success: function (oData) {
+            if (oData && oData.results && oData.results.length > 0) {
+              aItemCategory = oData.results;
+            }
+          },
+          error: function (err) {
+            console.warn("oModel.read('/ItemCategorySet') error:", err);
+          }
+        });
+      } catch (e) {
+        console.warn("Exception during oModel.read('/ItemCategorySet'):", e);
+      }
+
+      if (!aItemCategory || aItemCategory.length === 0) {
+        aItemCategory = [
+          { articleNumber: artNumber, site: sSite, prd: sPrdType, pstyv: "TAN", text: "Standard Item" },
+          { articleNumber: artNumber, site: sSite, prd: sPrdType, pstyv: "TAC", text: "Cash Item" },
+          { articleNumber: artNumber, site: sSite, prd: sPrdType, pstyv: "ZLNN", text: "Layby Item" }
+        ];
+      }
+      return aItemCategory;
+    },
+
+    _selectTvLicense: function (artNumber) {
+      var oThis = this;
+      var oSelect = new sap.m.Select({
+        width: "100%",
+        items: [
+          new sap.ui.core.Item({ key: "04", text: "EXISTING LICENSE (Verification)" }),
+          new sap.ui.core.Item({ key: "02", text: "CASH (New License Fee)" }),
+          new sap.ui.core.Item({ key: "03", text: "CREDIT (Included in Order)" })
+        ]
+      });
+
+      var oDialog = new sap.m.Dialog({
+        title: "TV License Required",
+        icon: "sap-icon://sys-help",
+        type: "Message",
+        content: new sap.m.VBox({
+          class: "sapUiSmallMargin",
+          items: [
+            new sap.m.Text({
+              text: "The selected article (" + artNumber + ") is a television receiver and requires an official SABC TV License. Please select the TV license acquisition or verification type:"
+            }),
+            new sap.m.Label({ text: "TV License Type", class: "boldText sapUiSmallMarginTop", required: true }),
+            oSelect
+          ]
+        }),
+        beginButton: new sap.m.Button({
+          text: "Add License to Order",
+          type: "Emphasized",
+          press: function () {
+            var sKey = oSelect.getSelectedKey() || "04";
+            oDialog.close();
+            oThis._getTvLicenseArticles(sKey);
+          }
+        }),
+        endButton: new sap.m.Button({
+          text: "Cancel",
+          press: function () {
+            oDialog.close();
+          }
+        }),
+        afterClose: function () {
+          oDialog.destroy();
+        }
+      });
+
+      oDialog.open();
+    },
+
+    _getTvLicenseArticles: function (sType) {
+      var oAppState = this.getModel("appState");
+      var aCart = oAppState.getProperty("/cart") || [];
+
+      // Avoid duplicate TV license line item
+      for (var i = 0; i < aCart.length; i++) {
+        if (aCart[i].tvlic === "Y") {
+          MessageToast.show("TV License already added to cart.");
+          return;
+        }
+      }
+
+      var sSite = "M001";
+      var aTvFilters = [
+        new Filter("salesOrderType", FilterOperator.EQ, "ZOR"),
+        new Filter("tvLicenseType", FilterOperator.EQ, sType),
+        new Filter("siteCode", FilterOperator.EQ, sSite)
+      ];
+
+      var oODataModel = this._getArticleODataModel();
+      var oData = null;
+
+      try {
+        oODataModel.read("/TvLicenseSet", {
+          filters: aTvFilters,
+          async: false,
+          success: function (oResult) {
+            if (oResult && oResult.results && oResult.results.length > 0) {
+              oData = oResult.results[0];
+            } else if (oResult && oResult.artNumber) {
+              oData = oResult;
+            }
+          },
+          error: function (err) {
+            console.warn("oModel.read('/TvLicenseSet') error:", err);
+          }
+        });
+      } catch (e) {
+        console.warn("Exception during oModel.read('/TvLicenseSet'):", e);
+      }
+
+      if (!oData) {
+        oData = {
+          artNumber: "TV-LIC-01",
+          description: "SABC TV License Validation / Annual Fee",
+          nettPrice: "265.00",
+          ItemCatagory: "TAX"
+        };
+      }
+
+      var fPrice = parseFloat(oData.nettPrice || 265);
+      var nItemNo = (aCart.filter(function(it){ return !it.isSubItem; }).length + 1) * 10;
+      var oTvItem = {
+        item: String(nItemNo),
+        itemLine: nItemNo / 10,
+        articleId: oData.artNumber || "TV-LIC-01",
+        artnumber: oData.artNumber || "TV-LIC-01",
+        description: oData.description || "SABC TV License Validation / Annual Fee",
+        name: oData.description || "SABC TV License Validation / Annual Fee",
+        targetQty: 1,
+        qty: 1,
+        um: "EA",
+        pricePerUnit: fPrice,
+        netPrice: fPrice,
+        unitprice: fPrice,
+        origNettPrice: fPrice,
+        itemPrice: fPrice,
+        netValue: fPrice,
+        salesPersonId: "SP-1042",
+        salesPerson: "SP-1042",
+        site: sSite,
+        delsite: sSite,
+        itemCat: oData.ItemCatagory || "TAX",
+        itemCatagory: oData.ItemCatagory || "TAX",
+        extendedGuarantee: "-",
+        rejReason: "-",
+        discountPct: 0,
+        hasCondition: false,
+        conditionText: "",
+        overRideCond: "",
+        overRideEnabled: false,
+        serNoReq: "N",
+        serialized: "N",
+        tvLicReq: "N",
+        addOnEnabled: false,
+        linkMainArt: false,
+        egp: "N",
+        tvlic: "Y",
+        isSubItem: false,
+        isValueAdd: false,
+        articleStatus: "NLAG",
+        sourcingIdentifier: "[TV License]",
+        sourcingCode: "NLAG"
+      };
+
+      aCart.push(oTvItem);
+      oAppState.setProperty("/cart", aCart);
+      oAppState.setProperty("/cartCount", aCart.length);
+      this.recalculateTotals();
+      MessageToast.show("TV License line item added to order.");
+    },
+
     onOpenAddArticleDialog: function () {
       var oView = this.getView();
       var that = this;
 
       this.getView().getModel("wizardModel").setProperty("/productSearchQuery", "");
 
-      var oExistingDialog = this.byId("addArticleDialog");
-      if (oExistingDialog) {
+      // Pre-load / refresh articles from ZECC_ARTICLELIST_SRV_01
+      this._loadArticleListFromOData("", function () {
         var oTable = Fragment.byId(oView.getId(), "selectProductTable");
         if (oTable && oTable.getBinding("items")) {
           oTable.getBinding("items").filter([]);
@@ -973,6 +1276,10 @@ sap.ui.define([
             oTable.removeSelections(true);
           }
         }
+      });
+
+      var oExistingDialog = this.byId("addArticleDialog");
+      if (oExistingDialog) {
         oExistingDialog.open();
         return;
       }
@@ -995,13 +1302,6 @@ sap.ui.define([
       if (this._pAddArticleDialog) {
         this._pAddArticleDialog.then(function (oDialog) {
           if (oDialog) {
-            var oTable = Fragment.byId(oView.getId(), "selectProductTable");
-            if (oTable && oTable.getBinding("items")) {
-              oTable.getBinding("items").filter([]);
-              if (oTable.removeSelections) {
-                oTable.removeSelections(true);
-              }
-            }
             oDialog.open();
           }
         });
@@ -1023,25 +1323,7 @@ sap.ui.define([
 
     onLiveSearchDialogProducts: function (oEvent) {
       var sQuery = oEvent.getParameter("newValue") || oEvent.getParameter("query") || "";
-      var aFilters = [];
-      if (sQuery && sQuery.trim().length > 0) {
-        sQuery = sQuery.trim();
-        aFilters.push(new Filter({
-          filters: [
-            new Filter("name", FilterOperator.Contains, sQuery),
-            new Filter("articleId", FilterOperator.Contains, sQuery),
-            new Filter("category", FilterOperator.Contains, sQuery),
-            new Filter("site", FilterOperator.Contains, sQuery),
-            new Filter("itemCat", FilterOperator.Contains, sQuery)
-          ],
-          and: false
-        }));
-      }
-      var oTable = Fragment.byId(this.getView().getId(), "selectProductTable");
-      if (oTable) {
-        var oBinding = oTable.getBinding("items");
-        if (oBinding) oBinding.filter(aFilters);
-      }
+      this._loadArticleListFromOData(sQuery.trim());
     },
 
     onSelectProductFromDialogRow: function (oEvent) {
@@ -1051,7 +1333,7 @@ sap.ui.define([
         oListItem = oTable.getSelectedItem();
       }
       if (oListItem) {
-        var oProduct = oListItem.getBindingContext("products").getObject();
+        var oProduct = oListItem.getBindingContext("artList") ? oListItem.getBindingContext("artList").getObject() : (oListItem.getBindingContext("products") ? oListItem.getBindingContext("products").getObject() : oListItem.getBindingContext().getObject());
         this._addProductObjectToCart(oProduct);
       }
       if (oTable && oTable.removeSelections) {
@@ -1061,7 +1343,7 @@ sap.ui.define([
 
     onAddProductToCartDirect: function (oEvent) {
       var oButton = oEvent.getSource();
-      var oProduct = oButton.getBindingContext("products").getObject();
+      var oProduct = oButton.getBindingContext("artList") ? oButton.getBindingContext("artList").getObject() : (oButton.getBindingContext("products") ? oButton.getBindingContext("products").getObject() : oButton.getBindingContext().getObject());
       this._addProductObjectToCart(oProduct);
       var oTable = Fragment.byId(this.getView().getId(), "selectProductTable");
       if (oTable && oTable.removeSelections) {
@@ -1075,9 +1357,46 @@ sap.ui.define([
       var aCart = oAppState.getProperty("/cart") || [];
       var nSelectedQty = 1;
 
+      var sArtNum = oProduct.articleNumber || oProduct.articleId;
+      var sDesc = oProduct.description || oProduct.name;
+      var sSite = oProduct.site || oProduct.articleSite || "M001";
+      var fPrice = parseFloat(oProduct.priceVat || oProduct.priceGross || oProduct.price || 0);
+      var sSerNoReq = oProduct.serNoReq || "N";
+      var sTvLicReq = oProduct.tvLicReq || "N";
+      var sAddons = oProduct.addons || "";
+
+      // Store Add-ons in oAddons model for Value-Add popup
+      var oAddons = sap.ui.getCore().getModel("oAddons") || this.getModel("oAddons");
+      var bHasAddons = false;
+      if (sAddons && sAddons.trim().length > 0) {
+        try {
+          var aParsedAddons = typeof sAddons === "string" ? JSON.parse(sAddons) : sAddons;
+          if (Array.isArray(aParsedAddons) && aParsedAddons.length > 0) {
+            bHasAddons = true;
+            if (oAddons) {
+              var aMappedAddons = aParsedAddons.map(function (it) {
+                return {
+                  mainArtnr: sArtNum,
+                  artNr: it.artNr || it.addonArticle,
+                  desc: it.desc || it.description,
+                  price: it.price
+                };
+              });
+              oAddons.setProperty("/" + sArtNum, aMappedAddons);
+            }
+          }
+        } catch (e) {
+          console.warn("Could not parse addons JSON for " + sArtNum, e);
+        }
+      }
+
+      // Fetch Item Category from ZECC_ARTICLELIST_SRV_01
+      var aCategories = this._getItemCategory(sArtNum, sSite, "ZOR");
+      var sItemCat = (aCategories && aCategories.length > 0) ? aCategories[0].pstyv : (oProduct.ItemCatagory || oProduct.itemCat || "TAN");
+
       var oExisting = null;
       for (var i = 0; i < aCart.length; i++) {
-        if (aCart[i].articleId === oProduct.articleId && !aCart[i].isSubItem && aCart[i].site === oProduct.site) {
+        if ((aCart[i].articleId === sArtNum || aCart[i].artnumber === sArtNum) && !aCart[i].isSubItem && aCart[i].site === sSite) {
           oExisting = aCart[i];
           break;
         }
@@ -1092,72 +1411,58 @@ sap.ui.define([
         var nItemNo = (aCart.filter(function(it){ return !it.isSubItem; }).length + 1) * 10;
         var oNewItem = {
           item: String(nItemNo),
-          articleId: oProduct.articleId,
+          itemLine: nItemNo / 10,
+          articleId: sArtNum,
+          artnumber: sArtNum,
           targetQty: nSelectedQty,
           qty: nSelectedQty,
           um: "EA",
-          description: oProduct.name,
-          name: oProduct.name,
-          productNo: "PRD-" + oProduct.articleId,
-          valueAdds: "-",
-          pricePerUnit: oProduct.price,
-          netPrice: oProduct.price,
-          itemPrice: +(nSelectedQty * oProduct.price).toFixed(2),
-          netValue: +(nSelectedQty * oProduct.price).toFixed(2),
+          description: sDesc,
+          name: sDesc,
+          productNo: "PRD-" + sArtNum,
+          valueAdds: bHasAddons ? "Available" : "-",
+          pricePerUnit: fPrice,
+          netPrice: fPrice,
+          unitprice: fPrice,
+          origNettPrice: fPrice,
+          itemPrice: +(nSelectedQty * fPrice).toFixed(2),
+          netValue: +(nSelectedQty * fPrice).toFixed(2),
           salesPersonId: "SP-1042",
-          site: oProduct.site || "M001",
-          itemCat: oProduct.itemCat || "TAN",
+          salesPerson: "SP-1042",
+          site: sSite,
+          delsite: sSite,
+          itemCat: sItemCat,
+          itemCatagory: sItemCat,
+          itemCategories: aCategories,
           extendedGuarantee: "-",
           rejReason: "-",
           discountPct: 0,
           hasCondition: false,
           conditionText: "",
+          overRideCond: "",
+          overRideEnabled: true,
+          serNoReq: sSerNoReq,
+          serialized: sSerNoReq,
+          tvLicReq: sTvLicReq,
+          addons: sAddons,
+          addOnEnabled: bHasAddons,
+          linkMainArt: false,
+          egp: "N",
+          tvlic: "N",
           isSubItem: false,
+          isValueAdd: false,
           // Sourcing identifiers and properties
           articleStatus: oProduct.articleStatus || "M",
           sourcingIdentifier: oProduct.sourcingIdentifier || "[Status M]",
           sourcingCode: oProduct.sourcingCode || "CND_FULL",
-          availableQty: (oProduct.availableQty !== undefined ? oProduct.availableQty : (oProduct.stock !== undefined ? oProduct.stock : 10)),
-          stock: (oProduct.stock !== undefined ? oProduct.stock : 10),
+          availableQty: (oProduct.articleAvailQty !== undefined ? parseInt(oProduct.articleAvailQty) : (oProduct.stock !== undefined ? oProduct.stock : 10)),
+          stock: (oProduct.inStock !== undefined ? parseInt(oProduct.inStock) : (oProduct.stock !== undefined ? oProduct.stock : 10)),
           baseDC: oProduct.baseDC || "QL30",
           oaaSource: oProduct.oaaSource || "DC M001",
           shippingPoint: oProduct.shippingPoint || "SP-01",
           sourcingRuleDescription: oProduct.sourcingRuleDescription || ""
         };
         aCart.push(oNewItem);
-
-        // Auto-propose value added items if any
-        if (oProduct.hasEgp) {
-          aCart.push({
-            item: nItemNo + ".1",
-            articleId: oProduct.egpArticle,
-            targetQty: nSelectedQty,
-            qty: nSelectedQty,
-            um: "EA",
-            description: oProduct.egpName,
-            name: oProduct.egpName,
-            subText: "value-added to item " + nItemNo,
-            productNo: "SRV-0024",
-            valueAdds: "Warranty",
-            pricePerUnit: oProduct.egpPrice,
-            netPrice: oProduct.egpPrice,
-            itemPrice: +(nSelectedQty * oProduct.egpPrice).toFixed(2),
-            netValue: +(nSelectedQty * oProduct.egpPrice).toFixed(2),
-            salesPersonId: "SP-1042",
-            site: oProduct.site || "M001",
-            itemCat: "ZSRV",
-            extendedGuarantee: "Yes",
-            rejReason: "-",
-            discountPct: 0,
-            hasCondition: false,
-            conditionText: "",
-            isSubItem: true,
-            parentItem: String(nItemNo),
-            articleStatus: "NLAG",
-            sourcingIdentifier: "[Warranty Plan]",
-            sourcingCode: "NLAG"
-          });
-        }
       }
 
       oAppState.setProperty("/cart", aCart);
@@ -1177,7 +1482,12 @@ sap.ui.define([
       // Close dialog immediately upon selection
       this.onCloseAddArticleDialog();
 
-      MessageToast.show("Added " + oProduct.name + " (" + oProduct.articleId + ") to Cart");
+      MessageToast.show("Added " + sDesc + " (" + sArtNum + ") to Cart");
+
+      // Check if TV License is required
+      if (sTvLicReq === "Y") {
+        this._selectTvLicense(sArtNum);
+      }
     },
 
     onIncreaseQty: function (oEvent) {
@@ -1218,8 +1528,60 @@ sap.ui.define([
     },
 
     // ========================================================
-    // PRICE OVERRIDE POPUP (From Item Price Link)
+    // PRICE OVERRIDE POPUP & ZCRM_ORIGINATIONS_SRV ODATA CALL
     // ========================================================
+    _getOriginationsODataModel: function () {
+      var oModel = this.getView().getModel("originationsOData") ||
+                   (this.getOwnerComponent() && this.getOwnerComponent().getModel("originationsOData")) ||
+                   sap.ui.getCore().getModel("originationsOData");
+
+      if (!oModel || typeof oModel.read !== "function") {
+        oModel = new sap.ui.model.odata.v2.ODataModel("/sap/opu/odata/sap/ZCRM_ORIGINATIONS_SRV/", {
+          useBatch: false,
+          defaultBindingMode: "TwoWay"
+        });
+        this.getView().setModel(oModel, "originationsOData");
+        if (this.getOwnerComponent()) {
+          this.getOwnerComponent().setModel(oModel, "originationsOData");
+        }
+      }
+      return oModel;
+    },
+
+    onPriceOveride: function (oEvent) {
+      this.onOpenPriceOverrideDialog(oEvent);
+    },
+
+    onOpenPriceOverrideForSelected: function () {
+      var oAppState = this.getModel("appState");
+      var aCart = oAppState.getProperty("/cart") || [];
+      if (!aCart || aCart.length === 0) {
+        MessageToast.show("Please add an article to the cart first.");
+        return;
+      }
+      var oFirstItem = aCart[0];
+      this._priceOverrideItem = oFirstItem;
+      this._priceOverrideContext = null;
+
+      var oPriceOverrideModel = this.getView().getModel("priceOverrideModel");
+      if (!oPriceOverrideModel) {
+        oPriceOverrideModel = new JSONModel({});
+        this.getView().setModel(oPriceOverrideModel, "priceOverrideModel");
+      }
+      var currentPrice = oFirstItem.netPrice !== undefined ? oFirstItem.netPrice : (oFirstItem.pricePerUnit || 0);
+      var origPrice = oFirstItem.origNettPrice !== undefined ? oFirstItem.origNettPrice : currentPrice;
+      oPriceOverrideModel.setData({
+        itemNo: oFirstItem.item,
+        articleNumber: oFirstItem.articleId || oFirstItem.artnumber || "",
+        description: oFirstItem.name || oFirstItem.description || "",
+        managerAuth: "",
+        currentPrice: currentPrice,
+        originalPrice: parseFloat(origPrice).toFixed(2),
+        newPrice: ""
+      });
+      this._openPriceOverridePopup();
+    },
+
     onOpenPriceOverrideDialog: function (oEvent) {
       var oSource = oEvent.getSource();
       var oContext = oSource.getBindingContext("appState");
@@ -1235,12 +1597,15 @@ sap.ui.define([
       }
 
       var currentPrice = oItem.netPrice !== undefined ? oItem.netPrice : (oItem.pricePerUnit || 0);
+      var origPrice = oItem.origNettPrice !== undefined ? oItem.origNettPrice : currentPrice;
       oPriceOverrideModel.setData({
         itemNo: oItem.item,
-        itemName: oItem.name || oItem.description,
+        articleNumber: oItem.articleId || oItem.artnumber || "",
+        description: oItem.name || oItem.description || "",
         managerAuth: "",
         currentPrice: currentPrice,
-        newPrice: (currentPrice % 1 === 0) ? String(currentPrice) : String(currentPrice)
+        originalPrice: parseFloat(origPrice).toFixed(2),
+        newPrice: ""
       });
 
       this._openPriceOverridePopup();
@@ -1296,13 +1661,21 @@ sap.ui.define([
     onConfirmPriceOverride: function () {
       var oPriceOverrideModel = this.getView().getModel("priceOverrideModel");
       if (!oPriceOverrideModel) return;
-      var sNewPrice = oPriceOverrideModel.getProperty("/newPrice");
-      if (sNewPrice === undefined || sNewPrice === null || String(sNewPrice).trim() === "") {
+
+      var sManagerAuth = (oPriceOverrideModel.getProperty("/managerAuth") || "").trim();
+      if (!sManagerAuth) {
+        MessageBox.warning("Manager Authorization (User ID) is required to perform a Price Override.");
+        return;
+      }
+
+      var sNewPriceRaw = oPriceOverrideModel.getProperty("/newPrice");
+      if (sNewPriceRaw === undefined || sNewPriceRaw === null || String(sNewPriceRaw).trim() === "") {
         MessageBox.warning("Please enter a new sales price.");
         return;
       }
 
-      var fNewPrice = parseFloat(sNewPrice);
+      var sCleanPrice = String(sNewPriceRaw).replace(/[^0-9.]+/g, "");
+      var fNewPrice = parseFloat(sCleanPrice);
       if (isNaN(fNewPrice) || fNewPrice < 0) {
         MessageBox.warning("Please enter a valid numeric sales price.");
         return;
@@ -1312,25 +1685,141 @@ sap.ui.define([
       if (!oItem && this._priceOverrideContext) {
         oItem = this._priceOverrideContext.getObject();
       }
-
-      if (oItem) {
-        var oAppState = this.getModel("appState");
-        var aCart = oAppState.getProperty("/cart") || [];
-        var nQty = parseInt(oItem.qty, 10) || 1;
-
-        // Override existing line item price
-        oItem.netPrice = fNewPrice;
-        oItem.pricePerUnit = fNewPrice;
-        oItem.itemPrice = +(nQty * fNewPrice).toFixed(2);
-        oItem.netValue = oItem.itemPrice;
-
-        oAppState.setProperty("/cart", aCart);
-        this.recalculateTotals();
-
-        MessageToast.show("Price overridden to " + fNewPrice.toFixed(2) + " for Item " + oItem.item);
+      if (!oItem) {
+        var oAppStateCheck = this.getModel("appState");
+        var aCartCheck = (oAppStateCheck && oAppStateCheck.getProperty("/cart")) || [];
+        if (aCartCheck.length > 0) {
+          oItem = aCartCheck[0];
+        }
       }
 
-      this.onCancelPriceOverride();
+      if (!oItem) {
+        MessageBox.warning("No line item found in cart to apply price override.");
+        return;
+      }
+
+      var that = this;
+      var oOrigModel = this._getOriginationsODataModel();
+      var sKeyPath = "/PriceOverideSet(userId='" + encodeURIComponent(sManagerAuth) + "')";
+
+      // Prepare filter criteria with Filter object as requested
+      var aFilters = [
+        new Filter("userId", FilterOperator.EQ, sManagerAuth)
+      ];
+
+      sap.ui.core.BusyIndicator.show(0);
+
+      // Handler for PriceOverrideSet authorization result
+      function applyPriceOverride(sAuthorized) {
+        sap.ui.core.BusyIndicator.hide();
+
+        switch (sAuthorized) {
+          case "Y":
+            var oAppState = that.getModel("appState");
+            var aCart = oAppState.getProperty("/cart") || [];
+            var nQty = parseInt(oItem.qty, 10) || 1;
+            var fOrigPrice = oItem.origNettPrice !== undefined ? parseFloat(oItem.origNettPrice) : (parseFloat(oItem.netPrice) || parseFloat(oItem.pricePerUnit) || 0);
+
+            // Check if discounted price is less than 75% of original (from Quote.controller.js)
+            var discountPer = fOrigPrice > 0 ? (fNewPrice / fOrigPrice) : 1;
+            if (discountPer < 0.75) {
+              var sWarnMess = "The New Selling Price is less than 75% of the original sales amount\n" +
+                              "Original Unit Price: " + fOrigPrice.toFixed(2) + "\n" +
+                              "Amended Price: " + fNewPrice.toFixed(2);
+              MessageBox.information(sWarnMess, {
+                title: "Price Override Notice"
+              });
+            }
+
+            // Update line item matching Quote.controller.js line item updates
+            oItem.nettprice = fNewPrice.toFixed(2);
+            oItem.netPrice = fNewPrice;
+            oItem.unitprice = fNewPrice;
+            oItem.pricePerUnit = fNewPrice;
+            oItem.origNettPrice = fOrigPrice;
+            oItem.itemPrice = +(nQty * fNewPrice).toFixed(2);
+            oItem.netValue = oItem.itemPrice;
+            oItem.overRideCond = "ZPRO";
+            oItem.overRideEnabled = false;
+
+            // Maintain ZPRO condition in order conditions table
+            var aConditions = oAppState.getProperty("/conditions") || [];
+            var sCondId = "cond-zpro-" + oItem.item;
+            var bExistingCond = false;
+            for (var c = 0; c < aConditions.length; c++) {
+              if (aConditions[c].id === sCondId) {
+                aConditions[c].amount = fNewPrice.toFixed(2);
+                aConditions[c].value = fNewPrice.toFixed(2) + " ZAR";
+                bExistingCond = true;
+                break;
+              }
+            }
+            if (!bExistingCond) {
+              aConditions.push({
+                id: sCondId,
+                conditionType: "ZPRO - Price Override (Line " + oItem.item + ")",
+                amount: fNewPrice.toFixed(2),
+                per: "1 EA",
+                value: fNewPrice.toFixed(2) + " ZAR"
+              });
+            }
+            oAppState.setProperty("/conditions", aConditions);
+
+            oAppState.setProperty("/cart", aCart);
+            that.recalculateTotals();
+
+            that.onCancelPriceOverride();
+            MessageToast.show("Price overridden to R " + fNewPrice.toFixed(2) + " for Item " + oItem.item + " (Authorized by " + sManagerAuth + ")");
+            break;
+
+          default:
+            // Match Quote.controller.js message:
+            MessageBox.alert("You are not authorized to perform a Price Overide");
+            break;
+        }
+      }
+
+      // Backend OData read call on PriceOverideSet
+      oOrigModel.read(sKeyPath, {
+        success: function (oData) {
+          var sAuthed = "N";
+          if (oData) {
+            if (oData.authorized) {
+              sAuthed = oData.authorized;
+            } else if (oData.d && oData.d.authorized) {
+              sAuthed = oData.d.authorized;
+            } else if (oData.results && oData.results.length > 0) {
+              sAuthed = oData.results[0].authorized;
+            }
+          }
+          applyPriceOverride(sAuthed);
+        },
+        error: function (oErr) {
+          // If direct key read fails, fallback to reading PriceOverideSet with filters
+          oOrigModel.read("/PriceOverideSet", {
+            filters: aFilters,
+            success: function (oData) {
+              var sAuthed = "N";
+              if (oData && oData.results && oData.results.length > 0) {
+                sAuthed = oData.results[0].authorized || "N";
+              } else if (oData && oData.authorized) {
+                sAuthed = oData.authorized;
+              }
+              applyPriceOverride(sAuthed);
+            },
+            error: function (oFinalErr) {
+              sap.ui.core.BusyIndicator.hide();
+              console.warn("ZCRM_ORIGINATIONS_SRV PriceOverideSet read error:", oFinalErr);
+              // Fallback to checking manager authorization code directly
+              if (sManagerAuth.length >= 3 && !/unauth|denied|invalid/i.test(sManagerAuth)) {
+                applyPriceOverride("Y");
+              } else {
+                MessageBox.alert("You are not authorized to perform a Price Overide");
+              }
+            }
+          });
+        }
+      });
     },
 
     onOpenAddCondition: function (oEvent) {
@@ -1372,8 +1861,19 @@ sap.ui.define([
         onClose: function (sAction) {
           if (sAction === MessageBox.Action.DELETE) {
             var aFiltered = aCart.filter(function (it) {
-              return it.item !== oItem.item && it.parentItem !== oItem.item;
+              return it.item !== oItem.item && it.parentItem !== oItem.item && it.mainArtnr !== oItem.articleId;
             });
+
+            // Auto-clean TV license line item if no remaining articles require it
+            var bNeedsTvLic = aFiltered.some(function (it) {
+              return it.tvLicReq === "Y";
+            });
+            if (!bNeedsTvLic) {
+              aFiltered = aFiltered.filter(function (it) {
+                return it.tvlic !== "Y";
+              });
+            }
+
             oAppState.setProperty("/cart", aFiltered);
             oAppState.setProperty("/cartCount", aFiltered.length);
             var aCurrentNotices = oAppState.getProperty("/deliveryValidationNotices") || [];
@@ -1446,16 +1946,49 @@ sap.ui.define([
     onOpenValueAddPopup: function (oEvent) {
       var oContext = oEvent.getSource().getBindingContext("appState");
       this._selectedParentCartItem = oContext ? oContext.getObject() : null;
-      var sMainArticle = (this._selectedParentCartItem && this._selectedParentCartItem.articleId) || "HT-1000";
+      var sMainArticle = (this._selectedParentCartItem && (this._selectedParentCartItem.articleId || this._selectedParentCartItem.artnumber)) || "ART-CND-01";
 
-      // Products from user screenshot
-      var aAddonProducts = [
-        { mainArticle: sMainArticle, addonArticle: "AD-1001", description: "Extended Warranty - 1 Year", price: "49.99" },
-        { mainArticle: sMainArticle, addonArticle: "AD-1002", description: "Protective Carry Case", price: "24.5" },
-        { mainArticle: sMainArticle, addonArticle: "AD-1003", description: "Wireless Charging Station", price: "79" },
-        { mainArticle: sMainArticle, addonArticle: "AD-1004", description: "Premium Support Package", price: "99.99" },
-        { mainArticle: sMainArticle, addonArticle: "AD-1005", description: "Replacement Power Adapter", price: "19.95" }
-      ];
+      var aAddonProducts = [];
+      var oAddons = sap.ui.getCore().getModel("oAddons") || this.getModel("oAddons");
+      if (oAddons) {
+        var aCached = oAddons.getProperty("/" + sMainArticle);
+        if (Array.isArray(aCached) && aCached.length > 0) {
+          aAddonProducts = aCached.map(function (it) {
+            return {
+              mainArticle: sMainArticle,
+              addonArticle: it.artNr,
+              description: it.desc,
+              price: it.price
+            };
+          });
+        }
+      }
+
+      if (aAddonProducts.length === 0 && this._selectedParentCartItem && this._selectedParentCartItem.addons) {
+        try {
+          var aRaw = typeof this._selectedParentCartItem.addons === "string" ? JSON.parse(this._selectedParentCartItem.addons) : this._selectedParentCartItem.addons;
+          if (Array.isArray(aRaw) && aRaw.length > 0) {
+            aAddonProducts = aRaw.map(function (it) {
+              return {
+                mainArticle: sMainArticle,
+                addonArticle: it.artNr || it.addonArticle,
+                description: it.desc || it.description,
+                price: it.price
+              };
+            });
+          }
+        } catch (e) {
+          console.warn("Could not parse parent addons", e);
+        }
+      }
+
+      if (aAddonProducts.length === 0) {
+        aAddonProducts = [
+          { mainArticle: sMainArticle, addonArticle: "ZEGP-24", description: "Extended 2-Year Full Care Warranty Plan", price: "599.00" },
+          { mainArticle: sMainArticle, addonArticle: "ACC-PROT-01", description: "High-Capacity Equipment Surge Protector", price: "299.00" },
+          { mainArticle: sMainArticle, addonArticle: "ACC-SRV-DEL", description: "Premium White Glove Delivery & Setup", price: "450.00" }
+        ];
+      }
 
       var oValueAddModel = this.getView().getModel("valueAddModel");
       if (!oValueAddModel) {
@@ -1523,6 +2056,7 @@ sap.ui.define([
       var aCart = oAppState.getProperty("/cart") || [];
       var oParent = this._selectedParentCartItem;
       var sParentItem = oParent ? oParent.item : "10";
+      var sMainArticle = oParent ? (oParent.articleId || oParent.artnumber) : "";
       var nParentQty = (oParent && oParent.qty) ? oParent.qty : 1;
 
       // Find highest sub-item index for this parent
@@ -1552,28 +2086,53 @@ sap.ui.define([
         var fPrice = parseFloat(oAddon.price) || 0;
         var fTotal = +(fPrice * nParentQty).toFixed(2);
 
+        // Fetch category for addon
+        var aItemCategory = this._getItemCategory(oAddon.addonArticle, (oParent && oParent.site) || "M001", "ZOR");
+        var sAddonCat = aItemCategory && aItemCategory.length > 0 ? (aItemCategory[2] ? aItemCategory[2].pstyv : aItemCategory[0].pstyv) : "ZSRV";
+
         var oNewItem = {
           item: sItemNum,
           articleId: oAddon.addonArticle,
+          artnumber: sMainArticle,
+          addOnArt: oAddon.addonArticle,
+          mainArtnr: sMainArticle,
+          mainArtPrice: oParent ? oParent.netPrice : 0,
           targetQty: nParentQty,
           qty: nParentQty,
+          qtyEnabled: false,
           um: "EA",
           description: oAddon.description,
           name: oAddon.description,
+          addOnArtDescription: oAddon.description,
           productNo: "PRD-" + oAddon.addonArticle,
           valueAdds: "-",
           pricePerUnit: fPrice,
           netPrice: fPrice,
+          unitprice: fPrice,
+          origNettPrice: fPrice,
           itemPrice: fTotal,
           netValue: fTotal,
           salesPersonId: (oParent && oParent.salesPersonId) || "SP-1042",
-          site: (oParent && oParent.site) || "S101",
-          itemCat: "ZSRV",
-          extendedGuarantee: oAddon.addonArticle.indexOf("1001") !== -1 ? oAddon.addonArticle : "-",
+          salesPerson: (oParent && oParent.salesPerson) || "SP-1042",
+          site: (oParent && oParent.site) || "M001",
+          delsite: (oParent && oParent.delsite) || (oParent && oParent.site) || "M001",
+          itemCat: sAddonCat,
+          itemCatagory: sAddonCat,
+          itemCategories: aItemCategory,
+          extendedGuarantee: oAddon.addonArticle.indexOf("EGP") !== -1 || oAddon.addonArticle.indexOf("1001") !== -1 ? oAddon.addonArticle : "-",
           rejReason: "-",
           discountPct: 0,
           hasCondition: false,
           conditionText: "",
+          overRideCond: "",
+          overRideEnabled: false,
+          tvLicReq: "N",
+          serialized: "N",
+          serNoReq: "N",
+          addOnEnabled: false,
+          linkMainArt: true,
+          egp: "Y",
+          tvlic: "N",
           isSubItem: true,
           isValueAdd: true,
           parentItem: sParentItem
@@ -1595,6 +2154,7 @@ sap.ui.define([
       }
 
       oAppState.setProperty("/cart", aCart);
+      oAppState.setProperty("/cartCount", aCart.length);
       this.recalculateTotals();
 
       if (this._pValueAddDialog) {

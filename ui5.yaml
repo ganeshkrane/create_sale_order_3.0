@@ -8,6 +8,23 @@ server:
       afterMiddleware: compression
       configuration:
         ignoreCertErrors: false
+        backend:
+          - path: /sap
+            url: http://gwdevs:4431
+            client: '310'
+            destination: GWDEV_BAS_BASICAUTH_251031
+          - path: /sap/opu/odata/sap/ZECC_ARTICLELIST_SRV_01/
+            url: http://gwdevs:4431
+            client: '310'
+            destination: GWDEV_BAS_258886
+          - path: /sap/opu/odata/sap/ZCRM_ORIGINATIONS_SRV/
+            url: http://gwdevs:4431
+            client: '310'
+            destination: GWDEV_BAS_258886
+          - path: /sap/opu/odata/sap/ZSRA017_SALESORDER_CREATE_SRV/
+            url: http://gwdevs:4431
+            client: '310'
+            destination: GWDEV_BAS_258886
         ui5:
           path:
             - /resources
@@ -23,4 +40,9 @@ server:
       afterMiddleware: fiori-tools-appreload
       configuration:
         component: sap.ui.salesorder.store
-        ui5Theme: sap_horizon
+        ui5Theme: sap_fiori_3
+builder:
+  resources:
+    excludes:
+      - /test/**
+      - /localService/**

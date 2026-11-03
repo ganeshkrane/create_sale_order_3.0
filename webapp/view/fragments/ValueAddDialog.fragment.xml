@@ -3,9 +3,9 @@
   xmlns:core="sap.ui.core">
   <Dialog
     id="valueAddDialog"
-    title="Select Product"
-    contentWidth="680px"
-    contentHeight="460px"
+    title="Value-Add Products (Add-ons)"
+    contentWidth="720px"
+    contentHeight="480px"
     horizontalScrolling="false"
     resizable="true"
     draggable="true">
@@ -13,7 +13,7 @@
       <Toolbar>
         <SearchField
           id="valueAddSearchField"
-          placeholder="Search"
+          placeholder="Search add-on products..."
           width="100%"
           liveChange=".onLiveSearchValueAdd" />
       </Toolbar>
@@ -22,32 +22,33 @@
       <Table
         id="valueAddTable"
         items="{valueAddModel>/items}"
+        noDataText="No add-on products available for this article"
         mode="MultiSelect"
         includeItemInSelection="true"
         fixedLayout="false"
         width="100%"
         class="sapUiSmallMarginTopBottom">
         <columns>
-          <Column width="20%">
+          <Column width="22%">
             <Text text="Main Article" />
           </Column>
           <Column width="20%">
             <Text text="Add-on Article" />
           </Column>
-          <Column width="42%">
+          <Column width="40%">
             <Text text="Description" />
           </Column>
           <Column width="18%" hAlign="End">
-            <Text text="Price" />
+            <Text text="Price (ZAR)" />
           </Column>
         </columns>
         <items>
           <ColumnListItem>
             <cells>
-              <Text text="{valueAddModel>mainArticle}" class="boldText" />
+              <Text text="{valueAddModel>mainArticle}" class="boldText textMuted" />
               <Text text="{valueAddModel>addonArticle}" class="boldText" />
               <Text text="{valueAddModel>description}" />
-              <Text text="{valueAddModel>price}" />
+              <Text text="{= 'R ' + ${valueAddModel>price} }" class="boldText" />
             </cells>
           </ColumnListItem>
         </items>
@@ -56,7 +57,7 @@
     <buttons>
       <Button
         id="btnSelectValueAdd"
-        text="Select"
+        text="Add to Cart"
         type="Emphasized"
         press=".onConfirmValueAddSelection" />
       <Button

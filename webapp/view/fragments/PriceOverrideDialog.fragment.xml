@@ -4,14 +4,16 @@
   <Dialog
     id="priceOverrideDialog"
     title="Price Override"
-    icon="sap-icon://sys-help"
-    contentWidth="400px"
+    icon="sap-icon://money-bills"
+    contentWidth="440px"
     resizable="false"
     draggable="true">
     <content>
       <VBox class="sapUiMediumMargin">
+        
+
         <VBox class="sapUiSmallMarginBottom">
-          <Label text="Manager Authorization" class="boldText sapUiTinyMarginBottom" labelFor="inpManagerAuth" />
+          <Label text="Manager Authorization" class="boldText sapUiTinyMarginBottom" labelFor="inpManagerAuth" required="true" />
           <Input
             id="inpManagerAuth"
             value="{priceOverrideModel>/managerAuth}"
@@ -21,7 +23,7 @@
         </VBox>
 
         <VBox class="sapUiSmallMarginBottom">
-          <Label text="New Sales Price" class="boldText sapUiTinyMarginBottom" labelFor="inpNewSalesPrice" />
+          <Label text="New Sales Price" class="boldText sapUiTinyMarginBottom" labelFor="inpNewSalesPrice" required="true" />
           <Input
             id="inpNewSalesPrice"
             value="{priceOverrideModel>/newPrice}"
