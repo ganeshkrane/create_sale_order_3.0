@@ -266,13 +266,21 @@
                     press=".onOpenAddressPluginModal" />
                 </HBox>
 
-                <!-- Action Button to proceed to Step 2 -->
+                <!-- Action Button to proceed to Step 2 and Update Customer Address -->
                 <HBox justifyContent="End" alignItems="Center" class="sapUiMediumMarginTop">
+                  <Button
+                    id="btnUpdateCustomerAddress"
+                    text="Update Customer Address"
+                    icon="sap-icon://save"
+                    type="Emphasized"
+                    press=".onUpdateCustomerAddress"
+                    visible="{wizardModel>/showUpdateCustomerAddress}"
+                    class="sapUiSmallMarginEnd sapUiSmallMarginBottom" />
                   <Button
                     id="btnProceedToStep2"
                     text="Proceed to Step 2: Marketing Consent"
                     icon="sap-icon://navigation-right-arrow"
-                    type="Emphasized"
+                    type="{= ${wizardModel>/showUpdateCustomerAddress} ? 'Default' : 'Emphasized' }"
                     press=".onProceedToStep2"
                     class="sapUiSmallMarginBottom" />
                 </HBox>
@@ -349,17 +357,19 @@
 
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="Title:" required="true" class="basicDetailsLabel" />
-                        <Select
-                          id="selectIndivTitle"
-                          selectedKey="{appState>/customer/title}"
-                          width="100%"
-                          change=".onFieldChange"
-                          class="basicDetailsSelect">
-                          <core:Item key="Mr." text="Mr." />
-                          <core:Item key="Mrs." text="Mrs." />
-                          <core:Item key="Ms." text="Ms." />
-                          <core:Item key="Dr." text="Dr." />
-                        </Select>
+
+                        <Select id="selectIndivTitle"
+                            selectedKey="{appState>/customer/title}"
+                            width="100%"
+                            change=".onTitleChange"
+                            class="basicDetailsSelect"
+                            items="{
+                              path: 'dropdowns>/title',
+                              sorter: { path: 'text' }
+                            }">
+                            <core:Item  key="{dropdowns>key}" text="{dropdowns>text}" />
+                          </Select>
+
                       </VBox>
 
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
@@ -383,6 +393,16 @@
                           change=".onFieldChange"
                           class="basicDetailsInput" />
                       </VBox>
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                      <Label text="VAT Number:" class="basicDetailsLabel" />
+                      <Input
+                        id="inputIndivVatNumber"
+                        value="{appState>/customer/vatNo}"
+                        placeholder="Enter VAT Number"
+                        liveChange=".onFieldChange"
+                        change=".onFieldChange"
+                        class="basicDetailsInput" />
+                    </VBox>
 
                       <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
                         <VBox width="48%">
@@ -390,9 +410,9 @@
                           <DatePicker
                             id="dpIndivDob"
                             value="{appState>/customer/dateOfBirth}"
-                            displayFormat="dd.MM.yyyy"
-                            valueFormat="dd.MM.yyyy"
-                            placeholder="dd.MM.yyyy"
+                            displayFormat="yyyy-MM-dd"
+                            valueFormat="yyyy-MM-dd"
+                            placeholder="yyyy-MM-dd"
                             width="100%"
                             change=".onDobChange"
                             class="basicDetailsDatePicker" />
@@ -404,10 +424,13 @@
                             selectedKey="{appState>/customer/gender}"
                             width="100%"
                             change=".onFieldChange"
-                            class="basicDetailsSelect">
-                            <core:Item key="Male" text="Male" />
-                            <core:Item key="Female" text="Female" />
-                            <core:Item key="Other" text="Other" />
+                            class="basicDetailsSelect" 
+                             items="{
+                              path: 'dropdowns>/gender',
+                              sorter: { path: 'text' }
+                            }"
+                            >
+                            <core:Item  key="{dropdowns>key}" text="{dropdowns>text}" />
                           </Select>
                         </VBox>
                       </HBox>
@@ -416,7 +439,23 @@
                     <!-- Right Column: Identification & Contact Information -->
                     <VBox class="basicDetailsColumn">
                       <Title text="Identification &amp; Contact Information" titleStyle="H6" class="basicDetailsSectionTitle sapUiSmallMarginBottom" />
-
+                      <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
+                        <Label text="Citizenship:" required="true" class="basicDetailsLabel" />
+                       <ComboBox
+                            id="selectCitizen"
+                            selectedKey="{appState>/customer/citizenship}"
+                            width="100%"
+                            change=".onFieldChange"
+                            class="basicDetailsSelect"
+                             items="{
+                              path: 'dropdowns>/citizenship',
+                              sorter: { path: 'text' },
+                              length: 500
+                            }"
+                            >
+                            <core:Item  key="{dropdowns>key}" text="{dropdowns>text}" />
+                          </ComboBox>
+                      </VBox>
                       <HBox justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
                         <VBox width="48%">
                           <Label text="ID Type:" required="true" class="basicDetailsLabel" />
@@ -425,10 +464,13 @@
                             selectedKey="{appState>/customer/idType}"
                             width="100%"
                             change=".onFieldChange"
-                            class="basicDetailsSelect">
-                            <core:Item key="SA ID Number" text="SA ID Number" />
-                            <core:Item key="Passport" text="Passport" />
-                            <core:Item key="Foreign ID" text="Foreign ID" />
+                            class="basicDetailsSelect"
+                             items="{
+                              path: 'dropdowns>/idType',
+                              sorter: { path: 'text' }
+                            }"
+                            >
+                            <core:Item  key="{dropdowns>key}" text="{dropdowns>text}" />
                           </Select>
                         </VBox>
                         <VBox width="48%">
@@ -518,9 +560,9 @@
                           <DatePicker
                             id="dpCompanyDob"
                             value="{appState>/customer/dateOfBirth}"
-                            displayFormat="dd.MM.yyyy"
-                            valueFormat="dd.MM.yyyy"
-                            placeholder="dd.MM.yyyy"
+                            displayFormat="yyyy-MM-dd"
+                            valueFormat="yyyy-MM-dd"
+                            placeholder="yyyy-MM-dd"
                             width="100%"
                             change=".onDobChange"
                             class="basicDetailsDatePicker" />
@@ -528,15 +570,17 @@
                         <VBox width="48%">
                           <Label text="Gender:" required="true" class="basicDetailsLabel" />
                           <Select
-                            id="selectCompanyGender"
-                            selectedKey="{appState>/customer/gender}"
-                            width="100%"
-                            change=".onFieldChange"
-                            class="basicDetailsSelect">
-                            <core:Item key="Male" text="Male" />
-                            <core:Item key="Female" text="Female" />
-                            <core:Item key="Other" text="Other" />
-                          </Select>
+                                id="selectCompanyGender"
+                                selectedKey="{appState>/customer/gender}"
+                                width="100%"
+                                change=".onFieldChange"
+                                class="basicDetailsSelect"
+                                items="{
+                                  path: 'dropdowns>/gender',
+                                  sorter: { path: 'text' }
+                                }">
+                                <core:Item key="{dropdowns>key}" text="{dropdowns>text}" />
+                              </Select>
                         </VBox>
                       </HBox>
 
@@ -560,16 +604,17 @@
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
                         <Label text="Title:" required="true" class="basicDetailsLabel" />
                         <Select
-                          id="selectCompanyTitle"
-                          selectedKey="{appState>/customer/authRepTitle}"
-                          width="100%"
-                          change=".onFieldChange"
-                          class="basicDetailsSelect">
-                          <core:Item key="Mr." text="Mr." />
-                          <core:Item key="Mrs." text="Mrs." />
-                          <core:Item key="Ms." text="Ms." />
-                          <core:Item key="Dr." text="Dr." />
-                        </Select>
+                              id="selectCompanyTitle"
+                              selectedKey="{appState>/customer/authRepTitle}"
+                              width="100%"
+                              change=".onTitleChange"
+                              class="basicDetailsSelect"
+                              items="{
+                                path: 'dropdowns>/title',
+                                sorter: { path: 'text' }
+                              }">
+                              <core:Item key="{dropdowns>key}" text="{dropdowns>text}" />
+                            </Select>
                       </VBox>
 
                       <VBox class="basicDetailsFieldGroup sapUiSmallMarginBottom">
@@ -598,15 +643,17 @@
                         <VBox width="48%">
                           <Label text="ID Type:" required="true" class="basicDetailsLabel" />
                           <Select
-                            id="selectCompanyIdType"
-                            selectedKey="{appState>/customer/idType}"
-                            width="100%"
-                            change=".onFieldChange"
-                            class="basicDetailsSelect">
-                            <core:Item key="SA ID Number" text="SA ID Number" />
-                            <core:Item key="Passport" text="Passport" />
-                            <core:Item key="Foreign ID" text="Foreign ID" />
-                          </Select>
+                              id="selectCompanyIdType"
+                              selectedKey="{appState>/customer/idType}"
+                              width="100%"
+                              change=".onFieldChange"
+                              class="basicDetailsSelect"
+                              items="{
+                                path: 'dropdowns>/idType',
+                                sorter: { path: 'text' }
+                              }">
+                              <core:Item key="{dropdowns>key}" text="{dropdowns>text}" />
+                            </Select>
                         </VBox>
                         <VBox width="48%">
                           <Label text="ID Number:" required="true" class="basicDetailsLabel" />
@@ -688,14 +735,14 @@
                           press=".onOpenAddressPluginModal" />
                       </HBox>
 
-                      <!-- Create Customer Button: Only visible after address selection/validation -->
+                      <!-- Proceed to Step 2 Button: Only visible after address selection/validation -->
                       <HBox justifyContent="End" alignItems="Center" class="sapUiMediumMarginTop">
                         <Button
-                          id="btnConfirmCreateCustomer"
-                          text="Create Customer"
-                          icon="sap-icon://add-employee"
+                          id="btnNewCustProceedToStep2"
+                          text="Proceed to Step 2: Marketing Information"
+                          icon="sap-icon://navigation-right-arrow"
                           type="Emphasized"
-                          press=".onExecuteCreateCustomer"
+                          press=".onProceedToStep2"
                           class="sapUiSmallMarginBottom" />
                       </HBox>
                     </VBox>
@@ -743,12 +790,11 @@
                 id="selMarketingLanguage"
                 width="240px"
                 selectedKey="{appState>/marketing/marketingLanguage}"
+                items="{dropdowns>/language}"
                 class="marketingSelect">
-                <core:Item key="English" text="English" />
-                <core:Item key="Afrikaans" text="Afrikaans" />
-                <core:Item key="isiZulu" text="isiZulu" />
-                <core:Item key="isiXhosa" text="isiXhosa" />
-                <core:Item key="German" text="German" />
+                <core:Item
+                    key="{dropdowns>key}"
+                    text="{dropdowns>text}" />
               </Select>
             </HBox>
 
@@ -763,12 +809,12 @@
                 width="240px"
                 selectedKey="{appState>/marketing/marketingCorrespondenceMethod}"
                 visible="{= ${appState>/marketing/marketToYou} === 'Yes' }"
-                class="marketingSelect">
-                <core:Item key="" text="" />
-                <core:Item key="Email" text="Email" />
-                <core:Item key="SMS" text="SMS" />
-                <core:Item key="Telephone" text="Telephone" />
-                <core:Item key="Post" text="Post" />
+                class="marketingSelect"
+                items="{dropdowns>/prefCorrMethod}"
+                >
+                <core:Item
+                    key="{dropdowns>key}"
+                    text="{dropdowns>text}" />
               </Select>
             </HBox>
 
@@ -783,11 +829,12 @@
                 width="240px"
                 selectedKey="{appState>/marketing/statementCorrespondenceMethod}"
                
-                class="marketingSelect">
-                <core:Item key="" text="" />
-                <core:Item key="Email" text="Email" />
-                <core:Item key="SMS" text="SMS" />
-                <core:Item key="Post" text="Post" />
+                class="marketingSelect"
+                items="{dropdowns>/stmtCorrMethod}"
+                >
+                 <core:Item
+                    key="{dropdowns>key}"
+                    text="{dropdowns>text}" />
               </Select>
             </HBox>
 
@@ -806,6 +853,39 @@
                 <core:Item key="Yes" text="Yes" />
                 <core:Item key="No" text="No" />
               </Select>
+            </HBox>
+
+            <!-- Create Customer Button (for New Customer): displayed in marketing information wizard after filling marketing info -->
+            <HBox justifyContent="End" alignItems="Center" class="sapUiMediumMarginTop"
+                  visible="{= ${wizardModel>/isCreatingNewCustomer} &amp;&amp; !${wizardModel>/isNewlyCreatedCustomer} &amp;&amp; !!${appState>/marketing/marketToYou} }">
+              <Button
+                id="btnConfirmCreateCustomer"
+                text="Create Customer"
+                icon="sap-icon://add-employee"
+                type="Emphasized"
+                press=".onExecuteCreateCustomer"
+                class="sapUiSmallMarginBottom" />
+            </HBox>
+
+            <!-- Success message shown after a new customer has been created -->
+            <MessageStrip
+              id="msgCustomerCreated"
+              visible="{wizardModel>/isNewlyCreatedCustomer}"
+              text="{= 'Customer ' + ${appState>/customer/name} + ' (BP ' + ${appState>/customer/bpNumber} + ') was created successfully. Click Proceed to Step 3 to continue.' }"
+              type="Success"
+              showIcon="true"
+              class="sapUiMediumMarginTop" />
+
+            <!-- Proceed to Step 3 Button (for Existing Customer / after Customer Created) -->
+            <HBox justifyContent="End" alignItems="Center" class="sapUiMediumMarginTop"
+                  visible="{= (${wizardModel>/isNewlyCreatedCustomer} || !${wizardModel>/isCreatingNewCustomer}) &amp;&amp; !!${appState>/marketing/marketToYou} }">
+              <Button
+                id="btnProceedToStep3"
+                text="Proceed to Step 3: Order Type"
+                icon="sap-icon://navigation-right-arrow"
+                type="Emphasized"
+                press=".onProceedToStep3"
+                class="sapUiSmallMarginBottom" />
             </HBox>
           </VBox>
         </WizardStep>

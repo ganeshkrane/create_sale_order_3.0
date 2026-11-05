@@ -11,12 +11,13 @@
     <subHeader>
       <Toolbar>
         <SearchField
+          id="customerSearchField"
           value="{appState>/searchFilterValue}"
           placeholder="Enter Customer Name"
+          search=".onLiveSearchDialog"
           liveChange=".onLiveSearchDialog"
-          width="40%" />
+          width="50%" />
         <ToolbarSpacer />
-        
       </Toolbar>
     </subHeader>
     <content>
@@ -46,11 +47,11 @@
         <items>
           <ColumnListItem>
             <cells>
-              <ObjectIdentifier title="{customers>bpNumber}" />
-              <Text text="{customers>name}" />
-              <Text text="{customers>telephone}" />
-              <Text text="{customers>email}" />
-              <ObjectStatus text="{customers>type}" state="{= ${customers>type} === 'Company' ? 'Information' : 'None'}" />
+              <ObjectIdentifier title="{= ${customers>BpId} || ${customers>bpNumber} }" />
+              <Text text="{= ${customers>CustomerName} || ${customers>name} || (${customers>fname} + ' ' + ${customers>sname}) }" />
+              <Text text="{= ${customers>cellno} || ${customers>Telephone} || ${customers>telephone} }" />
+              <Text text="{= ${customers>Email} || ${customers>email} }" />
+              <ObjectStatus text="{= ${customers>EmpType} || ${customers>type} || (${customers>coName} ? 'Company' : 'Individual') }" state="{= (${customers>coName} || ${customers>type} === 'Company') ? 'Information' : 'None'}" />
             </cells>
           </ColumnListItem>
         </items>

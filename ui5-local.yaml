@@ -38,6 +38,10 @@ server:
             url: http://gwdevs:4431
             client: '310'
             destination: GWDEV_BAS_258886
+          - path: /sap/opu/odata/sap/ZCRM_CUSTOMER_MANAGE_SRV/
+            url: http://gwdevs:4431
+            client: '310'
+            destination: GWDEV_BAS_BASICAUTH_259703
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:
@@ -65,6 +69,14 @@ server:
           - urlPath: /sap/opu/odata/sap/ZSRA017_SALESORDER_CREATE_SRV
             metadataPath: ./webapp/localService/ZSRA017_SALESORDER_CREATE_SRV/metadata.xml
             mockdataPath: ./webapp/localService/ZSRA017_SALESORDER_CREATE_SRV/data
+            generateMockData: true
+          - urlPath: /sap/opu/odata/sap/ZCUSTOMER_OVERVIEW_NEW_SRV
+            metadataPath: ./webapp/localService/ZCUSTOMER_OVERVIEW_NEW_SRV/metadata.xml
+            mockdataPath: ./webapp/localService/ZCUSTOMER_OVERVIEW_SRV/data
+            generateMockData: true
+          - urlPath: /sap/opu/odata/sap/ZCRM_CUSTOMER_MANAGE_SRV
+            metadataPath: ./webapp/localService/ZCRM_CUSTOMER_MANAGE_SRV/metadata.xml
+            mockdataPath: ./webapp/localService/ZCRM_CUSTOMER_MANAGE_SRV/data
             generateMockData: true
         annotations: []
 builder:

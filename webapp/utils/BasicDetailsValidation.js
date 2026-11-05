@@ -12,24 +12,71 @@ sap.ui.define([], function () {
     parseDob: function (sDob) {
       if (!sDob) return null;
       if (sDob instanceof Date) return isNaN(sDob.getTime()) ? null : sDob;
-      if (typeof sDob === "string") {
-        var aParts = sDob.split(".");
-        if (aParts.length === 3) {
-          var d = parseInt(aParts[0], 10);
-          var m = parseInt(aParts[1], 10) - 1;
-          var y = parseInt(aParts[2], 10);
-          if (isNaN(d) || isNaN(m) || isNaN(y) || d < 1 || d > 31 || m < 0 || m > 11 || y < 1900 || y > 2100) {
-            return null;
+      if (typeof sDob !== "string") return null;
+
+      var s = sDob.trim();
+      if (!s) return null;
+
+      // Handle ISO formats (YYYY-MM-DD or YYYY/MM/DD or YYYY.MM.DD) or DD-MM-YYYY / DD.MM.YYYY
+      var aParts = s.split(/[-/.]/);
+      if (aParts.length === 3) {
+        var p0 = parseInt(aParts[0], 10);
+        var p1 = parseInt(aParts[1], 10);
+        var p2 = parseInt(aParts[2], 10);
+
+        // Case 1: YYYY-xx-xx (year is first)
+        if (p0 >= 1900 && p0 <= 2100) {
+          var y = p0, m, d;
+          if (p1 > 12 && p2 <= 12) {
+            // YYYY-DD-MM
+            d = p1;
+            m = p2;
+          } else {
+            // Standard ISO: YYYY-MM-DD
+            m = p1;
+            d = p2;
           }
-          var dObj = new Date(y, m, d);
-          if (dObj.getFullYear() !== y || dObj.getMonth() !== m || dObj.getDate() !== d) {
-            return null;
+          if (m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+            var dObj = new Date(y, m - 1, d);
+            if (dObj.getFullYear() === y && dObj.getMonth() === m - 1 && dObj.getDate() === d) {
+              return dObj;
+            }
           }
-          return dObj;
         }
-        var dObj2 = new Date(sDob);
-        return isNaN(dObj2.getTime()) ? null : dObj2;
+
+        // Case 2: xx-xx-YYYY (year is last)
+        if (p2 >= 1900 && p2 <= 2100) {
+          var y2 = p2, m2, d2;
+          if (p0 > 12 && p1 <= 12) {
+            // DD-MM-YYYY
+            d2 = p0;
+            m2 = p1;
+          } else if (p1 > 12 && p0 <= 12) {
+            // MM-DD-YYYY
+            m2 = p0;
+            d2 = p1;
+          } else {
+            // Default DD-MM-YYYY
+            d2 = p0;
+            m2 = p1;
+          }
+          if (m2 >= 1 && m2 <= 12 && d2 >= 1 && d2 <= 31) {
+            var dObj2 = new Date(y2, m2 - 1, d2);
+            if (dObj2.getFullYear() === y2 && dObj2.getMonth() === m2 - 1 && dObj2.getDate() === d2) {
+              return dObj2;
+            }
+          }
+        }
       }
+
+      var dNative = new Date(s);
+      if (!isNaN(dNative.getTime())) {
+        var ny = dNative.getFullYear();
+        if (ny >= 1900 && ny <= 2100) {
+          return dNative;
+        }
+      }
+
       return null;
     },
 
@@ -98,21 +145,19 @@ sap.ui.define([], function () {
 
         // Date of Birth
         var sDobComp = (oData.dateOfBirth || "").trim();
+        var dDobC = this.parseDob(sDobComp);
         var bDpCompValid = oOptions.bDpCompValid !== undefined ? oOptions.bDpCompValid : true;
 
         if (!sDobComp) {
           flagError("dpCompanyDob", "lblDateOfBirth", "Date of Birth", "valDobMandatory", "Date of Birth is mandatory.");
-        } else if (!bDpCompValid) {
-          flagError("dpCompanyDob", "lblDateOfBirth", "Date of Birth", "valDobValid18Years", "Please enter a valid Date of Birth (dd.MM.yyyy) - must be at least 18 years old.");
-        } else {
-          var dDobC = this.parseDob(sDobComp);
-          if (!dDobC) {
-            flagError("dpCompanyDob", "lblDateOfBirth", "Date of Birth", "valDobValidFormat", "Please enter or select a valid Date of Birth (dd.MM.yyyy).");
-          } else if (dDobC > new Date()) {
-            flagError("dpCompanyDob", "lblDateOfBirth", "Date of Birth", "valDobFuture", "Date of Birth cannot be in the future.");
-          } else if (this.calculateAge(dDobC) < 18) {
-            flagError("dpCompanyDob", "lblDateOfBirth", "Date of Birth", "valAuthRep18Years", "Authorised Representative must be at least 18 years old.");
-          }
+        } else if (!dDobC && !bDpCompValid) {
+          flagError("dpCompanyDob", "lblDateOfBirth", "Date of Birth", "valDobValid18Years", "Please enter a valid Date of Birth (yyyy-MM-dd) - must be at least 18 years old.");
+        } else if (!dDobC) {
+          flagError("dpCompanyDob", "lblDateOfBirth", "Date of Birth", "valDobValidFormat", "Please enter or select a valid Date of Birth (yyyy-MM-dd).");
+        } else if (dDobC > new Date()) {
+          flagError("dpCompanyDob", "lblDateOfBirth", "Date of Birth", "valDobFuture", "Date of Birth cannot be in the future.");
+        } else if (this.calculateAge(dDobC) < 18) {
+          flagError("dpCompanyDob", "lblDateOfBirth", "Date of Birth", "valAuthRep18Years", "Authorised Representative must be at least 18 years old.");
         }
 
         // Gender
@@ -203,21 +248,19 @@ sap.ui.define([], function () {
 
         // Date of Birth
         var sDobInd = (oData.dateOfBirth || "").trim();
+        var dDobI = this.parseDob(sDobInd);
         var bDpIndValid = oOptions.bDpIndValid !== undefined ? oOptions.bDpIndValid : true;
 
         if (!sDobInd) {
           flagError("dpIndivDob", "lblDateOfBirth", "Date of Birth", "valDobMandatory", "Date of Birth is mandatory.");
-        } else if (!bDpIndValid) {
-          flagError("dpIndivDob", "lblDateOfBirth", "Date of Birth", "valDobValid18Years", "Please enter a valid Date of Birth (dd.MM.yyyy) - must be at least 18 years old.");
-        } else {
-          var dDobI = this.parseDob(sDobInd);
-          if (!dDobI) {
-            flagError("dpIndivDob", "lblDateOfBirth", "Date of Birth", "valDobValidFormat", "Please enter or select a valid Date of Birth (dd.MM.yyyy).");
-          } else if (dDobI > new Date()) {
-            flagError("dpIndivDob", "lblDateOfBirth", "Date of Birth", "valDobFuture", "Date of Birth cannot be in the future.");
-          } else if (this.calculateAge(dDobI) < 18) {
-            flagError("dpIndivDob", "lblDateOfBirth", "Date of Birth", "valCust18Years", "Customer must be at least 18 years old.");
-          }
+        } else if (!dDobI && !bDpIndValid) {
+          flagError("dpIndivDob", "lblDateOfBirth", "Date of Birth", "valDobValid18Years", "Please enter a valid Date of Birth (yyyy-MM-dd) - must be at least 18 years old.");
+        } else if (!dDobI) {
+          flagError("dpIndivDob", "lblDateOfBirth", "Date of Birth", "valDobValidFormat", "Please enter or select a valid Date of Birth (yyyy-MM-dd).");
+        } else if (dDobI > new Date()) {
+          flagError("dpIndivDob", "lblDateOfBirth", "Date of Birth", "valDobFuture", "Date of Birth cannot be in the future.");
+        } else if (this.calculateAge(dDobI) < 18) {
+          flagError("dpIndivDob", "lblDateOfBirth", "Date of Birth", "valCust18Years", "Customer must be at least 18 years old.");
         }
 
         // Gender

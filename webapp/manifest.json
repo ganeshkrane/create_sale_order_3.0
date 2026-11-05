@@ -63,6 +63,24 @@
           "localUri": "localService/ZSRA017_SALESORDER_CREATE_SRV/metadata.xml",
           "odataVersion": "2.0"
         }
+      },
+      "ZCUSTOMER_OVERVIEW_SRV": {
+        "uri": "/sap/opu/odata/sap/ZCUSTOMER_OVERVIEW_NEW_SRV/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "localUri": "localService/ZCUSTOMER_OVERVIEW_NEW_SRV/metadata.xml",
+          "odataVersion": "2.0"
+        }
+      },
+      "ZCRM_CUSTOMER_MANAGE_SRV": {
+        "uri": "/sap/opu/odata/sap/ZCRM_CUSTOMER_MANAGE_SRV/",
+        "type": "OData",
+        "settings": {
+          "annotations": [],
+          "localUri": "localService/ZCRM_CUSTOMER_MANAGE_SRV/metadata.xml",
+          "odataVersion": "2.0"
+        }
       }
     },
     "sourceTemplate": {
@@ -155,6 +173,16 @@
       },
       "ZSRA017_SALESORDER_CREATE_SRV": {
         "dataSource": "ZSRA017_SALESORDER_CREATE_SRV",
+        "preload": true,
+        "settings": {}
+      },
+      "ZCUSTOMER_OVERVIEW_SRV": {
+        "dataSource": "ZCUSTOMER_OVERVIEW_SRV",
+        "preload": true,
+        "settings": {}
+      },
+      "ZCRM_CUSTOMER_MANAGE_SRV": {
+        "dataSource": "ZCRM_CUSTOMER_MANAGE_SRV",
         "preload": true,
         "settings": {}
       }

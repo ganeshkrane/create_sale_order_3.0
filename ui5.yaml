@@ -25,6 +25,10 @@ server:
             url: http://gwdevs:4431
             client: '310'
             destination: GWDEV_BAS_258886
+          - path: /sap/opu/odata/sap/ZCRM_CUSTOMER_MANAGE_SRV/
+            url: http://gwdevs:4431
+            client: '310'
+            destination: GWDEV_BAS_BASICAUTH_259703
         ui5:
           path:
             - /resources

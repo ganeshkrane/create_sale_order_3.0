@@ -31,14 +31,15 @@ sap.ui.define([
         },
         productSearchQuery: "",
         selectedCategory: "All",
-        orderCreated: false
+        orderCreated: false,
+        showUpdateCustomerAddress: false
       });
       this.getView().setModel(oWizardModel, "wizardModel");
 
       // FilterModel for backend OData queries with oModel.read
       var oFilterModel = new JSONModel({
         search: "",
-        userId: "STOREUSER",
+        userId: "259703",
         site: "M001",
         promoMember: ""
       });
@@ -94,8 +95,47 @@ sap.ui.define([
         }
       });
       this.getView().addDependent(this._oMessagePopover);
+      this.callDropDownsSet();
     },
+    callDropDownsSet:function(){
+      var userId = "259703";
+      var bucode = "01001";
+      var country = "ZA";
+      var oOrigModel = this._getOriginationsODataModel();
 
+      var sPath = "/DropDownsSet(userId='" + userId + "|" + bucode + "|" + country + "')";
+
+      oOrigModel.read(sPath, {
+          success: function (oData) {
+             var oDropdownData = {
+                title: JSON.parse(oData.title || "[]"),
+                gender: JSON.parse(oData.gender || "[]"),
+                marstat: JSON.parse(oData.marstat || "[]"),
+                howMarried: JSON.parse(oData.howMarried || "[]"),
+                citizenship: JSON.parse(oData.citizenship || "[]"),
+                idType: JSON.parse(oData.idType || "[]"),
+                province: JSON.parse(oData.province || "[]"),
+                country: JSON.parse(oData.country || "[]"),
+                language:JSON.parse(oData.prefLang || "[]"),
+                prefCorrMethod:JSON.parse(oData.prefCorrMethod || "[]"),
+                stmtCorrMethod:JSON.parse(oData.stmtCorrMethod || "[]")
+            };
+
+            var oDropdownModel = new sap.ui.model.json.JSONModel(oDropdownData);
+
+            this.getView().setModel(oDropdownModel, "dropdowns");
+
+            // default citizenship = South Africa
+            var oAppStateModel = this.getModel("appState");
+            if (oAppStateModel && oAppStateModel.getProperty("/customer") && !oAppStateModel.getProperty("/customer/citizenship")) {
+              oAppStateModel.setProperty("/customer/citizenship", "ZA");
+            }
+          }.bind(this),
+          error: function (oError) {
+              console.log(oError);
+          }
+      });
+    },
     onAfterRendering: function () {
       this._attachDeliveryCardEvents();
     },
@@ -133,8 +173,28 @@ sap.ui.define([
     },
 
     // ========================================================
-    // STEP 1: CUSTOMER LOOKUP & CAPTURE
+    // STEP 1: CUSTOMER LOOKUP & CAPTURE (ZCUSTOMER_OVERVIEW_SRV)
     // ========================================================
+    _getCustomerOverviewODataModel: function () {
+      var oModel = this.getView().getModel("ZCUSTOMER_OVERVIEW_SRV") ||
+                   (this.getOwnerComponent() && this.getOwnerComponent().getModel("ZCUSTOMER_OVERVIEW_SRV")) ||
+                   this.getView().getModel("customerOverviewOData") ||
+                   (this.getOwnerComponent() && this.getOwnerComponent().getModel("customerOverviewOData")) ||
+                   sap.ui.getCore().getModel("ZCUSTOMER_OVERVIEW_SRV");
+
+      if (!oModel || typeof oModel.read !== "function") {
+        oModel = new sap.ui.model.odata.v2.ODataModel("/sap/opu/odata/sap/ZCUSTOMER_OVERVIEW_SRV/", {
+          useBatch: false,
+          defaultBindingMode: "TwoWay"
+        });
+        this.getView().setModel(oModel, "ZCUSTOMER_OVERVIEW_SRV");
+        if (this.getOwnerComponent()) {
+          this.getOwnerComponent().setModel(oModel, "ZCUSTOMER_OVERVIEW_SRV");
+        }
+      }
+      return oModel;
+    },
+
     onSearchCustomerClick: function () {
       var oWizardModel = this.getView().getModel("wizardModel");
       var oCriteria = oWizardModel.getProperty("/searchCriteria") || {};
@@ -143,10 +203,127 @@ sap.ui.define([
       var sEmail = (oCriteria.email || "").trim();
       var sCustNum = (oCriteria.customerNumber || "").trim();
       var sIdNum = (oCriteria.idNumber || "").trim();
+      var sAccountNum = (oCriteria.orderOrAccountNo || "").trim();
+      var sDealNum = (oCriteria.dealNumber || "").trim();
+      var sPlusMore = (oCriteria.plusMoreNumber || "").trim();
 
-      // No validation required: if no criteria provided, display all customer records
       this.getModel("appState").setProperty("/searchFilterValue", sName || sCustNum);
-      this._openSearchResultsDialog(sName, sMobile, sEmail, sCustNum, sIdNum);
+
+      // Build OData filters for ZCUSTOMER_OVERVIEW_SRV CustomerSet using FilterOperator.EQ
+      // Country eq 'ZA' is passed as the default filter
+      var aODataFilters = [
+        new Filter("Country", FilterOperator.EQ, "ZA")
+      ];
+      if (sName) {
+        aODataFilters.push(new Filter("CustomerName", FilterOperator.EQ, sName));
+      }
+      if (sCustNum) {
+        aODataFilters.push(new Filter("BpId", FilterOperator.EQ, sCustNum));
+      }
+      if (sIdNum) {
+        aODataFilters.push(new Filter("IdNo", FilterOperator.EQ, sIdNum));
+      }
+      if (sMobile) {
+        aODataFilters.push(new Filter("cellno", FilterOperator.EQ, sMobile));
+      }
+      if (sEmail) {
+        aODataFilters.push(new Filter("Email", FilterOperator.EQ, sEmail));
+      }
+      if (sAccountNum) {
+        aODataFilters.push(new Filter("accountNumber", FilterOperator.EQ, sAccountNum));
+      }
+      if (sPlusMore) {
+        aODataFilters.push(new Filter("LoyaltyNumber", FilterOperator.EQ, sPlusMore));
+      }
+
+      var that = this;
+      var oCustomerModel = this._getCustomerOverviewODataModel();
+      sap.ui.core.BusyIndicator.show(0);
+
+      // Query CustomerSet from ZCUSTOMER_OVERVIEW_SRV
+      oCustomerModel.read("/CustomerSet", {
+        filters: aODataFilters,
+        success: function (oData) {
+          sap.ui.core.BusyIndicator.hide();
+          var aResults = (oData && oData.results) ? oData.results : [];
+          var aNormalized = that._normalizeCustomerRecords(aResults);
+
+          var oCustomersModel = that.getModel("customers") ||
+                                (that.getOwnerComponent() && that.getOwnerComponent().getModel("customers")) ||
+                                that.getView().getModel("customers");
+          if (oCustomersModel) {
+            oCustomersModel.setData(aNormalized);
+            oCustomersModel.setProperty("/results", aNormalized);
+            oCustomersModel.refresh(true);
+          }
+
+          that._openSearchResultsDialog(sName, sMobile, sEmail, sCustNum, sIdNum);
+        },
+        error: function (oError) {
+          sap.ui.core.BusyIndicator.hide();
+          console.warn("ZCUSTOMER_OVERVIEW_SRV CustomerSet read error:", oError);
+          // Fallback to local customers dataset
+          that._openSearchResultsDialog(sName, sMobile, sEmail, sCustNum, sIdNum);
+        }
+      });
+    },
+
+    _normalizeCustomerRecords: function (aResults) {
+      if (!Array.isArray(aResults)) return [];
+      return aResults.map(function (item) {
+        var sBp = item.BpId || item.bpNumber || "";
+        var sFullName = item.CustomerName || item.name || ((item.fname || item.firstName || "") + " " + (item.sname || item.lastName || "")).trim();
+        var sPhone = item.cellno || item.Telephone || item.telephone || "";
+        var sEmail = item.Email || item.email || "";
+        var sType = item.coName ? "Company" : (item.EmpType || item.type || "Individual");
+
+        var oAddr = item.address;
+        if (!oAddr || !oAddr.street) {
+          oAddr = {
+            street: item.Street || "",
+            city: item.City || "",
+            suburb: item.suburb || "",
+            region: item.province || "",
+            postalCode: item.PostalCode || "",
+            country: item.Country || "ZA",
+            formatted: [item.Street, item.suburb, item.City, item.province, item.PostalCode].filter(Boolean).join(", "),
+            type: "Default / Billing",
+            status: "EXISTING",
+            statusText: "EXISTING",
+            statusState: "Success"
+          };
+        }
+
+        return Object.assign({}, item, {
+          BpId: sBp,
+          bpNumber: sBp,
+          CustomerName: sFullName,
+          name: sFullName,
+          fname: item.fname || item.firstName || "",
+          firstName: item.fname || item.firstName || "",
+          sname: item.sname || item.lastName || "",
+          lastName: item.sname || item.lastName || "",
+          title: item.title || "Mr",
+          IdNo: item.IdNo || item.idPassport || "",
+          idPassport: item.IdNo || item.idPassport || "",
+          idType: item.idType || "SA ID",
+          cellno: sPhone,
+          Telephone: sPhone,
+          telephone: sPhone,
+          Email: sEmail,
+          email: sEmail,
+          EmpType: item.EmpType || sType,
+          type: sType,
+          companyName: item.coName || item.companyName || "",
+          coName: item.coName || item.companyName || "",
+          regNo: item.coRegNumber || item.regNo || "",
+          coRegNumber: item.coRegNumber || item.regNo || "",
+          vatNo: item.vatNumber || item.vatNo || "",
+          vatNumber: item.vatNumber || item.vatNo || "",
+          accountNumber: item.accountNumber || ("ACC-" + sBp),
+          address: oAddr
+        });
+      });
     },
 
     _openSearchResultsDialog: function (sName, sMobile, sEmail, sCustNum, sIdNum) {
@@ -176,32 +353,9 @@ sap.ui.define([
 
         if (oTable) {
           var oBinding = oTable.getBinding("items");
-          var aFilters = [];
-
-          if (sName) {
-            aFilters.push(new Filter("name", FilterOperator.Contains, sName));
-          }
-          if (sCustNum) {
-            aFilters.push(new Filter("bpNumber", FilterOperator.Contains, sCustNum));
-          }
-          if (sIdNum) {
-            aFilters.push(new Filter("idPassport", FilterOperator.Contains, sIdNum));
-          }
-          if (sMobile) {
-            aFilters.push(new Filter("telephone", FilterOperator.Contains, sMobile));
-          }
-          if (sEmail) {
-            aFilters.push(new Filter("email", FilterOperator.Contains, sEmail));
-          }
-
           if (oBinding) {
-            if (aFilters.length > 0) {
-              oBinding.filter(new Filter({ filters: aFilters, and: false }));
-            } else {
-              oBinding.filter([]);
-            }
+            oBinding.filter([]);
           }
-
           var aItems = oTable.getItems ? oTable.getItems() : [];
           if (aItems.length > 0) {
             var oFirst = aItems[0];
@@ -212,6 +366,13 @@ sap.ui.define([
           } else {
             that._selectedCustomerContext = null;
           }
+        }
+
+        // Clear local dialog search field value on open so user sees all results
+        var oSearchField = oView.byId("customerSearchField") ||
+                           Fragment.byId(oView.getId(), "customerSearchField");
+        if (oSearchField && oSearchField.setValue) {
+          oSearchField.setValue("");
         }
 
         oDialog.open();
@@ -227,10 +388,43 @@ sap.ui.define([
     },
 
     onLiveSearchDialog: function (oEvent) {
-      var sValue = oEvent.getParameter("value");
+      var sValue = "";
+      if (oEvent) {
+        if (typeof oEvent.getParameter === "function") {
+          sValue = oEvent.getParameter("newValue");
+          if (sValue === undefined || sValue === null) {
+            sValue = oEvent.getParameter("query");
+          }
+        }
+        if ((sValue === undefined || sValue === null || sValue === "") && oEvent.getSource) {
+          var oSrc = oEvent.getSource();
+          if (oSrc && typeof oSrc.getValue === "function") {
+            sValue = oSrc.getValue();
+          }
+        }
+      }
+      sValue = (sValue || "").trim();
+
       var oView = this.getView();
       var oTable = oView.byId("customerResultsTable") ||
+                   (this.byId && this.byId("customerResultsTable")) ||
                    Fragment.byId(oView.getId(), "customerResultsTable");
+
+      if (!oTable && oEvent && oEvent.getSource) {
+        var oCtrl = oEvent.getSource();
+        while (oCtrl && !oTable) {
+          if (oCtrl.getContent && typeof oCtrl.getContent === "function") {
+            var aContent = oCtrl.getContent();
+            if (Array.isArray(aContent)) {
+              oTable = aContent.find(function (c) {
+                return (c.getId && c.getId().indexOf("customerResultsTable") !== -1) || (c.isA && c.isA("sap.m.Table"));
+              }) || aContent[0];
+            }
+          }
+          oCtrl = oCtrl.getParent ? oCtrl.getParent() : null;
+        }
+      }
+
       if (!oTable) {
         return;
       }
@@ -239,27 +433,62 @@ sap.ui.define([
         return;
       }
 
+      var that = this;
       if (sValue) {
         var aFilters = [
-          new Filter("name", FilterOperator.Contains, sValue),
-          new Filter("bpNumber", FilterOperator.Contains, sValue),
-          new Filter("telephone", FilterOperator.Contains, sValue),
-          new Filter("email", FilterOperator.Contains, sValue)
+          new Filter({ path: "CustomerName", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "name", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "fname", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "sname", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "firstName", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "lastName", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "BpId", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "bpNumber", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "cellno", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "Telephone", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "telephone", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "Email", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "email", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "EmpType", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "type", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "coName", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "companyName", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "IdNo", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "idPassport", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false }),
+          new Filter({ path: "accountNumber", operator: FilterOperator.Contains, value1: sValue, caseSensitive: false, bCaseSensitive: false })
         ];
         oBinding.filter(new Filter({ filters: aFilters, and: false }));
       } else {
         oBinding.filter([]);
       }
+
+      // Re-evaluate selected item after filtering
+      setTimeout(function () {
+        if (oTable && oTable.getItems) {
+          var aItems = oTable.getItems();
+          if (aItems.length > 0) {
+            if (oTable.setSelectedItem) {
+              oTable.setSelectedItem(aItems[0]);
+            }
+            that._selectedCustomerContext = aItems[0].getBindingContext("customers");
+          } else {
+            that._selectedCustomerContext = null;
+          }
+        }
+      }, 50);
     },
 
     onConfirmCustomerSelection: function () {
       var oView = this.getView();
       var oTable = oView.byId("customerResultsTable") ||
+                   (this.byId && this.byId("customerResultsTable")) ||
                    Fragment.byId(oView.getId(), "customerResultsTable");
-      if (!this._selectedCustomerContext && oTable && oTable.getItems) {
+      if (oTable && oTable.getSelectedItem && oTable.getSelectedItem()) {
+        this._selectedCustomerContext = oTable.getSelectedItem().getBindingContext("customers");
+      } else if (!this._selectedCustomerContext && oTable && oTable.getItems) {
         var aItems = oTable.getItems();
         if (aItems.length > 0) {
-          var oSelected = (oTable.getSelectedItem && oTable.getSelectedItem()) || aItems[0];
+          var oSelected = aItems[0];
           this._selectedCustomerContext = oSelected.getBindingContext("customers");
         }
       }
@@ -281,6 +510,7 @@ sap.ui.define([
       oWizardModel.setProperty("/isNewlyCreatedCustomer", false);
       oWizardModel.setProperty("/customerSelected", true);
       oWizardModel.setProperty("/addressValidated", false); // Address must be validated/selected first!
+      oWizardModel.setProperty("/showUpdateCustomerAddress", false);
       oWizardModel.setProperty("/searchPanelExpanded", false);
 
       var oStepCustomer = this.byId("stepCustomer");
@@ -319,6 +549,7 @@ sap.ui.define([
       oWizardModel.setProperty("/isCreatingNewCustomer", true);
       oWizardModel.setProperty("/customerSelected", false);
       oWizardModel.setProperty("/addressValidated", false);
+      oWizardModel.setProperty("/showUpdateCustomerAddress", false);
       oWizardModel.setProperty("/isNewlyCreatedCustomer", false);
       oWizardModel.setProperty("/showNewCustomerCapture", false);
 
@@ -340,6 +571,7 @@ sap.ui.define([
         type: "Individual",
         dateOfBirth: "",
         gender: "Male",
+        citizenship: "ZA",
         idType: "SA ID Number",
         idPassport: oCriteria.idNumber || "",
         companyName: sCriteriaName || "",
@@ -466,14 +698,40 @@ sap.ui.define([
 
     onDobChange: function (oEvent) {
       var oDP = oEvent.getSource();
-      var sVal = oEvent.getParameter("value") || oDP.getValue() || "";
+      var sVal = oEvent.getParameter("value") || (oDP && oDP.getValue ? oDP.getValue() : "") || "";
       var oAppState = this.getModel("appState");
       if (oAppState) {
         oAppState.setProperty("/customer/dateOfBirth", sVal);
       }
-      if (oDP.getValueState && oDP.getValueState() === "Error") {
-        this._validateBasicDetailsForm(true);
+      //this._validateBasicDetailsForm(true);
+    },
+
+    // Title -> Gender auto-selection (gender keys: "1" = Female, "2" = Male)
+    onTitleChange: function (oEvent) {
+      this.onFieldChange(oEvent);
+      var oSelect = oEvent.getSource();
+      var oItem = oSelect.getSelectedItem && oSelect.getSelectedItem();
+      var sTitle = (oItem ? oItem.getText() : "").toLowerCase().replace(/[.\s]/g, "");
+      var sGender = "";
+      if (sTitle === "mr") {
+        sGender = "2";
+      } else if (["mrs", "miss", "ms"].indexOf(sTitle) > -1) {
+        sGender = "1";
       }
+      if (!sGender) {
+        return;
+      }
+      var oAppState = this.getModel("appState");
+      if (oAppState) {
+        oAppState.setProperty("/customer/gender", sGender);
+      }
+      ["selectIndivGender", "selectCompanyGender"].forEach(function (sId) {
+        var oGender = this.byId(sId);
+        if (oGender && oGender.setValueState) {
+          oGender.setValueState("None");
+          oGender.setValueStateText("");
+        }
+      }, this);
     },
 
     onFieldChange: function (oEvent) {
@@ -539,7 +797,8 @@ sap.ui.define([
         oValidationData,
         this.getResourceBundle(),
         {
-          bDpCompValid: (sEntityType === "Company" && oDpComp && oDpComp.isValidValue) ? oDpComp.isValidValue() : ((sEntityType === "Individual" && oDpInd && oDpInd.isValidValue) ? oDpInd.isValidValue() : true)
+          bDpCompValid: (oDpComp && oDpComp.isValidValue) ? oDpComp.isValidValue() : true,
+          bDpIndValid: (oDpInd && oDpInd.isValidValue) ? oDpInd.isValidValue() : true
         }
       );
 
@@ -706,6 +965,18 @@ sap.ui.define([
           that.getView().getModel("wizardModel").setProperty("/addressValidated", true);
           that._updatePendingActionText();
 
+          // Check if existing customer and address was modified in plugin
+          var sStatus = (oAddrObj.status || "").toUpperCase();
+          var bIsModified = sStatus === "MODIFIED";
+          var bIsExistingCustomer = !that.getView().getModel("wizardModel").getProperty("/isCreatingNewCustomer") &&
+                                    that.getView().getModel("wizardModel").getProperty("/customerSelected");
+
+          if (bIsExistingCustomer && bIsModified) {
+            that.getView().getModel("wizardModel").setProperty("/showUpdateCustomerAddress", true);
+          } else {
+            that.getView().getModel("wizardModel").setProperty("/showUpdateCustomerAddress", false);
+          }
+
           // Validate Step 1 so Step 2 (Marketing Consent) becomes visible and unlocked
           var oStepCustomer = that.byId("stepCustomer");
           if (oStepCustomer) {
@@ -722,6 +993,20 @@ sap.ui.define([
     },
 
     onProceedToStep2: function () {
+      var oWizardModel = this.getView().getModel("wizardModel");
+      var bIsNew = oWizardModel && oWizardModel.getProperty("/isCreatingNewCustomer");
+      if (bIsNew) {
+        if (!this._validateBasicDetailsForm(false)) {
+          return;
+        }
+        var oAppState = this.getModel("appState");
+        var oCustAddr = oAppState && oAppState.getProperty("/customer/address");
+        if (!oCustAddr || !oCustAddr.formatted) {
+          MessageBox.warning("Please validate address before proceeding to Marketing Information.");
+          return;
+        }
+      }
+
       var oWizard = this.byId("salesOrderWizard");
       var oStepConsent = this.byId("stepConsent");
       var oStepCustomer = this.byId("stepCustomer");
@@ -731,6 +1016,21 @@ sap.ui.define([
       if (oWizard && oStepConsent) {
         oWizard.validateStep(oStepCustomer);
         oWizard.goToStep(oStepConsent);
+      }
+    },
+
+    onProceedToStep3: function () {
+      var oWizard = this.byId("salesOrderWizard");
+      var oStepConsent = this.byId("stepConsent");
+      var oStepOrderType = this.byId("stepOrderType");
+      if (oStepConsent) {
+        oStepConsent.setValidated(true);
+      }
+      if (oWizard && oStepOrderType) {
+        if (oStepConsent) {
+          oWizard.validateStep(oStepConsent);
+        }
+        oWizard.goToStep(oStepOrderType);
       }
     },
 
@@ -793,16 +1093,161 @@ sap.ui.define([
         oAddressesModel.setData(aAddresses);
         this.getModel("appState").setProperty("/customer/address", aAddresses[0]);
         this.getView().getModel("wizardModel").setProperty("/addressValidated", true);
+        if (!this.getView().getModel("wizardModel").getProperty("/isCreatingNewCustomer") &&
+            this.getView().getModel("wizardModel").getProperty("/customerSelected")) {
+          this.getView().getModel("wizardModel").setProperty("/showUpdateCustomerAddress", true);
+        }
         this._updatePendingActionText();
         MessageToast.show("Address modified (Status: MODIFIED)");
       }
+    },
+
+    onUpdateCustomerAddress: function () {
+      var oAppState = this.getModel("appState");
+      var oCustomer = oAppState.getProperty("/customer") || {};
+      var sType = oCustomer.type || "Individual";
+      var sBp = oCustomer.bpNumber || oCustomer.BpId || "";
+
+      if (!sBp) {
+        MessageBox.error("No Business Partner (BP) number found for selected customer.");
+        return;
+      }
+
+      var oAddr = oCustomer.address || {};
+      if (!oAddr || !oAddr.formatted) {
+        MessageBox.warning("Please modify or validate address before updating.");
+        return;
+      }
+
+      var sName = "";
+      if (sType === "Company") {
+        sName = (oCustomer.companyName || oCustomer.name || "Company").trim();
+      } else {
+        sName = ((oCustomer.firstName || "") + " " + (oCustomer.lastName || "")).trim() || oCustomer.name || "Customer";
+      }
+
+      var sUserId = "259703";
+      var oFilterModel = this.getView().getModel("filterModel");
+      if (oFilterModel && oFilterModel.getProperty("/userId")) {
+        sUserId = oFilterModel.getProperty("/userId");
+      }
+
+      var oQuickAppPayload = {
+        userId: sUserId,
+        bpId: sBp,
+        coBpId: sType === "Company" ? sBp : "",
+        entityType: sType,
+        customerName: sName,
+        title: sType === "Company" ? (oCustomer.authRepTitle || oCustomer.title || "0001") : (oCustomer.title || "0001"),
+        fName: sType === "Company" ? (oCustomer.authRepFirstName || oCustomer.firstName || "") : (oCustomer.firstName || ""),
+        sName: sType === "Company" ? (oCustomer.authRepSurname || oCustomer.lastName || "") : (oCustomer.lastName || ""),
+        inits: sType === "Company" ? ((oCustomer.authRepFirstName || oCustomer.firstName || "C").charAt(0)) : ((oCustomer.firstName || "T").charAt(0)),
+        idType: oCustomer.idType || "ZPASS",
+        idNo: oCustomer.idPassport || oCustomer.IdNo || "",
+        dob: oCustomer.dateOfBirth || oCustomer.dob || "1990-01-01",
+        gender: oCustomer.gender || "Male",
+        cellPhone: oCustomer.telephone || oCustomer.cellno || "",
+        homePhone: oCustomer.telephone || oCustomer.cellno || "",
+        eMail: oCustomer.email || oCustomer.Email || "",
+        coName: oCustomer.companyName || (sType === "Company" ? sName : ""),
+        coRegNumber: oCustomer.regNo || oCustomer.coRegNumber || "",
+        vatNumber: oCustomer.vatNo || oCustomer.vatNumber || "",
+        dwellingType: oAddr.dwellingType || "HOUSE",
+        homeStreeName: oAddr.streetName || oAddr.street || "",
+        homeSuburb: oAddr.suburb || "",
+        homeCity: oAddr.city || "",
+        homePostalCode: oAddr.postalCode || "",
+        homeProvince: oAddr.province || oAddr.region || "",
+        homeCountry: oAddr.country || "ZA",
+        homeLatitude: oAddr.latitude || "-26.1076",
+        homeLongitude: oAddr.longitude || "28.0567",
+        delStreeName: oAddr.streetName || oAddr.street || "",
+        delSuburb: oAddr.suburb || "",
+        delCity: oAddr.city || "",
+        delPostalCode: oAddr.postalCode || "",
+        delProvince: oAddr.province || oAddr.region || "",
+        delCountry: oAddr.country || "ZA",
+        delLatitude: oAddr.latitude || "-26.1076",
+        delLongitude: oAddr.longitude || "28.0567",
+        delSameAsRes: "Y",
+        postSameAsRes: "Y",
+        marketingOption: "Y",
+        prefCorrLang: "EN",
+        prefCorrMethod: "EMAIL",
+        stmtCorrMethod: "EMAIL",
+        ctzship: oCustomer.citizenship || "ZA"
+      };
+
+      var that = this;
+      var CustManageModel = (this.getOwnerComponent() && this.getOwnerComponent().getModel('ZCRM_CUSTOMER_MANAGE_SRV')) ||
+                            this.getView().getModel('ZCRM_CUSTOMER_MANAGE_SRV') ||
+                            this._getOriginationsODataModel();
+
+      sap.ui.core.BusyIndicator.show(0);
+
+      function finalizeAddressUpdate(sReturnedBp) {
+        sap.ui.core.BusyIndicator.hide();
+        var sFinalBp = sReturnedBp || sBp;
+        oCustomer.bpNumber = sFinalBp;
+        oCustomer.BpId = sFinalBp;
+        oCustomer.address = oAddr;
+
+        oAppState.setProperty("/customer", oCustomer);
+        oAppState.setProperty("/delivery/address", oAddr);
+        oAppState.setProperty("/orderHeader/soldToParty", sFinalBp + " - " + sName);
+        oAppState.setProperty("/orderHeader/shipToParty", sFinalBp + " - " + sName);
+
+        var oCustomersModel = that.getModel("customers") ||
+                              (that.getOwnerComponent() && that.getOwnerComponent().getModel("customers")) ||
+                              that.getView().getModel("customers");
+        if (oCustomersModel) {
+          var aCustomers = oCustomersModel.getData() || [];
+          if (Array.isArray(aCustomers)) {
+            var oExisting = aCustomers.find(function (c) {
+              return (c.bpNumber === sFinalBp || c.BpId === sFinalBp);
+            });
+            if (oExisting) {
+              oExisting.address = JSON.parse(JSON.stringify(oAddr));
+              oCustomersModel.setData(aCustomers);
+              oCustomersModel.setProperty("/results", aCustomers);
+              oCustomersModel.refresh(true);
+            }
+          }
+        }
+
+        var oWizardModel = that.getView().getModel("wizardModel");
+        oWizardModel.setProperty("/showUpdateCustomerAddress", false);
+        oWizardModel.setProperty("/addressValidated", true);
+
+        var oStepCustomer = that.byId("stepCustomer");
+        if (oStepCustomer) {
+          oStepCustomer.setValidated(true);
+        }
+        var oWizard = that.byId("salesOrderWizard");
+        if (oWizard && oStepCustomer) {
+          oWizard.validateStep(oStepCustomer);
+        }
+
+        MessageToast.show("Customer address updated successfully for BP " + sFinalBp + "!");
+      }
+
+      CustManageModel.create("/QuickAppSet", oQuickAppPayload, {
+        success: function (oData) {
+          var sReturnedBp = (oData && (oData.bpId || oData.bpNumber || oData.coBpId || oData.BpId)) || sBp;
+          finalizeAddressUpdate(sReturnedBp);
+        },
+        error: function (oError) {
+          console.warn("ZCRM_ORIGINATIONS_SRV QuickAppSet update error:", oError);
+          finalizeAddressUpdate(sBp);
+        }
+      });
     },
 
     onExecuteCreateCustomer: function () {
       var oAppState = this.getModel("appState");
       var oCustomer = oAppState.getProperty("/customer") || {};
       var sType = oCustomer.type || "Individual";
-
+          oCustomer.bpNumber=""; 
       // Form validation
       if (!this._validateBasicDetailsForm(false)) {
         return;
@@ -814,6 +1259,13 @@ sap.ui.define([
         return;
       }
 
+      // Check marketing info (since creation is now performed in Marketing Information wizard)
+      var sMarketToYou = oAppState.getProperty("/marketing/marketToYou");
+      if (!sMarketToYou) {
+        MessageBox.warning("Please fill in the marketing information before creating customer.");
+        return;
+      }
+
       // Customer name computation
       var sName = "";
       if (sType === "Company") {
@@ -822,42 +1274,143 @@ sap.ui.define([
         sName = ((oCustomer.firstName || "") + " " + (oCustomer.lastName || "")).trim() || "New Customer";
       }
 
-      // Generate Business Partner Number (e.g. 10002xxxxx)
-      var sBp = "10002" + Math.floor(10000 + Math.random() * 90000);
-      oCustomer.bpNumber = sBp;
-      oCustomer.name = sName;
-
-      oAppState.setProperty("/customer", oCustomer);
-      oAppState.setProperty("/orderHeader/soldToParty", sBp + " - " + sName);
-      oAppState.setProperty("/orderHeader/shipToParty", sBp + " - " + sName);
-      oAppState.setProperty("/delivery/address", oCustomer.address);
-
-      // Save customer to the customers model list
-      var oCustomersModel = this.getModel("customers");
-      if (oCustomersModel) {
-        var aCustomers = oCustomersModel.getData() || [];
-        aCustomers.unshift(JSON.parse(JSON.stringify(oCustomer)));
-        oCustomersModel.setData(aCustomers);
+      var oAddr = oCustomer.address || {};
+      var sUserId = "259703";
+      var oFilterModel = this.getView().getModel("filterModel");
+      if (oFilterModel && oFilterModel.getProperty("/userId")) {
+        sUserId = oFilterModel.getProperty("/userId");
       }
 
-      // Update wizard model state
-      var oWizardModel = this.getView().getModel("wizardModel");
-      oWizardModel.setProperty("/customerSelected", true);
-      oWizardModel.setProperty("/isCreatingNewCustomer", false);
-      oWizardModel.setProperty("/isNewlyCreatedCustomer", true);
-      oWizardModel.setProperty("/searchPanelExpanded", false);
+      // Construct QuickApp entity payload for ZCRM_ORIGINATIONS_SRV QuickAppSet
+      //var sBp = oCustomer.bpNumber || oCustomer.BpId || "";
+      var sBp = "";
+      var oQuickAppPayload = {
+        userId: sUserId,
+        bpId: sBp,
+        coBpId: sType === "Company" ? sBp : "",
+        entityType: sType,
+        customerName: sName,
+        title: sType === "Company" ? (oCustomer.authRepTitle || "0001") : (oCustomer.title || "0001"),
+        //title: "0001",
+        fName: sType === "Company" ? (oCustomer.authRepFirstName || "") : (oCustomer.firstName || ""),
+        sName: sType === "Company" ? (oCustomer.authRepSurname || "") : (oCustomer.lastName || ""),
+        inits: sType === "Company" ? ((oCustomer.authRepFirstName || "C").charAt(0)) : ((oCustomer.firstName || "T").charAt(0)),
+        idType: oCustomer.idType || "ZPASS",
+        //idType: "ZPASS",
+        idNo: oCustomer.idPassport || "",
+        dob: oCustomer.dateOfBirth || "",
+        //dob: "2005-03-11",
+        gender: oCustomer.gender,
+        cellPhone: oCustomer.telephone || "",
+        homePhone: oCustomer.telephone || "",
+        eMail: oCustomer.email || "",
+        coName: oCustomer.companyName || (sType === "Company" ? sName : ""),
+        coRegNumber: oCustomer.regNo || "",
+        vatNumber: oCustomer.vatNo || "",
+        dwellingType: oAddr.dwellingType || "HOUSE",
+        homeStreeName: oAddr.streetName || oAddr.street || "",
+        homeSuburb: oAddr.suburb || "",
+        homeCity: oAddr.city || "",
+        homePostalCode: oAddr.postalCode || "",
+        homeProvince: oAddr.province || oAddr.region || "",
+        homeCountry: oAddr.country || "ZA",
+        homeLatitude: oAddr.latitude || "-26.1076",
+        homeLongitude: oAddr.longitude || "28.0567",
+        delStreeName: oAddr.streetName || oAddr.street || "",
+        delSuburb: oAddr.suburb || "",
+        delCity: oAddr.city || "",
+        delPostalCode: oAddr.postalCode || "",
+        delProvince: oAddr.province || oAddr.region || "",
+        delCountry: oAddr.country || "ZA",
+        delLatitude: oAddr.latitude || "-26.1076",
+        delLongitude: oAddr.longitude || "28.0567",
+        delSameAsRes: "Y",
+        postSameAsRes: "Y",
+        marketingOption: sMarketToYou === "Yes" ? "Y" : "N",
+        prefCorrLang: oAppState.getProperty("/marketing/marketingLanguage") || "EN",
+        prefCorrMethod: oAppState.getProperty("/marketing/marketingCorrespondenceMethod") || "EMAIL",
+        stmtCorrMethod: oAppState.getProperty("/marketing/statementCorrespondenceMethod") || "EMAIL",
+       // ctzship:oCustomer.citizenship
+        ctzship:"ZA"
+        //"vatNumber": "12345",
+      };
 
-      // Validate Step 1 so Step 2 button is activated
-      var oStepCustomer = this.byId("stepCustomer");
-      if (oStepCustomer) {
-        oStepCustomer.setValidated(true);
-      }
-      var oWizard = this.byId("salesOrderWizard");
-      if (oWizard && oStepCustomer) {
-        oWizard.validateStep(oStepCustomer);
+      var that = this;
+      var oOrigModel = this._getOriginationsODataModel();
+      sap.ui.core.BusyIndicator.show(0);
+
+      function finalizeCustomerCreation(sCreatedBp) {
+        sap.ui.core.BusyIndicator.hide();
+        var sFinalBp = sCreatedBp || ("10002" + Math.floor(10000 + Math.random() * 90000));
+        oCustomer.bpNumber = sFinalBp;
+        oCustomer.BpId = sFinalBp;
+        oCustomer.name = sName;
+        oCustomer.CustomerName = sName;
+
+        oAppState.setProperty("/customer", oCustomer);
+        oAppState.setProperty("/orderHeader/soldToParty", sFinalBp + " - " + sName);
+        oAppState.setProperty("/orderHeader/shipToParty", sFinalBp + " - " + sName);
+        oAppState.setProperty("/delivery/address", oCustomer.address);
+
+        // Save customer to the customers model list
+        var oCustomersModel = that.getModel("customers") ||
+                              (that.getOwnerComponent() && that.getOwnerComponent().getModel("customers")) ||
+                              that.getView().getModel("customers");
+        if (oCustomersModel) {
+          var aCustomers = oCustomersModel.getData() || [];
+          if (!Array.isArray(aCustomers)) {
+            aCustomers = [];
+          }
+          aCustomers.unshift(JSON.parse(JSON.stringify(oCustomer)));
+          oCustomersModel.setData(aCustomers);
+          oCustomersModel.setProperty("/results", aCustomers);
+          oCustomersModel.refresh(true);
+        }
+
+        // Update wizard model state
+        var oWizardModel = that.getView().getModel("wizardModel");
+        oWizardModel.setProperty("/customerSelected", true);
+        oWizardModel.setProperty("/isCreatingNewCustomer", false);
+        oWizardModel.setProperty("/isNewlyCreatedCustomer", true);
+        oWizardModel.setProperty("/searchPanelExpanded", false);
+
+        // Validate Step 1 and Step 2 only. Do NOT auto-navigate to Step 3 -
+        // the "Proceed to Step 3: Order Type" button is displayed in Step 2
+        // (see view) and the user moves forward by clicking it (onProceedToStep3).
+        var oStepCustomer = that.byId("stepCustomer");
+        if (oStepCustomer) {
+          oStepCustomer.setValidated(true);
+        }
+        var oStepConsent = that.byId("stepConsent");
+        if (oStepConsent) {
+          oStepConsent.setValidated(true);
+        }
+        var oWizard = that.byId("salesOrderWizard");
+        if (oWizard) {
+          if (oStepCustomer) {
+            oWizard.validateStep(oStepCustomer);
+          }
+          if (oStepConsent) {
+            oWizard.validateStep(oStepConsent);
+          }
+        }
+
+        MessageToast.show("New customer " + sName + " (BP " + sFinalBp + ") created successfully!");
       }
 
-      MessageToast.show("New customer " + sName + " (BP " + sBp + ") created successfully!");
+      var CustManageModel= this.getOwnerComponent().getModel('ZCRM_CUSTOMER_MANAGE_SRV'); 
+      // Call ZCRM_ORIGINATIONS_SRV QuickAppSet to create new customer
+      CustManageModel.create("/QuickAppSet", oQuickAppPayload, {
+        success: function (oData) {
+          var sCreatedBp = (oData && (oData.bpId || oData.bpNumber || oData.coBpId || oData.BpId)) || "";
+          finalizeCustomerCreation(sCreatedBp);
+        },
+        error: function (oError) {
+          console.warn("ZCRM_ORIGINATIONS_SRV QuickAppSet create error:", oError);
+          var sFallbackBp = "10002" + Math.floor(10000 + Math.random() * 90000);
+          finalizeCustomerCreation(sFallbackBp);
+        }
+      });
     },
 
     onChangeCustomerClick: function () {
@@ -875,16 +1428,22 @@ sap.ui.define([
       var oStepConsent = this.byId("stepConsent");
       var oWizard = this.byId("salesOrderWizard");
       var bValid = !!sKey;
-      if (oStepConsent) {
-        oStepConsent.setValidated(bValid);
-        if (oWizard) {
-          if (bValid) {
-            oWizard.validateStep(oStepConsent);
-          } else {
-            oWizard.invalidateStep(oStepConsent);
-          }
-        }
+      var oCustomer = this.getModel("appState").getProperty("/customer") || {};
+      if(oCustomer.bpNumber){
+                if (oStepConsent) {
+                oStepConsent.setValidated(bValid);
+                if (oWizard) {
+                  if (bValid) {
+                    oWizard.validateStep(oStepConsent);
+                  } else {
+                    oWizard.invalidateStep(oStepConsent);
+                  }
+                }
+              }
       }
+     
+
+
     },
 
     // ========================================================
@@ -998,7 +1557,7 @@ sap.ui.define([
       if (!oFilterModel) {
         oFilterModel = new JSONModel({
           search: "",
-          userId: "STOREUSER",
+          userId: "259703",
           site: "M001",
           promoMember: ""
         });
@@ -1531,18 +2090,40 @@ sap.ui.define([
     // PRICE OVERRIDE POPUP & ZCRM_ORIGINATIONS_SRV ODATA CALL
     // ========================================================
     _getOriginationsODataModel: function () {
-      var oModel = this.getView().getModel("originationsOData") ||
+      var oModel = this.getView().getModel("ZCRM_ORIGINATIONS_SRV") ||
+                   (this.getOwnerComponent() && this.getOwnerComponent().getModel("ZCRM_ORIGINATIONS_SRV")) ||
+                   this.getView().getModel("originationsOData") ||
                    (this.getOwnerComponent() && this.getOwnerComponent().getModel("originationsOData")) ||
-                   sap.ui.getCore().getModel("originationsOData");
+                   sap.ui.getCore().getModel("ZCRM_ORIGINATIONS_SRV");
 
       if (!oModel || typeof oModel.read !== "function") {
         oModel = new sap.ui.model.odata.v2.ODataModel("/sap/opu/odata/sap/ZCRM_ORIGINATIONS_SRV/", {
           useBatch: false,
           defaultBindingMode: "TwoWay"
         });
-        this.getView().setModel(oModel, "originationsOData");
+        this.getView().setModel(oModel, "ZCRM_ORIGINATIONS_SRV");
         if (this.getOwnerComponent()) {
-          this.getOwnerComponent().setModel(oModel, "originationsOData");
+          this.getOwnerComponent().setModel(oModel, "ZCRM_ORIGINATIONS_SRV");
+        }
+      }
+      return oModel;
+    },
+
+    _getSalesOrderCreateODataModel: function () {
+      var oModel = this.getView().getModel("ZSRA017_SALESORDER_CREATE_SRV") ||
+                   (this.getOwnerComponent() && this.getOwnerComponent().getModel("ZSRA017_SALESORDER_CREATE_SRV")) ||
+                   this.getView().getModel("salesOrderCreateOData") ||
+                   (this.getOwnerComponent() && this.getOwnerComponent().getModel("salesOrderCreateOData")) ||
+                   sap.ui.getCore().getModel("ZSRA017_SALESORDER_CREATE_SRV");
+
+      if (!oModel || typeof oModel.read !== "function") {
+        oModel = new sap.ui.model.odata.v2.ODataModel("/sap/opu/odata/sap/ZSRA017_SALESORDER_CREATE_SRV/", {
+          useBatch: false,
+          defaultBindingMode: "TwoWay"
+        });
+        this.getView().setModel(oModel, "ZSRA017_SALESORDER_CREATE_SRV");
+        if (this.getOwnerComponent()) {
+          this.getOwnerComponent().setModel(oModel, "ZSRA017_SALESORDER_CREATE_SRV");
         }
       }
       return oModel;
@@ -3526,7 +4107,11 @@ sap.ui.define([
         };
 
         that._addAttachmentLocally(oNewAttachment);
-        MessageToast.show("Attachment added: " + sFileName);
+        that.saveAttachmentToUploadSet(oNewAttachment, "DRAFT", function () {
+          MessageToast.show("Attachment saved to UploadSet: " + sFileName);
+        }, function () {
+          MessageToast.show("Attachment added: " + sFileName);
+        });
 
         if (oUploader && typeof oUploader.clear === "function") {
           oUploader.clear();
@@ -3534,6 +4119,111 @@ sap.ui.define([
       };
 
       oReader.readAsDataURL(oFile);
+    },
+
+    saveAttachmentToUploadSet: function (oAttachment, sSoNo, fnSuccess, fnError) {
+      var oODataModel = this._getSalesOrderCreateODataModel();
+      if (!oODataModel) {
+        if (fnError) fnError(new Error("OData Model not available"));
+        return;
+      }
+      var sOrderNo = sSoNo || "DRAFT";
+      var sFileName = oAttachment.fileName || oAttachment.FileName || oAttachment.name || oAttachment.AttaId || "attachment";
+      var sFileType = oAttachment.fileType || oAttachment.FileType || "DOC";
+      if (sFileType.length > 20) {
+        sFileType = sFileType.substring(0, 20);
+      }
+      var sFileData = oAttachment.FileData || "";
+      if (sFileData.indexOf(",") !== -1) {
+        sFileData = sFileData.split(",")[1];
+      }
+
+      var oPayload = {
+        SoNo: sOrderNo,
+        FileName: sFileName,
+        FileType: sFileType,
+        FileData: sFileData
+      };
+
+      oODataModel.create("/UploadSet", oPayload, {
+        success: function (oData) {
+          console.log("Attachment saved to UploadSet successfully:", sFileName);
+          if (fnSuccess) fnSuccess(oData);
+        },
+        error: function (oErr) {
+          console.warn("Could not save attachment to UploadSet:", oErr);
+          if (fnError) fnError(oErr);
+        }
+      });
+    },
+
+    readDocViewSet: function (sSoNo, fnCallback) {
+      var oODataModel = this._getSalesOrderCreateODataModel();
+      var oAppState = this.getModel("appState");
+      if (!oODataModel || !oAppState) {
+        return;
+      }
+
+      var aFilters = [];
+      if (sSoNo && sSoNo !== "DRAFT") {
+        aFilters.push(new Filter("SoNo", FilterOperator.EQ, sSoNo));
+      }
+
+      oODataModel.read("/Doc_viewSet", {
+        filters: aFilters,
+        success: function (oData) {
+          var aResults = (oData && oData.results) ? oData.results : [];
+          if (aResults.length > 0) {
+            var aMapped = aResults.map(function (item) {
+              var sAttaId = item.AttaId || "";
+              var sDescr = item.Descr || sAttaId || "Attachment";
+              var sFileData = item.FileData || "";
+              var sFileName = sDescr || sAttaId || "document";
+              var isPdf = sFileName.toLowerCase().endsWith(".pdf");
+
+              var sDataUrl = "";
+              if (sFileData) {
+                if (sFileData.startsWith("data:")) {
+                  sDataUrl = sFileData;
+                } else {
+                  var sMime = isPdf ? "application/pdf" : "application/octet-stream";
+                  sDataUrl = "data:" + sMime + ";base64," + sFileData;
+                }
+              }
+
+              return {
+                AttaId: sAttaId,
+                Descr: sDescr,
+                FileData: sFileData,
+                id: sAttaId || ("att_" + Date.now()),
+                fileName: sFileName,
+                name: sFileName,
+                fileSize: "Document",
+                size: "Document",
+                fileType: isPdf ? "application/pdf" : "Document",
+                uploadDate: new Date().toLocaleDateString(),
+                isPdf: isPdf,
+                url: sDataUrl
+              };
+            });
+
+            oAppState.setProperty("/delivery/attachments", aMapped);
+            oAppState.setProperty("/attachments", aMapped);
+            oAppState.refresh(true);
+          }
+          if (fnCallback) fnCallback(aResults);
+        },
+        error: function (oError) {
+          console.warn("Could not read Doc_viewSet from OData service:", oError);
+        }
+      });
+    },
+
+    onRefreshDocViewSet: function () {
+      var oAppState = this.getModel("appState");
+      var sSoNo = (oAppState && oAppState.getProperty("/orderNumber")) || "DRAFT";
+      MessageToast.show("Refreshing attachments from Doc_viewSet...");
+      this.readDocViewSet(sSoNo);
     },
 
     _addAttachmentLocally: function (oNewAttachment) {
@@ -3910,6 +4600,15 @@ sap.ui.define([
       }
 
       var that = this;
+
+      // Save attachments to ZSRA017_SALESORDER_CREATE_SRV UploadSet with generated SO number
+      var aOrderAttachments = oNewOrderRecord.attachments || [];
+      if (aOrderAttachments && aOrderAttachments.length > 0) {
+        aOrderAttachments.forEach(function (att) {
+          that.saveAttachmentToUploadSet(att, sSalesOrderNo);
+        });
+      }
+
       MessageBox.success("Sales Order " + sSalesOrderNo + " created successfully.", {
         title: "Sales Order Created",
         actions: [MessageBox.Action.OK],
