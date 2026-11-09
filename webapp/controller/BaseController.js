@@ -68,16 +68,22 @@ sap.ui.define([
         fDiscountSum += fLineDiscount;
       });
 
-      var fNetValue = +(fGrossSum - fDiscountSum).toFixed(2);
-      var fVat = +(fNetValue * 0.15).toFixed(2);
-      var fTotal = +(fNetValue + fVat).toFixed(2);
+      var fItemsGross = +(fGrossSum - fDiscountSum).toFixed(2);
+      // In South African retail (ZAR), item shelf prices are VAT inclusive (15%)
+      var fNetValue = +(fItemsGross / 1.15).toFixed(2);
+      var fVat = +(fItemsGross - fNetValue).toFixed(2);
+      var sMethod = (oAppState && oAppState.getProperty("/delivery/methodKey")) || "CND";
+      var fDelivery = (sMethod === "CND") ? 220.00 : 0.00;
+      var fTotal = +(fItemsGross + fDelivery).toFixed(2);
 
       oAppState.setProperty("/cart", aItems.slice());
       oAppState.setProperty("/cartCount", aItems.length);
       oAppState.setProperty("/pricing/netValue", fNetValue);
       oAppState.setProperty("/pricing/discounts", -fDiscountSum);
       oAppState.setProperty("/pricing/vat", fVat);
+      oAppState.setProperty("/pricing/deliveryFee", fDelivery);
       oAppState.setProperty("/pricing/total", fTotal);
+      oAppState.setProperty("/pricing/totalWithDelivery", fTotal);
       oAppState.refresh(true);
     },
 

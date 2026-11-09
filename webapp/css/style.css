@@ -333,8 +333,8 @@ html, body {
 }
 
 .deliveryMethodSvgIcon {
-  width: 46px !important;
-  height: 46px !important;
+  width: 30px !important;
+  height: 30px !important;
   display: block !important;
   object-fit: contain !important;
   transition: transform 0.2s ease !important;
@@ -612,134 +612,469 @@ html, body {
 }
 
 /* Delivery Step Side-by-Side Layout (Left: Delivery Methods & Destination, Right: Cart Summary) */
-.deliverySideBySideLayout {
+/* Modern Delivery Checkout Screen Layout (matching user screenshot) */
+.deliveryCheckoutLayout {
   display: flex !important;
   flex-direction: row !important;
   flex-wrap: nowrap !important;
-  align-items: stretch !important;
+  align-items: flex-start !important;
   justify-content: space-between !important;
   width: 100% !important;
-  gap: 1.25rem !important;
+  gap: 2rem !important;
   box-sizing: border-box !important;
 }
 
-.deliverySideColumn {
-  flex: 1 1 50% !important;
-  width: calc(50% - 0.65rem) !important;
-  max-width: calc(50% - 0.65rem) !important;
+.deliveryCheckoutLeftCol {
+  flex: 1 1 52% !important;
+  width: 52% !important;
+  max-width: 52% !important;
   min-width: 0 !important;
   display: flex !important;
   flex-direction: column !important;
   box-sizing: border-box !important;
 }
 
-.deliverySidePanel {
-  flex: 1 1 auto !important;
-  width: 100% !important;
-  height: 100% !important;
-  background: #ffffff !important;
-  border-radius: 10px !important;
-  border: 1px solid #cbd5e1 !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
-  overflow: hidden !important;
-  box-sizing: border-box !important;
-}
-
-.deliverySidePanel .sapMPanelHdr {
-  font-weight: 700 !important;
-  font-size: 1.05rem !important;
-  color: #002d3c !important;
-}
-
-.deliverySidePanel .sapMPanelContent {
-  padding: 1rem !important;
-  box-sizing: border-box !important;
-}
-
-/* Delivery Options Content Wrapper (Inside Left Column) */
-.deliveryOptionsContentWrapper {
-  width: 100% !important;
+.deliveryCheckoutRightCol {
+  flex: 1 1 48% !important;
+  width: 48% !important;
+  max-width: 48% !important;
+  min-width: 0 !important;
   display: flex !important;
   flex-direction: column !important;
   box-sizing: border-box !important;
 }
 
-/* 3 Delivery Cards in Left Column (Side-by-Side Row) */
-.deliveryMethodScreenCardsRow {
+/* Top Breadcrumb Bar: [🚚 Delivery Method] > Payment */
+.deliveryBreadcrumbBar {
   display: flex !important;
   flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  align-items: stretch !important;
-  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.deliveryBreadcrumbPill {
+  display: inline-flex !important;
+  align-items: center !important;
+  background-color: #fef08a !important;
+  border: 1.5px solid #84cc16 !important;
+  border-radius: 9999px !important;
+  padding: 3px 12px !important;
+}
+
+.deliveryBreadcrumbText {
+  color: #1e293b !important;
+  font-weight: 700 !important;
+  font-size: 0.78rem !important;
+  letter-spacing: -0.01em !important;
+}
+
+.deliveryBreadcrumbChevron {
+  color: #94a3b8 !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  margin: 0 0.5rem !important;
+}
+
+.deliveryBreadcrumbNext {
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.deliveryBreadcrumbMuted {
+  color: #94a3b8 !important;
+  font-size: 0.82rem !important;
+  font-weight: 500 !important;
+}
+
+/* Main Heading */
+.deliveryQuestionHeading {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.3 !important;
+  margin: 0.5rem 0 0.75rem 0 !important;
+}
+
+/* 3 Stacked Horizontal Selection Cards */
+.deliveryStackedCardsContainer {
+  display: flex !important;
+  flex-direction: column !important;
   gap: 0.75rem !important;
   width: 100% !important;
-  margin: 0.25rem 0 1rem 0 !important;
   box-sizing: border-box !important;
 }
 
-.deliveryMethodScreenCard {
-  flex: 1 1 0 !important;
-  width: 32% !important;
-  min-width: 95px !important;
-  max-width: 33.333% !important;
-  height: 160px !important;
-  min-height: 160px !important;
-  border: 2px solid #cbd5e1 !important;
-  border-radius: 10px !important;
+.deliveryHorizontalCard {
+  position: relative !important;
+  width: 100% !important;
+  min-height: 64px !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 12px !important;
   background-color: #ffffff !important;
+  padding: 0.85rem 1.25rem !important;
+  box-sizing: border-box !important;
   display: flex !important;
   flex-direction: column !important;
-  align-items: center !important;
   justify-content: center !important;
-  text-align: center !important;
-  padding: 0.85rem 0.4rem !important;
-  box-sizing: border-box !important;
   cursor: pointer !important;
-  position: relative !important;
   transition: all 0.2s ease-in-out !important;
 }
 
-.deliveryMethodScreenCard:hover {
-  border-color: #3b82f6 !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.12) !important;
+.deliveryHorizontalCard:hover {
+  border-color: #0070f2 !important;
+  background-color: #f8fbff !important;
+  box-shadow: 0 3px 12px rgba(0, 112, 242, 0.08) !important;
 }
 
-.deliveryMethodScreenCardSelected {
-  border: 2.5px solid #0070f2 !important;
-  background-color: #eff6ff !important;
-  box-shadow: 0 0 0 1px #0070f2, 0 4px 16px rgba(0, 112, 242, 0.18) !important;
+/* Selected state is driven by the data-selected attribute (CustomData writeToDom),
+   so it does not depend on a binding inside the class attribute. */
+.deliveryHorizontalCard[data-selected="true"],
+.deliveryHorizontalCardSelected {
+  border: 2px solid #0070f2 !important;
+  background-color: #f0f7ff !important;
+  box-shadow: 0 2px 10px rgba(0, 112, 242, 0.12) !important;
 }
 
-.deliveryMethodCardIconBox {
-  width: 44px !important;
-  height: 44px !important;
-  margin-bottom: 0.5rem !important;
+.deliveryCardLeftWrap {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.deliveryRadioCircleWrap {
+  width: 26px !important;
+  height: 26px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  flex-shrink: 0 !important;
 }
 
-.deliveryMethodSvgIcon {
-  width: 38px !important;
-  height: 38px !important;
-  display: block !important;
-  object-fit: contain !important;
+.deliveryCheckedIcon {
+  color: #16a34a !important;
+  font-size: 1.45rem !important;
 }
 
-.deliveryMethodCardTitle {
-  font-size: 0.85rem !important;
+.deliveryUncheckedRadio {
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  border: 2.5px solid #eab308 !important;
+  background-color: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
+.deliveryCardTitle {
+  font-size: 0.98rem !important;
   font-weight: 700 !important;
-  margin-bottom: 0.2rem !important;
-  line-height: 1.2 !important;
-  color: #002d3c !important;
-  word-break: break-word !important;
+  color: #0f172a !important;
+  line-height: 1.25 !important;
 }
 
-.deliveryMethodCardSubtitle {
-  font-size: 0.72rem !important;
-  line-height: 1.25 !important;
+.deliveryCardSubtitle {
+  font-size: 0.82rem !important;
   color: #64748b !important;
+  margin-top: 1px !important;
+  line-height: 1.2 !important;
+}
+
+.deliveryCardRightIconBox {
+  width: 42px !important;
+  height: 42px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+/* Delivery Details Section below cards */
+.deliveryDetailsSection {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.deliveryDetailsHeading {
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+/* Prominent Blue Button matching screenshot */
+.validateAddressBlueBtn {
+  min-width: 240px !important;
+  height: 44px !important;
+  cursor: pointer !important;
+}
+
+.validateAddressBlueBtn .sapMBtnInner {
+  background-color: #0070f2 !important;
+  border-color: #0070f2 !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 0 1.5rem !important;
+  font-weight: 600 !important;
+  font-size: 0.96rem !important;
+  box-shadow: 0 2px 6px rgba(0, 112, 242, 0.25) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.validateAddressBlueBtn:hover .sapMBtnInner {
+  background-color: #0056bd !important;
+  border-color: #0056bd !important;
+}
+
+/* Right Column: Order Summary Card Container */
+.orderSummaryContainerCard {
+  width: 100% !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 1.5rem !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Header band: tinted background + brand accent bar + icon */
+.orderSummaryHeader {
+  background: linear-gradient(90deg, #eff6ff 0%, #ffffff 100%) !important;
+  border-left: 4px solid #0056bd !important;
+  border-radius: 6px !important;
+  padding: 0.6rem 0.85rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.orderSummaryHeaderIcon {
+  color: #0056bd !important;
+  font-size: 1.25rem !important;
+  margin-right: 0.6rem !important;
+}
+
+.orderSummaryHeading {
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin: 0 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.orderSummaryCostTable {
+  width: 100% !important;
+}
+
+.orderSummaryCostRow {
+  padding: 0.4rem 0 !important;
+}
+
+.orderSummaryCostLabel {
+  font-size: 0.92rem !important;
+  color: #64748b !important;
+}
+
+.orderSummaryCostValue {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+}
+
+.orderSummaryDividerLine {
+  width: 100% !important;
+  height: 1px !important;
+  background-color: #e2e8f0 !important;
+  margin: 0.75rem 0 !important;
+}
+
+/* Total: highlighted panel, accent bar, brand-coloured amount (contrast > 4.5:1) */
+.orderSummaryTotalRow {
+  background-color: #eff6ff !important;
+  border: 1px solid #bfdbfe !important;
+  border-left: 4px solid #0056bd !important;
+  border-radius: 8px !important;
+  padding: 0.85rem 1rem !important;
+  margin-top: 0.25rem !important;
+}
+
+.orderSummaryTotalLabel {
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  color: #1e3a8a !important;
+}
+
+.orderSummaryTotalValue {
+  font-size: 1.45rem !important;
+  font-weight: 800 !important;
+  color: #0056bd !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Delivery status: free = success green, paid = default */
+.orderSummaryCostValue[data-state="free"] {
+  color: #15803d !important;
+}
+
+.cartItemsCountHeading {
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.85rem !important;
+}
+
+/* Cart Item Modern Card */
+.cartItemModernCard {
+  width: 100% !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 0.85rem 1rem !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.15s ease !important;
+}
+
+.cartItemModernCard:hover {
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+.cartItemLeftGroup {
+  display: flex !important;
+  align-items: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.cartItemThumbBox {
+  width: 68px !important;
+  height: 68px !important;
+  min-width: 68px !important;
+  border-radius: 8px !important;
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.cartItemThumbImg {
+  width: 64px !important;
+  height: 64px !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+
+.cartItemInfoBox {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  margin-left: 0.75rem !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.cartItemTitle {
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.3 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.cartItemSpecsText {
+  font-size: 0.78rem !important;
+  color: #64748b !important;
+  line-height: 1.35 !important;
+  margin-top: 2px !important;
+}
+
+.cartItemReleaseDateLabel {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  letter-spacing: 0.04em !important;
+}
+
+.cartItemReleaseDateVal {
+  font-size: 0.72rem !important;
+  color: #64748b !important;
+}
+
+.cartItemPrice {
+  font-size: 0.98rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+.cartItemRightGroup {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  margin-left: 0.75rem !important;
+}
+
+/* Oval Qty Pill Badge */
+.cartItemQtyPill {
+  border: 1.5px solid #0070f2 !important;
+  border-radius: 9999px !important;
+  padding: 3px 14px !important;
+  background-color: transparent !important;
+  box-sizing: border-box !important;
+}
+
+.cartItemQtyPillText {
+  color: #0070f2 !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+}
+
+/* Need Help? Footer Section */
+.needHelpSection {
+  border-top: 1px solid #f1f5f9 !important;
+  padding-top: 1.25rem !important;
+  margin-top: 1.5rem !important;
+}
+
+.needHelpTitle {
+  font-size: 0.98rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+.needHelpSubtitle {
+  font-size: 0.82rem !important;
+  color: #64748b !important;
+}
+
+.needHelpChipsRow {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+}
+
+.needHelpChip {
+  background-color: #f1f5f9 !important;
+  border-radius: 9999px !important;
+  padding: 6px 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  cursor: pointer !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.needHelpChip:hover {
+  background-color: #e2e8f0 !important;
+}
+
+.needHelpChipText {
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
 }
 
 /* Sub-screen forms inside Left Column (CNC / CNP / CND) */
@@ -1519,5 +1854,3 @@ html, body {
   font-weight: 400 !important;
   margin-left: 0.25rem !important;
 }
-
-

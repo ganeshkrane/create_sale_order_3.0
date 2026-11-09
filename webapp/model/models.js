@@ -102,15 +102,72 @@ sap.ui.define([
             value: "150.00- ZAR"
           }
         ],
-        cart: [],
-        cartCount: 0,
+        cart: [
+          {
+            item: "10",
+            itemLine: 1,
+            articleId: "ART-CND-01",
+            artnumber: "ART-CND-01",
+            name: "Packard Bell Montenegro-C",
+            description: "Packard Bell Montenegro-C",
+            specs: "Intel® Celeron® N4020 4GB RAM 128GB SSD Laptop",
+            releaseDate: "25/10/2022",
+            targetQty: 1,
+            qty: 1,
+            um: "EA",
+            pricePerUnit: 3799.00,
+            netPrice: 3799.00,
+            unitprice: 3799.00,
+            itemPrice: 3799.00,
+            netValue: 3799.00,
+            salesPersonId: "SP-1042",
+            site: "M001",
+            delsite: "M001",
+            itemCat: "TAN",
+            articleStatus: "M",
+            sourcingIdentifier: "[M · Full Stock]",
+            sourcingCode: "CND_FULL",
+            stock: 25,
+            availableQty: 25,
+            image: "./css/icons/product-laptop.jpg"
+          },
+          {
+            item: "20",
+            itemLine: 2,
+            articleId: "ART-CND-02",
+            artnumber: "ART-CND-02",
+            name: "Russell Hobbs 20lt Electronic Microwave Silver RHEM21L",
+            description: "Russell Hobbs 20lt Electronic Microwave Silver RHEM21L",
+            specs: "Russell Hobbs 20lt Electronic Microwave Silver RHEM21L",
+            releaseDate: "",
+            targetQty: 1,
+            qty: 1,
+            um: "EA",
+            pricePerUnit: 1399.00,
+            netPrice: 1399.00,
+            unitprice: 1399.00,
+            itemPrice: 1399.00,
+            netValue: 1399.00,
+            salesPersonId: "SP-1042",
+            site: "M001",
+            delsite: "M001",
+            itemCat: "TAN",
+            articleStatus: "M",
+            sourcingIdentifier: "[M · Full Stock]",
+            sourcingCode: "CND_FULL",
+            stock: 14,
+            availableQty: 14,
+            image: "./css/icons/product-microwave.jpg"
+          }
+        ],
+        cartCount: 2,
         deliveryValidationNotices: [],
         deliveryValidationPassed: false,
         deliveryValidationNotice: "",
         // Sourcing status summary per SRS V3.3 decision rules
         sourcingSummary: {
           methodKey: "CND",
-          totalItems: 0,
+          totalItems: 2,
           blockingCount: 0,
           actionableCount: 0,
           hasErrors: false,
@@ -118,12 +175,14 @@ sap.ui.define([
           statusTitle: "Delivery Sourcing Ready",
           statusDescription: "Select your preferred delivery method to evaluate inventory sourcing."
         },
-        // Pricing summary breakdown
+        // Pricing summary breakdown (matching screenshot: Subtotal 4,520 + Delivery 220 + VAT 678 = Total 5,418)
         pricing: {
-          netValue: 0.00,
+          netValue: 4520.00,
           discounts: 0.00,
-          vat: 0.00,
-          total: 0.00
+          vat: 678.00,
+          deliveryFee: 220.00,
+          total: 5418.00,
+          totalWithDelivery: 5418.00
         },
         // Delivery choices and address (Review Shipping 23 fields)
         delivery: {

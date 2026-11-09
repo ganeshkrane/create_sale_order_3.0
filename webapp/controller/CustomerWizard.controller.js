@@ -138,6 +138,63 @@ sap.ui.define([
     },
     onAfterRendering: function () {
       this._attachDeliveryCardEvents();
+      this._applyWizardNextButtonText();
+    },
+
+    // ========================================================
+    // WIZARD NEXT-BUTTON LABELS
+    // Key = id of the step that is currently active,
+    // value = label of the standard wizard button that moves to the next step
+    // ========================================================
+    _mWizardNextButtonText: {
+      stepCustomer: "Proceed to step 2: Marketing Consent",
+      stepConsent: "Proceed to step 3: Order Type",
+      stepOrderType: "Proceed to step 4: Cart",
+      stepProducts: "Proceed to step 5: Delivery Method",
+      stepDeliveryMethod: "Proceed to step 6: Review Shipping",
+      stepDelivery: "Proceed to step 7: Review Details"
+    },
+
+    onWizardStepActivate: function (oEvent) {
+      var oStep = oEvent && oEvent.getSource && oEvent.getSource();
+      this._applyWizardNextButtonText(oStep && oStep.getId());
+    },
+
+    _applyWizardNextButtonText: function (sActiveStepId) {
+      var that = this;
+      var oWizard = this.byId("salesOrderWizard");
+      if (!oWizard) {
+        return;
+      }
+
+      // The wizard re-renders/updates its next button on step change & validation,
+      // so the label is (re)applied after the current UI5 cycle has finished.
+      setTimeout(function () {
+        var sCurrent = sActiveStepId || oWizard.getCurrentStep();
+        // map full control id back to local view id
+        var oCurrentStep = sCurrent && sap.ui.getCore().byId(sCurrent);
+        var sLocalId = oCurrentStep ? that.getView().getLocalId(oCurrentStep.getId()) : sCurrent;
+        var sText = that._mWizardNextButtonText[sLocalId];
+
+        var oNextBtn = oWizard._getNextButton && oWizard._getNextButton();
+        if (!oNextBtn || !sText) {
+          return;
+        }
+        that._sWizardNextText = sText;
+
+        // keep the text even if the wizard resets it (e.g. on validate/invalidate)
+        if (!that._bNextBtnDelegate) {
+          that._bNextBtnDelegate = true;
+          oNextBtn.addEventDelegate({
+            onAfterRendering: function () {
+              if (that._sWizardNextText && oNextBtn.getText() !== that._sWizardNextText) {
+                oNextBtn.setText(that._sWizardNextText);
+              }
+            }
+          });
+        }
+        oNextBtn.setText(sText);
+      }, 0);
     },
 
     _attachDeliveryCardEvents: function () {
@@ -581,7 +638,7 @@ sap.ui.define([
         authRepFirstName: sFirst,
         authRepSurname: sLast,
         contactPerson: sCriteriaName || "",
-        language: "English",
+        language: "En",
         salesOrg: "1000",
         distChannel: "10",
         division: "00",
@@ -1247,7 +1304,8 @@ sap.ui.define([
       var oAppState = this.getModel("appState");
       var oCustomer = oAppState.getProperty("/customer") || {};
       var sType = oCustomer.type || "Individual";
-          oCustomer.bpNumber=""; 
+          //oCustomer.bpNumber="";
+          oAppState.setProperty("/customer/bpNumber",'');
       // Form validation
       if (!this._validateBasicDetailsForm(false)) {
         return;
@@ -1425,25 +1483,31 @@ sap.ui.define([
     onMarketToYouChange: function (oEvent) {
       var sKey = oEvent.getParameter("selectedItem") ? oEvent.getParameter("selectedItem").getKey() : "";
       this.getModel("appState").setProperty("/marketing/marketToYou", sKey);
+      this._updateConsentStepValidation();
+    },
+
+    // Step 2 (Marketing Consent) unlocks the "Proceed to step 3" button:
+    //  - existing customer selected : immediately once Yes/No is chosen
+    //  - new customer being created : only AFTER the customer has been created
+    _updateConsentStepValidation: function () {
       var oStepConsent = this.byId("stepConsent");
       var oWizard = this.byId("salesOrderWizard");
-      var bValid = !!sKey;
-      var oCustomer = this.getModel("appState").getProperty("/customer") || {};
-      if(oCustomer.bpNumber){
-                if (oStepConsent) {
-                oStepConsent.setValidated(bValid);
-                if (oWizard) {
-                  if (bValid) {
-                    oWizard.validateStep(oStepConsent);
-                  } else {
-                    oWizard.invalidateStep(oStepConsent);
-                  }
-                }
-              }
+      if (!oStepConsent || !oWizard) {
+        return;
       }
-     
+      var oWizardModel = this.getView().getModel("wizardModel");
+      var bNewCustomerPending = !!oWizardModel.getProperty("/isCreatingNewCustomer") &&
+                                !oWizardModel.getProperty("/isNewlyCreatedCustomer");
+      var sMarketToYou = this.getModel("appState").getProperty("/marketing/marketToYou");
+      var oCustomer = this.getModel("appState").getProperty("/customer") || {};
+      var bValid = !!sMarketToYou && !bNewCustomerPending && !!oCustomer.bpNumber;
 
-
+      oStepConsent.setValidated(bValid);
+      if (bValid) {
+        oWizard.validateStep(oStepConsent);
+      } else {
+        oWizard.invalidateStep(oStepConsent);
+      }
     },
 
     // ========================================================
@@ -2766,6 +2830,7 @@ sap.ui.define([
       oAppState.setProperty("/delivery/methodSubtitle", "Deliver to customer address");
       oAppState.setProperty("/delivery/deliveryType", "Delivery");
       oAppState.setProperty("/review/shippingDetails/deliveryMethod", "Delivery (CND)");
+      this.recalculateTotals();
       this.updateCartSourcingEvaluation();
       MessageToast.show("Delivery Method: Delivery (CND)");
     },
@@ -2847,6 +2912,7 @@ sap.ui.define([
         oAppState.setProperty("/review/shippingDetails/shipTo", oStore.storeName);
         oAppState.setProperty("/review/shippingDetails/address", oStore.address);
       }
+      this.recalculateTotals();
       this.updateCartSourcingEvaluation();
       MessageToast.show("Delivery Method: Click & Collect (CNC)");
     },
@@ -2864,6 +2930,7 @@ sap.ui.define([
         oAppState.setProperty("/review/shippingDetails/shipTo", oPoint.pointName);
         oAppState.setProperty("/review/shippingDetails/address", oPoint.location);
       }
+      this.recalculateTotals();
       this.updateCartSourcingEvaluation();
       MessageToast.show("Delivery Method: BOPIS (CNP)");
     },
@@ -2908,7 +2975,8 @@ sap.ui.define([
       }
     },
 
-    onDeliveryMethodStepActivate: function () {
+    onDeliveryMethodStepActivate: function (oEvent) {
+      this.onWizardStepActivate(oEvent);
       var oAppState = this.getModel("appState");
       if (oAppState) {
         oAppState.setProperty("/deliveryValidationPassed", false);
@@ -3507,7 +3575,7 @@ sap.ui.define([
           }
         }
 
-        MessageToast.show("Stock validated. Click 'Step 6: Review Shipping' to proceed.");
+        MessageToast.show("Stock validated. Click 'Proceed to step 6: Review Shipping' to continue.");
       }
     },
 
